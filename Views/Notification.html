@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <!-- <link href="/styles.css" rel="stylesheet" /> -->
+    <!-- <script src="/script.js"></script> -->
+    <link href="/styles" rel="stylesheet" />
+    <script src="/script"></script>
+</head>
+<body>
+    <a href="/View/Admin">Startseite</a>
+    <hr>
+    <div class="container">
+        <h3>Global Extra</h3>
+        <div class="flex">
+            <textarea type="text" id="globalExtra" data-post="/Notification/GlobalExtra/{}"></textarea>
+            <div class="value-container" data-get="/Notification/GlobalExtra"></div>
+            <button id="stopInterval" onclick="post('globalExtra')" data-post="/Routine/Stop">Setzen</button>
+        </div>
+    </div>
+    <div class="container">
+        <h3>Add Artwork</h3>
+        <div class="flex">
+            <iframe name="dummy" id="dummyFrame" style="display: none"></iframe>
+            <form action="/Notification/AddArtwork" method="POST" id="addArtwork" target="dummy" enctype="multipart/form-data">
+                <input type="file" name="artworkFile" id="artworkFileInput">
+                Name:
+                <input type="text" name="name">
+                Vom:
+                <input type="text" name="startDate">
+                Bis:
+                <input type="text" name="endDate">
+                Farbe:
+                <input type="color" name="color">
+                Schriftfarbe (white, black, red, green, gray, blue)
+                <input type="text" name="fontColor" />
+                <button type="submit">Hinzufügen</button>
+            </form>  
+        </div>
+    </div>
+    <div class="container">
+        <h3>Force Artwork</h3>
+        <div>
+            <div class="flex">
+                Forced:
+                <div data-get="/Notification/CurrentForcedArtwork"></div>
+            </div>
+            <ul id="artworkSelection-container">
+
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+    async function getArtworks(){
+        const container = document.getElementById("artworkSelection-container")
+        const names = await request("/Notification/AllArtworks")
+
+        for(const name of names){
+            const rowEl = document.createElement("li")
+            const buttonEl = document.createElement("button")
+            buttonEl.textContent = name;
+            buttonEl.onclick = async () => {
+                await request("/Notification/ForceArtwork/"+name, {method: "POST"})
+                reload()
+            }
+
+            rowEl.append(buttonEl);
+            container.append(rowEl);
+        }
+        const rowEl = document.createElement("li")
+        const buttonEl = document.createElement("button")
+        buttonEl.textContent = "NICHTS"
+        buttonEl.onclick = async () => {
+            await request("/Notification/ForceArtwork/NICHTS", {method: "POST"})
+            reload()
+        }
+        rowEl.append(buttonEl)
+        container.append(rowEl);
+
+    }
+    getArtworks()
+</script>

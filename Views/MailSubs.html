@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="/script"></script>
+    <link href="/styles" rel="stylesheet" />
+</head>
+<body>
+    <a href="/View/Admin">Startseite</a>
+    MailSubs
+    <div id="sub-container">
+
+    </div>
+</body>
+</html>
+
+<script>
+    async function getMailRequests() {
+        const containerEl = document.getElementById("sub-container")
+        containerEl.innerHTML = "";
+        const requests = await request("/Admin/MailRequests");
+        for (const user of requests) {
+            const divEl = document.createElement("div");
+            divEl.textContent = `${user.name} | ${user.address} | ${user.grade} | `
+
+            const acceptButtonEl = document.createElement("button");
+            acceptButtonEl.textContent = "akzeptieren"
+            acceptButtonEl.onclick = () => handleUser(user.address, "Accept")
+
+            const rejectButtonEl = document.createElement("button");
+            rejectButtonEl.textContent = "verwerfen"
+            rejectButtonEl.onclick = () => handleUser(user.address, "Reject")
+
+            divEl.append(acceptButtonEl)
+            divEl.append(rejectButtonEl)
+
+            containerEl.append(divEl)
+        }
+    }
+    getMailRequests();
+
+    async function handleUser(mail, task) {
+        const data = new FormData()
+        data.append("mail", mail)
+        await request(`/Admin/${task}User`, { method: "POST", body: data })
+        getMailRequests()
+    }
+</script>

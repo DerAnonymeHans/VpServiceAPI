@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="/script"></script>
+    <link href="/styles" rel="stylesheet" />
+</head>
+<body>
+    <a href="/View/Admin">Startseite</a>
+    Kleine Extras
+    <div id="sub-container">
+
+    </div>
+</body>
+</html>
+
+<script>
+    async function getSmallExtraProposals() {
+        const containerEl = document.getElementById("sub-container")
+        containerEl.innerHTML = "";
+        const requests = await request("/Admin/SmallExtraProposals");
+        for (const extra of requests) {
+            const divEl = document.createElement("div");
+            divEl.textContent = `${extra.text} | ${extra.author} | `
+
+            const acceptButtonEl = document.createElement("button");
+            acceptButtonEl.textContent = "akzeptieren"
+            acceptButtonEl.onclick = () => handleProposal(extra.text, "Accept")
+
+            const rejectButtonEl = document.createElement("button");
+            rejectButtonEl.textContent = "verwerfen"
+            rejectButtonEl.onclick = () => handleProposal(extra.text, "Reject")
+
+            divEl.append(acceptButtonEl)
+            divEl.append(rejectButtonEl)
+
+            containerEl.append(divEl)
+        }
+    }
+    getSmallExtraProposals();
+
+    async function handleProposal(text, task) {
+        const data = new FormData()
+        data.append("text", text)
+        await request(`/Admin/${task}SmallExtra`, { method: "POST", body: data })
+        getSmallExtraProposals()
+    }
+</script>

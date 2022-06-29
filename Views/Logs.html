@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link href="/styles" rel="stylesheet" />
+    <script src="/script"></script>
+    <style>
+        html{
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            background: black;
+            color: white;
+            height: 100%;
+        }
+        main{
+            border: 2px solid gray;
+            margin: 1em;
+            padding: 1em;
+            height: 90%;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+    </style>
+
+</head>
+<body>
+    <a href="/View/Admin">Startseite</a>
+    Logs
+    <main id="log-container">
+        ...
+    </main>
+    <div id="page-buttons" class="flex">
+        
+    </div>
+</body>
+</html>
+
+<script>
+    const ROW_COUNT = 100;
+    async function insertLogs(offset=0) {
+        let rows = await request(`/Logs/Rows/${ROW_COUNT}/${offset * ROW_COUNT}`);
+        rows.reverse();
+        const logContainerEl = document.getElementById("log-container");
+        logContainerEl.innerHTML = rows.join("");
+    }
+
+    async function selectPage(name) {
+        if (name === "Tail") selectTailPage();
+        else deSelectTailPage();
+
+        const buttonContainerEl = document.getElementById("page-buttons")
+        for (const button of buttonContainerEl.children) {
+            button.style.background = "gray";
+            if (button.textContent == name) button.style.background = "red";
+        }
+        if (isNaN(name)) return;
+        await insertLogs(name - 1);
+    }
+
+    async function insertButtons(){
+        let count = await request("/Logs/Count");
+        const buttonContainerEl = document.getElementById("page-buttons")
+
+        const tailButton = document.createElement("button");
+        tailButton.textContent = "Tail";
+        tailButton.onclick = () => selectPage("Tail")
+
+        buttonContainerEl.append(tailButton)
+
+        for (let i = 1; i <= Math.ceil(count / ROW_COUNT); i++) {
+            const buttonEl = document.createElement("button");
+            buttonEl.textContent = i;
+            buttonEl.onclick = () => selectPage(i)
+
+            buttonContainerEl.append(buttonEl)
+        }
+        selectPage(1)
+    }
+    insertButtons();
+
+    
+    let interval;
+
+    function selectTailPage() {
+        interval = setInterval(() => {
+            insertLogs(0)
+            console.log("insert")
+        }, 5000)
+    }
+    function deSelectTailPage() {
+        console.log("deselect")
+        clearInterval(interval)
+    }
+
+</script>

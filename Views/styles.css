@@ -1,0 +1,33 @@
+﻿body {
+    height: 100%;
+    margin: 0;
+}
+
+
+.flex{
+    display: flex;
+    align-items: baseline;
+}
+.flex > * {
+    margin: 0 1em;
+}
+
+.value-container{
+    background-color: lightgrey;
+    padding: .5em;
+}
+
+.container{
+    background-color: #eee;
+    padding: .5em;
+    margin: .5em;
+}
+
+@media only screen and (max-width: 600px) {
+    body {
+        font-size: 2rem;
+    }
+    button{
+        padding: 1em;
+    }
+}

@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+
+    <style>
+        .row-has-change{
+            color: [Color];
+        }
+        hr{
+            margin: 2em 0;
+        }
+        .link-container {
+            margin: 2em auto;
+            width: fit-content;
+        }
+        .container{
+            margin: 1em 0;
+        }
+    </style>
+</head>
+<body>
+    <img src="[ArtWorkSrc]" alt="Hallo [UserName]; [ArtWorkSrc]" style="width: 100vw; max-width: 500px;" />
+
+    <h2 style="color: [Color]; text-align: center">[GlobalExtra]</h2>
+
+    <div class="meta-container container">
+        <div>Es gibt einen neuen Vertretungsplan für deine Klassenstufe <b>[Grade]</b> für den <b>[AffectedDate]</b>. <i>(vom: [OriginDate] um [OriginTime] Uhr.)</i></div>
+    </div>
+
+    <div class="missing-teacher-container container">
+        <div>Es fehlen: [MissingTeachers]</div>
+    </div>
+
+    <hr />
+
+    [[if Information]]
+    <div class="information-container container">
+        [Information]
+    </div>
+    <hr />
+    [[endif Information]]
+
+
+
+    <div class="plan-container container">
+        <b>[AffectedWeekday]:</b>
+        <table>
+            <colgroup>
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+            </colgroup>
+            <tr>
+                <th>Klasse</th>
+                <th>Stunde</th>
+                <th>Fach</th>
+                <th>Lehrer</th>
+                <th>Raum</th>
+                <th>Info</th>
+            </tr>
+            [PlanRows]
+        </table>
+    </div>
+
+    <hr />
+    [[if AffectedWeekday2]]
+    <div class="plan-container container">
+        <b>[AffectedWeekday2]:</b>
+        <table>
+            <colgroup>
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+            </colgroup>
+            <tr>
+                <th>Klasse</th>
+                <th>Stunde</th>
+                <th>Fach</th>
+                <th>Lehrer</th>
+                <th>Raum</th>
+                <th>Info</th>
+            </tr>
+            [SecondPlanRows]
+        </table>
+    </div>
+    <hr />
+    [[endif AffectedWeekday2]]
+
+
+    <div class="link-container">
+        <a href="https://jkg-leipzig.de/vertretungsplan/"><button>Weitere Info</button></a>
+        <a href="https://kepleraner.herokuapp.com?name=[UserName]"><button href="#" style="color: [Color]">Webseite</button></a>
+    </div>
+
+    <hr />
+
+    <div class="small-extra-container container">
+        <div><b>Das heutige kleine aber feine Extra:</b></div>
+        <blockquote>
+            <i>
+                [SmallExtra]
+            </i>
+        </blockquote>
+        <p style="text-align: right; margin-right: 15vw">~[SmallExtraAuthor]</p>
+    </div>
+
+    <hr />
+
+    <img src="[QrCodeSrc]" alt="qrcode" style="width: 100vw; max-width: 500px" />
+
+    <hr />
+
+    <span>Alle Angaben ohne Gewähr</span>
+</body>
+
+</html>
+
+

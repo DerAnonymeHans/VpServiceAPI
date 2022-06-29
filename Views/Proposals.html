@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="/script"></script>
+    <link href="/styles" rel="stylesheet" />
+</head>
+<body>
+    <a href="/View/Admin">Startseite</a>
+    Kleine Extras
+    <div id="sub-container">
+
+    </div>
+</body>
+</html>
+
+<script>
+    async function getSmallExtraProposals() {
+        const containerEl = document.getElementById("sub-container")
+        containerEl.innerHTML = "";
+        const requests = await request("/Admin/Proposals");
+        for (const proposal of requests) {
+            const divEl = document.createElement("div");
+            divEl.textContent = `${proposal} | `
+
+            containerEl.append(divEl)
+        }
+    }
+    getSmallExtraProposals();
+
+</script>

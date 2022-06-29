@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <!-- <link href="/styles.css" rel="stylesheet" />
+    <script src="script.js"></script> -->
+    <link href="/styles" rel="stylesheet" />
+    <script src="/script"></script>
+    
+</head>
+<body>
+    <a href="/View/Admin">Startseite</a>
+    <hr>
+    <h1>Routine</h1>
+    <main>
+        <div class="container">
+            <h3>Start/Stop</h3>
+            <div class="flex">
+                <button id="startInterval" onclick="post('startInterval')" data-post="/Routine/Begin">Start</button>
+                <button id="stopInterval" onclick="post('stopInterval')" data-post="/Routine/Stop">Stop</button>
+                läuft:
+                <div class="value-container" data-get="/Routine/IsRunning"></div>
+            </div>
+
+        </div>
+        <div class="container">
+            <h3>Starte einmal</h3>
+            <div class="flex">
+                <button id="beginOnce" onclick="post('beginOnce')" data-post="/Routine/BeginOnce">Los</button>
+            </div>
+
+        </div>
+        <div class="container">
+            <h3>Change Interval</h3>
+            <div class="flex">
+                <input type="number" id="changeInterval" min="0" max="3600000" step="60000" data-post="/Routine/ChangeInterval/{}">
+                <span>(entspricht: </span>
+                <span id="intervalInMinutes"></span>
+                <span>Minuten)</span>
+                <div class="value-container" data-get="/Routine/Interval"></div>
+                <button onclick="post('changeInterval')">Ändern</button>
+            </div>
+        </div>
+        <div class="container">
+            <h3>Change Force Modes</h3>
+            <div id="force-modes-container">
+
+            </div>
+        </div>
+    </main>
+</body>
+<script src="./script.js"></script>
+<script>
+    document.getElementById("changeInterval").oninput = (e) => {
+        document.getElementById("intervalInMinutes").innerText = parseInt(e.target.value) / 60_000;
+    }
+
+    async function getForceModes() {
+        const containerEl = document.getElementById("force-modes-container")
+        containerEl.innerHTML = "";
+        const modes = await request("/Admin/ForceModes");
+        for (const mode of modes) {
+            const divEl = document.createElement("div");
+            divEl.classList.add("flex");
+            divEl.textContent = mode;
+
+            const valueEl = document.createElement("div");
+            valueEl.classList.add("value-container");
+            valueEl.dataset.get = `/Admin/ForceMode/${mode}`
+
+            const toggleBtnEl = document.createElement("button");
+            toggleBtnEl.textContent = "Toggle";
+            toggleBtnEl.onclick = async () => await toggleForceMode(mode)
+
+            divEl.append(valueEl)
+            divEl.append(toggleBtnEl)
+
+            containerEl.append(divEl)
+        }
+        reload()
+    }
+    getForceModes();
+
+    async function toggleForceMode(name){
+        await request(`/Admin/ToggleForceMode/${name}`, {method: "POST"})
+        reload();
+    }
+
+
+
+    
+</script>
+</html>
