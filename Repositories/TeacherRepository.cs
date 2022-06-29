@@ -33,12 +33,13 @@ namespace VpServiceAPI.Repositories
         public async Task UpdateTeacherList()
         {
             string HTML;
+            var newTeachers = new List<Teacher>();
             try
             {
                 HTML = await WebScraper.GetFromKepler("/kollegiuml");                
                 HTML = HTML[HTML.IndexOf("<article")..HTML.IndexOf("</article>")];
-                string tableBody = HTML[HTML.IndexOf("<tbody")..HTML.IndexOf("</tbody>")];
-                Teachers = new();
+                string tableBody = HTML[HTML.IndexOf("<tbody")..HTML.IndexOf("</tbody>")];                
+
                 for (int i = 0; i < 150; i++)
                 {
                     // selects <tr> row
@@ -56,7 +57,7 @@ namespace VpServiceAPI.Repositories
 
                     tableBody = tableBody[(trEndIdx + tagName.Length + 3)..];
                     if (rowArr.Length == 0 || rowArr is null) continue;
-                    Teachers.Add(new Teacher(
+                    newTeachers.Add(new Teacher(
                         rowArr[0].Split(' ')[0],
                         rowArr[0].Split(' ')[1],
                         rowArr[1],
@@ -71,7 +72,8 @@ namespace VpServiceAPI.Repositories
             {
                 Logger.Error(LogArea.Routine, ex, "Tried to update teacher list");
                 return;
-            }            
+            }
+            Teachers = newTeachers;
         }
     }
 }
