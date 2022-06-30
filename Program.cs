@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using VpServiceAPI.Tools;
 
 namespace VpServiceAPI
 {
@@ -19,6 +20,7 @@ namespace VpServiceAPI
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production") StartRoutine();
             CreateHostBuilder(args).Build().Run();
+
         }
 
         private static async void StartRoutine()

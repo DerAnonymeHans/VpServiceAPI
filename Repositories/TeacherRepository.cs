@@ -38,7 +38,7 @@ namespace VpServiceAPI.Repositories
             {
                 HTML = await WebScraper.GetFromKepler("/kollegiuml");                
                 HTML = HTML[HTML.IndexOf("<article")..HTML.IndexOf("</article>")];
-                string tableBody = HTML[HTML.IndexOf("<tbody")..HTML.IndexOf("</tbody>")];                
+                string tableBody = HTML[HTML.IndexOf("<tbody")..HTML.IndexOf("</tbody>")];
 
                 for (int i = 0; i < 150; i++)
                 {

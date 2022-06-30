@@ -192,10 +192,8 @@ namespace VpServiceAPI.Jobs.Checking
         {
             try
             {
-                string title = new Regex("(?<=<titel>).*(?=</titel>)")
-                .Match(PlanHTML).Value;
-                string originDateString = new Regex("(?<=<datum>).*(?=</datum>)")
-                    .Match(PlanHTML).Value;
+                string title = XMLParser.GetNodeContent(PlanHTML, "titel");
+                string originDateString = XMLParser.GetNodeContent(PlanHTML, "datum");
 
                 var affectedDate = GetAffectedDate(title);
                 var originDate = GetOriginDate(originDateString);
@@ -249,25 +247,14 @@ namespace VpServiceAPI.Jobs.Checking
         }
         private List<PlanRow> HTMLIntoRows()
         {
-            string tableHTML;
-            try
-            {
-                tableHTML = PlanHTML[PlanHTML.IndexOf("<haupt>")..];
-                tableHTML = tableHTML[..tableHTML.IndexOf("</haupt>")];
-            }
-            catch
-            {
-                return new List<PlanRow>();
-            }
+            var tableHTML = XMLParser.GetNodeContent(PlanHTML, "haupt");
+            if(tableHTML is null) return new List<PlanRow>();            
 
             var table = new List<PlanRow>();
             for (int i = 0; i < 100; i++)
             {
-                // selects <tr> row
-                int trStartIdx = tableHTML.IndexOf("<aktion");
-                int trEndIdx = tableHTML.IndexOf("</aktion>");
-                if (trStartIdx == -1) break;
-                string rowStr = tableHTML.Substring(trStartIdx + 7, trEndIdx - trStartIdx);
+                var rowStr = XMLParser.GetNodeContent(tableHTML, "aktion");
+                if (rowStr is null) break;
 
                 Func<string, string> GetVal = tag => Regex.Match(rowStr, $@"(?<=<{tag}>).+(?=</{tag}>)").Value;
 
@@ -281,7 +268,7 @@ namespace VpServiceAPI.Jobs.Checking
                     Info = GetVal("info"),
                 };
 
-                tableHTML = tableHTML[(trEndIdx + 8)..];
+                tableHTML = tableHTML[rowStr.Length..];
                 table.Add(row);
             }
 
@@ -289,24 +276,17 @@ namespace VpServiceAPI.Jobs.Checking
         }
         private List<string> GetInformation()
         {
-            string fussHTML;
-            try
-            {
-                fussHTML = PlanHTML[PlanHTML.IndexOf("<fuss>")..PlanHTML.IndexOf("</fuss>")];
-            }
-            catch
-            {
-                return new List<string>();
-            }
+            var fussHTML = XMLParser.GetNodeContent(PlanHTML, "fuss");
+            if(fussHTML is null) return new List<string>();
             return Regex.Matches(fussHTML, @"(?<=<fussinfo>).+(?=</fussinfo>)")
                 .Select(match => match.Value)
                 .ToList();
         }
         private List<string>? GetMissingTeacher()
         {
-            var match = Regex.Match(PlanHTML, @"(?<=<abwesendl>).+(?=</abwesendl>)");
-            if (!match.Success) return null;
-            return match.Value.Split(',').ToList();
+            var missingTeacher = XMLParser.GetNodeContent(PlanHTML, "abwesendl");
+            if (missingTeacher is null) return null;
+            return missingTeacher.Split(',').ToList();
         }
     }
 }
