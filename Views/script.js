@@ -40,7 +40,8 @@ async function post(valElId){
 
 
 window.onload = () => {
-   getAllValues();
+    if (window.location.origin === "http://vp-service-api.herokuapp.com") window.location = "https://vp-service-api.herokuapp.com/admin"
+    getAllValues();
 }
 
 function reload(){

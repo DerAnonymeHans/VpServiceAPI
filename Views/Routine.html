@@ -44,10 +44,19 @@
         </div>
         <div class="container">
             <h3>Change Force Modes</h3>
+            <p>on_info_change - notify when information (hitzefrei, sportfest, gedöns halt) changes</p>
             <div id="force-modes-container">
 
             </div>
         </div>
+        <div class="container">
+            <h3>Change Grade Modes</h3>
+            <p>NORMAL - standard notification (only when changes in plan or email is forced); STOP - never notify grade; FORCE - notify even when no changes; SPECIAL - notify as standard but use special extra; SPECIAL_FORCE- notify as force but use special extra</p>
+            <div id="grade-modes-container">
+
+            </div>
+        </div>
+
     </main>
 </body>
 <script src="./script.js"></script>
@@ -81,14 +90,44 @@
         reload()
     }
     getForceModes();
-
     async function toggleForceMode(name){
         await request(`/Admin/ToggleForceMode/${name}`, {method: "POST"})
         reload();
     }
 
 
+    async function renderGradeModes() {
+        const containerEl = document.getElementById("grade-modes-container")
+        containerEl.innerHTML = "";
+        const buttons = ["normal", "stop", "force", "special", "special_force"]
+        for (let i = 5; i <= 12; i++) {
+            const divEl = document.createElement("div");
+            divEl.classList.add("flex");
+            divEl.textContent = `Stufe: ${i}`;
 
+            const valueEl = document.createElement("div");
+            valueEl.classList.add("value-container");
+            valueEl.dataset.get = `/Admin/GradeMode/${i}`
+
+            divEl.append(valueEl)
+
+            for (const val of buttons) {
+                const buttonEl = document.createElement("button");
+                buttonEl.textContent = val;
+                buttonEl.onclick = async () => await changeGradeMode(i, val)
+                divEl.append(buttonEl)
+            }
+
+            containerEl.append(divEl)
+        }
+        reload()
+    }
+    renderGradeModes();
+
+    async function changeGradeMode(grade, mode) {
+        await request(`/Admin/ChangeGradeMode/${grade}/${mode}`, { method: "POST" })
+        reload();
+    }
     
 </script>
 </html>

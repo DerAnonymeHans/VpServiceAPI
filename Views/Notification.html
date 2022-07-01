@@ -16,7 +16,15 @@
         <div class="flex">
             <textarea type="text" id="globalExtra" data-post="/Notification/GlobalExtra/{}"></textarea>
             <div class="value-container" data-get="/Notification/GlobalExtra"></div>
-            <button id="stopInterval" onclick="post('globalExtra')" data-post="/Routine/Stop">Setzen</button>
+            <button id="stopInterval" onclick="post('globalExtra')">Setzen</button>
+        </div>
+    </div>
+    <div class="container">
+        <h3>Special Extra</h3>
+        <div class="flex">
+            <textarea type="text" id="specialExtra" data-post="/Notification/SpecialExtra/{}"></textarea>
+            <div class="value-container" data-get="/Notification/SpecialExtra"></div>
+            <button id="stopInterval" onclick="post('specialExtra')">Setzen</button>
         </div>
     </div>
     <div class="container">
@@ -36,7 +44,7 @@
                 Schriftfarbe (white, black, red, green, gray, blue)
                 <input type="text" name="fontColor" />
                 <button type="submit">Hinzufügen</button>
-            </form>  
+            </form>
         </div>
     </div>
     <div class="container">
@@ -47,7 +55,6 @@
                 <div data-get="/Notification/CurrentForcedArtwork"></div>
             </div>
             <ul id="artworkSelection-container">
-
             </ul>
         </div>
     </div>

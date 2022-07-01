@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Enums;
+using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.WebResponse;
 
@@ -98,6 +100,19 @@ namespace VpServiceAPI.Controllers
         public async Task<WebMessage> SetGlobalExtra(string value)
         {
             return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData("EXTRA", "global_extra", value), Request.Path.Value, $"Set global extra to {value}");
+        }
+
+        [HttpGet]
+        [Route("/Notification/SpecialExtra")]
+        public async Task<WebResponse<string>> GetSpecialExtra()
+        {
+            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData("EXTRA", "special_extra"))[0], Request.Path.Value);
+        }
+        [HttpPost]
+        [Route("/Notification/SpecialExtra/{value}")]
+        public async Task<WebMessage> SetSpecialExtra(string value)
+        {
+            return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData("EXTRA", "special_extra", value), Request.Path.Value, $"Set special extra to {value}");
         }
 
         [HttpPost]
@@ -235,9 +250,43 @@ namespace VpServiceAPI.Controllers
         }
 
 
-
-
-
+        [HttpGet]
+        [Route("GradeMode/{grade}")]
+        public async Task<WebResponse<string>> GetGradeMode(string grade)
+        {
+            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData("GRADE_MODE", grade))[0], Request.Path.Value);
+        }
+        [HttpPost]
+        [Route("ChangeGradeMode/{grade}/{mode}")]
+        public async Task<WebMessage> ChangeGradeMode(string grade, string mode)
+        {
+            try
+            {
+                var _mode = mode switch
+                {
+                    "normal" => GradeMode.NORMAL,
+                    "force" => GradeMode.FORCE,
+                    "stop" => GradeMode.STOP,
+                    "special" => GradeMode.SPECIAL_EXTRA,
+                    "special_force" => GradeMode.SPECIAL_EXTRA_FORCE,
+                    _ => throw new AppException($"Specified mode '{mode}' is not available")
+                };
+                await WebResponder.RunWith(async () => await DataQueries.SetRoutineData("GRADE_MODE", grade, _mode.ToString()), Request.Path.Value);
+                return new WebMessage
+                {
+                    Message = $"Der GRADE_MODE von {grade} wurde zu {_mode} geändert.",
+                    IsSuccess = true,
+                };
+            }
+            catch (Exception ex)
+            {
+                return new WebMessage
+                {
+                    Message = ex.Message,
+                    IsSuccess = false,
+                };
+            }
+        }
 
 
 
