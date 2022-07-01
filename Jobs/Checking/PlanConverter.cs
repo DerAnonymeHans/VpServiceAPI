@@ -256,7 +256,7 @@ namespace VpServiceAPI.Jobs.Checking
                 var rowStr = XMLParser.GetNodeContent(tableHTML, "aktion");
                 if (rowStr is null) break;
 
-                Func<string, string> GetVal = tag => Regex.Match(rowStr, $@"(?<=<{tag}>).+(?=</{tag}>)").Value;
+                Func<string, string> GetVal = tag => XMLParser.GetNodeContent(rowStr, tag) ?? "";
 
                 var row = new PlanRow
                 {

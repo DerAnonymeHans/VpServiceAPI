@@ -18,8 +18,9 @@ namespace VpServiceAPI.Tools
         private static Func<string, string?> GetEnvVar = Environment.GetEnvironmentVariable;
         private static Func<bool> IsProduction = () => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
 
-        private bool _allUsersWithTestNotificator { get; init; } = true;
-
+        private bool _allUsersWithTestNotificator = false;
+        private bool _forceTestUsers = true;
+        private bool _forceTestNotificator = true;
 
         public DependencyInjector(ref IServiceCollection services)
         {
@@ -93,7 +94,7 @@ namespace VpServiceAPI.Tools
             }
             else
             {
-                InjectWithCondition<INotificator, TestNotificator, ProdNotificator>(_allUsersWithTestNotificator);
+                InjectWithCondition<INotificator, TestNotificator, ProdNotificator>(_allUsersWithTestNotificator || _forceTestNotificator);
             }
         }
         private void InjectRepositories()
@@ -110,7 +111,7 @@ namespace VpServiceAPI.Tools
             }
             else
             {
-                InjectWithCondition<IUserRepository, ProdUserRepository, TestUserRepository>(_allUsersWithTestNotificator);
+                InjectWithCondition<IUserRepository, ProdUserRepository, TestUserRepository>(_allUsersWithTestNotificator && !_forceTestUsers);
             }
         }
         private void InjectStatisticCreation()

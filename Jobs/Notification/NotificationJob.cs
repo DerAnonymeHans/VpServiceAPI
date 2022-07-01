@@ -120,13 +120,14 @@ namespace VpServiceAPI.Jobs.Notification
 
                 if (!PlanModel._forceMail)
                 {
-                    if (!gradeBody.IsAffected) continue;
+                    if (!gradeBody.IsSendMail) continue;
                 }
 
                 var userBody = await UserTask.Begin(user);
 
                 var notifBody = new NotificationBody();
                 notifBody.Set(GlobalBody).Set(gradeBody).Set(userBody);
+                notifBody.GlobalExtra = gradeBody.GradeExtra ?? notifBody.GlobalExtra;
                 var notification = NotificationBuilder.Build(notifBody, user.Address);
                 Notificator.Notify(notification);
             }

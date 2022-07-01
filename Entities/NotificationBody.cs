@@ -25,7 +25,8 @@ namespace VpServiceAPI.Entities
         public string Grade { get; set; } = "";
         public List<NotificationRow> Rows { get; set; } = new();
         public List<NotificationRow> Rows2 { get; set; } = new();
-        public bool IsAffected { get; set; }
+        public bool IsSendMail { get; set; }
+        public string? GradeExtra { get; set; }
     }
 
     public record UserNotificationBody : IUserNotificationBody
@@ -52,7 +53,8 @@ namespace VpServiceAPI.Entities
         public string Grade { get; set; } = "";
         public List<NotificationRow> Rows { get; set; } = new();
         public List<NotificationRow> Rows2 { get; set; } = new();
-        public bool IsAffected { get; set; }
+        public bool IsSendMail { get; set; }
+        public string? GradeExtra { get; set; }
 
 
         public string UserName { get; set; } = "";

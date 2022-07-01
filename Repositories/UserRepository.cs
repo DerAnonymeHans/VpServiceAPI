@@ -33,6 +33,12 @@ namespace VpServiceAPI.Repositories
                     Address = "pascal.setzer@gmail.com",
                     Grade = "11"
                 },
+                new User
+                {
+                    Name = "Hans",
+                    Address = "hans@gmail.com",
+                    Grade = "10"
+                },
             };
         }
 
