@@ -22,7 +22,7 @@ namespace VpServiceAPI.Jobs.Checking
         }
 
         public async Task<bool?> Check(bool isSecondPlan=false, int dayShift=0)
-        {
+        {            
             string html = await PlanHTMLProvider.GetPlanHTML(isSecondPlan ? 1 + dayShift : 0 + dayShift);
             if (string.IsNullOrEmpty(html)) return null;
             var testModel = PlanConverter.Convert(html);
@@ -31,8 +31,10 @@ namespace VpServiceAPI.Jobs.Checking
 
             if (isSecondPlan) return true;
 
+
             if(await IsForceMail())
             {
+                Logger.Debug("Force");
                 PlanModel._forceMail = true;
                 return true;
             }

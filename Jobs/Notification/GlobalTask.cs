@@ -152,36 +152,36 @@ namespace VpServiceAPI.Jobs.Notification
             return importantDay.icon switch
             {
                 1 => "sunny",           // Sonne
-                2 => "sunny_cloudy",    // Sonne, leicht bewölkt
+                2 => "sunny_bit_cloudy",// Sonne, leicht bewölkt
                 3 => "sunny_cloudy",    // Sonne, bewölkt
                 4 => "cloudy",          // Wolken
                 5 => "foggy",           // Nebel
                 6 => "foggy",           // Nebel, rutschgefahr
-                7 => "rainy",           // leichter Regen
+                7 => "sprinkly",        // leichter Regen
                 8 => "rainy",           // Regen
                 9 => "rainy",           // starker Regen
-                10 => "rainy",          // leichter Regen, rutschgefahr
-                11 => "rainy",          // starker Regen, rutschgefahr
+                10 => "icy",            // leichter Regen, rutschgefahr
+                11 => "icy",            // starker Regen, rutschgefahr
                 12 => "rainy",          // Regen, vereinzelt Schneefall
                 13 => "snowy",          // Regen, vermehrt Schneefall
                 14 => "snowy",          // leichter Schneefall
                 15 => "snowy",          // Schneefall
                 16 => "snowy",          // starker Schneefall
                 17 => "cloudy",         // Wolken, (Hagel)
-                18 => "sunny",          // Sonne, leichter Regen
+                18 => "sprinkly",       // Sonne, leichter Regen
                 19 => "sunny_cloudy",   // Sonne, starker Regen
                 20 => "sunny_cloudy",   // Sonne, Regen, vereinzelter Schneefall
                 21 => "snowy",          // Sonne, Regen, vermehrter Schneefall
                 22 => "snowy",          // Sonne, vereinzelter Schneefall
                 23 => "snowy",          // Sonne, vermehrter Schneefall
                 24 => "sunny_cloudy",   // Sonne, (Hagel)
-                25 => "sunny_cloudy",   // Sonne, (staker Hagel)
+                25 => "hagel",          // Sonne, (staker Hagel)
                 26 => "thunder",        // Gewitter
                 27 => "thunder",        // Gewitter, Regen
                 28 => "thunder",        // Gewitter, starker Regen
                 29 => "thunder",        // Gewitter, (Hagel)
-                30 => "thunder",        // Gewitter, (starker Hagel)
-                31 => "cloudy",         // Wind
+                30 => "hagel",          // Gewitter, (starker Hagel)
+                31 => "windy",          // Wind
                 _ => "no-weather-found"
             };
         }

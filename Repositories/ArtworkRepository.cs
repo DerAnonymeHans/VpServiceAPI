@@ -21,7 +21,7 @@ namespace VpServiceAPI.Repositories
 
         public async Task Add(Artwork artwork)
         {
-            await DataQueries.Save("INSERT INTO artwork_data(name, image, color, font_color, start_date, end_date) VALUES (@name, @image, @color, @fontColor, @startDate, @endDate)", new { name = artwork.Name, image = artwork.Image, color = artwork.Color, fontColor=artwork.FontColor.ToString(), startDate = artwork.Timespan.FromToString(), endDate = artwork.Timespan.ToToString() });
+            await DataQueries.Save("INSERT INTO artwork_data(name, image, color, font_color, start_date, end_date) VALUES (@name, @image, @color, @fontColor, @startDate, @endDate)", new { name = artwork.Name, image = artwork.Image, color = artwork.Color, fontColor=artwork.FontColor.Name.ToLower(), startDate = artwork.Timespan.FromToString(), endDate = artwork.Timespan.ToToString() });
             Logger.Info(LogArea.Notification, "Added new Artwork " + artwork.Name);
         }
 

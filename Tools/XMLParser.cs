@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 
 namespace VpServiceAPI.Tools
 {
@@ -33,7 +34,8 @@ namespace VpServiceAPI.Tools
                 int offset = startIdx + 1;
                 while (true)
                 {
-                    int start = xml.IndexOf($"<{nodeTag}", offset);
+                    //int start = Regex.Match(xml, @$"<{nodeTag}\s").Index;
+                    int start = xml.IndexOf($"<{nodeTag}>", offset);
                     int end = xml.IndexOf($"</{nodeTag}>", offset);
 
                     if(start < end && start != -1)

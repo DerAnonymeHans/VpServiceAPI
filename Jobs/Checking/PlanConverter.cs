@@ -171,10 +171,6 @@ namespace VpServiceAPI.Jobs.Checking
                 return null;
             };
             var table = HTMLIntoRows();
-            if (table.Count == 0)
-            {
-                Logger.Info(LogArea.PlanConverting, "Quitted conversion of planHTML because of lack of rows.");
-            }
 
             return new PlanModel
             {
