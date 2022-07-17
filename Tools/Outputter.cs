@@ -72,7 +72,7 @@ namespace VpServiceAPI.Tools
             string type = ToType(color);
             string time = output[0..19];
             string message = output[19..];
-            await DataQueries.Save("INSERT INTO logs(time, type, message, extra) VALUES (@time, @type, @message, @extra)", new { time = time, type = type, message = message, extra = "" });
+            await DataQueries.Save("INSERT INTO logs(time, type, message, extra) VALUES (@time, @type, @message, @extra)", new { time, type, message, extra = "" });
         }
 
         public async Task Push(List<string> output, OutputColor color = OutputColor.Blue)
@@ -83,7 +83,7 @@ namespace VpServiceAPI.Tools
             List<string> extras = new();
             for (int i = 1; i < output.Count; i++) extras.Add(output[i]);
             string extra = string.Join(" | ", extras);
-            await DataQueries.Save("INSERT INTO logs(time, type, message, extra) VALUES (@time, @type, @message, @extra)", new { time = time, type = type, message = message, extra = extra });
+            await DataQueries.Save("INSERT INTO logs(time, type, message, extra) VALUES (@time, @type, @message, @extra)", new { time, type, message, extra });
 
         }
     }

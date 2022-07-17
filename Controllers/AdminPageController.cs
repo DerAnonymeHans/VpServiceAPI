@@ -20,9 +20,9 @@ namespace VpServiceAPI.Controllers
         private readonly IMyLogger Logger;
         private readonly IRoutine Routine;
         private readonly IDataQueries DataQueries;
-        private readonly IDataAccess DataAccess;
+        private readonly IDBAccess DataAccess;
 
-        public AdminPageController(IMyLogger logger, IRoutine routine, IDataQueries dataQueries, IDataAccess dataAccess)
+        public AdminPageController(IMyLogger logger, IRoutine routine, IDataQueries dataQueries, IDBAccess dataAccess)
         {
             Logger = logger;
             Routine = routine;

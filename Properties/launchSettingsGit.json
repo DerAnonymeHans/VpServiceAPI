@@ -25,10 +25,10 @@
         "GEN_STATS": "false",
         "VP_SOURCE": "VP24",
 
-        "DB_HOST": "remotemysql.com",
-        "DB_USER": "",
-        "DB_PW": "",
-        "DB_NAME": "",
+        "DB_1_HOST": "remotemysql.com",
+        "DB_1_USER": "",
+        "DB_1_PW": "",
+        "DB_1_NAME": "",
 
         "SMTP_USER": "vp.mailservice.kepler@gmail.com",
         "SMTP_PW": "",

@@ -18,9 +18,9 @@ namespace VpServiceAPI.Tools
         private static Func<string, string?> GetEnvVar = Environment.GetEnvironmentVariable;
         private static Func<bool> IsProduction = () => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
 
-        private bool _allUsersWithTestNotificator = false;
-        private bool _forceTestUsers = true;
-        private bool _forceTestNotificator = true;
+        private bool _allUsersWithTestNotificator = true; // or test users with prod notificator
+        private bool _forceTestUsers = false;
+        private bool _forceTestNotificator = false;
 
         public DependencyInjector(ref IServiceCollection services)
         {
@@ -42,7 +42,7 @@ namespace VpServiceAPI.Tools
             Services
                 .AddSingleton<IMyLogger, Logger>()
                 .AddSingleton<IRoutine, Routine>()
-                .AddSingleton<IDataAccess, DBAccess>()
+                .AddSingleton<IDBAccess, DBAccess>()
                 .AddSingleton<IDataQueries, DataQueries>()
                 .AddSingleton<IWebScraper, WebScraper>();
             if (IsProduction())

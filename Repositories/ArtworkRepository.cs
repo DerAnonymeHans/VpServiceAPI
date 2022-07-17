@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
 using VpServiceAPI.Exceptions;
@@ -25,14 +26,32 @@ namespace VpServiceAPI.Repositories
             Logger.Info(LogArea.Notification, "Added new Artwork " + artwork.Name);
         }
 
+        private async Task<byte[]> ReadArtworkFile(string name)
+        {
+            return await File.ReadAllBytesAsync(AppDomain.CurrentDomain.BaseDirectory + $"Pictures/Artworks/{name}.png");
+        }
+
         public async Task<Artwork> Default()
         {
-            return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE 1 LIMIT 1", new { }))[0];
+            try
+            {
+                return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE 1 LIMIT 1", new { }))[0];
+            }catch(Exception ex)
+            {
+                return new Artwork("rainbow_car", await ReadArtworkFile("rainbow_car"), "red", "white", "0.0.", "0.0.");
+            }
         }
 
         public async Task<ArtworkMeta> DefaultMeta()
         {
-            return (await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE 1 LIMIT 1", new { }))[0];
+            try
+            {
+                return (await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE 1 LIMIT 1", new { }))[0];
+            }catch(Exception ex)
+            {
+                Logger.Error(LogArea.Artwork, ex, "Tried to get default meta");
+                return new ArtworkMeta("rainbow_car", "0.0.", "0.0.", "red", "white");
+            }
         }
 
         public Artwork FormFileToArtwork(IFormFile file, IFormCollection form)
@@ -51,18 +70,44 @@ namespace VpServiceAPI.Repositories
         public async Task<Artwork> GetArtwork(string name)
         {
             if (!await IncludesArtwork(name)) return await Default();
-            return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE name=@name", new { name = name }))[0];
+            try
+            {
+                return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE name=@name", new { name = name }))[0];
+            }catch(Exception ex)
+            {
+                try
+                {
+                    return new Artwork(name, await ReadArtworkFile(name), "red", "white", "0.0.", "0.0.");
+                }
+                catch
+                {
+                    return await Default();
+                }
+            }
         }
 
         public async Task<ArtworkMeta> GetArtworkMeta(string name)
         {
             if (!await IncludesArtwork(name)) return await DefaultMeta();
-            return (await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE name=@name", new { name = name }))[0];
+            try
+            {
+                return (await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE name=@name", new { name = name }))[0];
+            }catch(Exception ex)
+            {
+                return new ArtworkMeta(name, "0.0.", "0.0.", "red", "white");
+            }
         }
 
         public async Task<ArtworkMeta?> GetSpecialArtworkForDate(DateTime dateTime)
         {
-            var artworkMetaList = await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE 1", new { });
+            var artworkMetaList = new List<ArtworkMeta>();
+            try
+            {
+                artworkMetaList = await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE 1", new { });
+            }catch(Exception ex)
+            {
+                Logger.Error(LogArea.Artwork, ex, "Tried to get artwork meta");
+            }
 
             foreach (var artwork in artworkMetaList)
             {
@@ -77,7 +122,14 @@ namespace VpServiceAPI.Repositories
 
         public async Task<bool> IncludesArtwork(string name)
         {
-            return (await DataQueries.Load<string, dynamic>("SELECT name FROM artwork_data WHERE name=@name", new { name = name })).Count > 0;
+            try
+            {
+                return (await DataQueries.Load<string, dynamic>("SELECT name FROM artwork_data WHERE name=@name", new { name = name })).Count > 0;
+            }catch(Exception ex)
+            {
+                Logger.Error(LogArea.Artwork, ex, "Tried to check if artwork is included");
+                return false;
+            }
         }
 
     }

@@ -33,12 +33,6 @@ namespace VpServiceAPI.Repositories
                     Address = "pascal.setzer@gmail.com",
                     Grade = "11"
                 },
-                new User
-                {
-                    Name = "Hans",
-                    Address = "hans@gmail.com",
-                    Grade = "10"
-                },
             };
         }
 
@@ -100,7 +94,8 @@ namespace VpServiceAPI.Repositories
 
         public async Task<List<User>> GetUsers(string status="NORMAL")
         {
-            return await DataQueries.Load<User, dynamic>("SELECT name, address, grade FROM `users` WHERE status=@status ORDER BY `grade`", new { status });
+            //return await DataQueries.Load<User, dynamic>("SELECT name, address, grade FROM `users` WHERE status=@status ORDER BY `grade`", new { status });
+            return await DataQueries.GetUsers(status);
         }
 
         public async Task<User> ValidateUser(string name, string mail, string grade)
@@ -144,6 +139,8 @@ namespace VpServiceAPI.Repositories
         public async Task AcceptUser(string mail)
         {
             await DataQueries.Save("UPDATE users SET status='NORMAL' WHERE address=@address", new { address = mail });
+            User user = (await DataQueries.Load<User, dynamic>("SELECT name, address, grade FROM users WHERE address=@address", new { address = mail }))[0];
+            await DataQueries.AddUserToBackupDB(user);
         }
 
         public async Task RejectUser(string mail)

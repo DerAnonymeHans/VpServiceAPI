@@ -10,36 +10,50 @@ using System.Threading.Tasks;
 
 namespace VpServiceAPI.Tools
 {
-    public class DBAccess : IDataAccess
+    public class DBAccess : IDBAccess
     {
+        private string DBConString { get; set; }
+        public int CurrentDB { get; private set; }
 
-        private string DBConString = $"server={Environment.GetEnvironmentVariable("DB_HOST")};uid={Environment.GetEnvironmentVariable("DB_USER")};pwd={Environment.GetEnvironmentVariable("DB_PW")};database={Environment.GetEnvironmentVariable("DB_NAME")}";
-        //private readonly IMyLogger Logger;
-        public DBAccess(/*IMyLogger logger*/)
+        public DBAccess()
         {
-            //Logger = logger;
-            var host = Environment.GetEnvironmentVariable("DB_HOST");
-            ChangeConnection(
-                Environment.GetEnvironmentVariable("DB_HOST"),
-                Environment.GetEnvironmentVariable("DB_USER"),
-                Environment.GetEnvironmentVariable("DB_PW"),
-                Environment.GetEnvironmentVariable("DB_NAME")
-            );
+            var host = Environment.GetEnvironmentVariable("DB_1_HOST");
+            SwitchToDB(1);
         }
-        public async Task<List<T>> Load<T, U>(string sql, U parameters)
+        public async Task<List<T>> Load<T, U>(string sql, U parameters, int tryNumber=1)
         {
-            var con = new MySqlConnection(DBConString);
-            var rows = await con.QueryAsync<T>(sql, parameters);
-            con.Close();
-            return rows.ToList();
+            try
+            {
+                var con = new MySqlConnection(DBConString);
+                var rows = await con.QueryAsync<T>(sql, parameters);
+                con.Close();
+                return rows.ToList();
+            }
+            catch (MySqlException ex)
+            {
+                if (ex.Message != "Unable to connect to any of the specified MySQL hosts.") throw ex;
+                if (tryNumber == 2) throw ex;
+                SwitchToDB(tryNumber + 1);
+                return await Load<T, U>(sql, parameters, tryNumber + 1);
+            }
         }
 
-        public async Task<int> Save<T>(string sql, T parameters)
+        public async Task<int> Save<T>(string sql, T parameters, int tryNumber = 1)
         {
-            var con = new MySqlConnection(DBConString);
-            int affectedRows = await con.ExecuteAsync(sql, parameters);
-            con.Close();
-            return affectedRows;
+            try
+            {
+                var con = new MySqlConnection(DBConString);
+                int affectedRows = await con.ExecuteAsync(sql, parameters);
+                con.Close();
+                return affectedRows;
+            }
+            catch (MySqlException ex)
+            {
+                if (ex.Message != "Unable to connect to any of the specified MySQL hosts.") throw ex;
+                if (tryNumber == 2) throw ex;
+                SwitchToDB(tryNumber + 1);
+                return await Save(sql, parameters, tryNumber + 1);
+            }
         }
 
         public async Task<int> Delete<T>(string sql, T parameters)
@@ -50,7 +64,8 @@ namespace VpServiceAPI.Tools
         public void ChangeConnection(string? host, string? user, string? pw, string? dbName)
         {
             DBConString = $"SERVER={host}; DATABASE={dbName}; UID={user}; PASSWORD={pw}";
-            //Logger.Warn(LogArea.DataAccess, "Changed Database Connection to:", DBConString);
+
+
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Changed Database Connection to: " + DBConString);
             Console.ForegroundColor = ConsoleColor.White;
@@ -64,6 +79,13 @@ namespace VpServiceAPI.Tools
 
             con.Close();
             return id;
+        }
+
+        public void SwitchToDB(int number)
+        {
+            CurrentDB = number;
+            Func<string, string> GetDBVar = (string name) => Environment.GetEnvironmentVariable($"DB_{number}_{name}");
+            ChangeConnection(GetDBVar("HOST"), GetDBVar("USER"), GetDBVar("PW"), GetDBVar("NAME"));
         }
     }
 }

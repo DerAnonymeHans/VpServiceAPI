@@ -32,6 +32,7 @@ namespace VpServiceAPI.Interfaces
         StatAPI,
         UserAPI,
         Admin,
-        Attack
+        Attack,
+        Artwork
     }
 }

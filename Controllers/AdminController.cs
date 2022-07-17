@@ -25,16 +25,17 @@ namespace VpServiceAPI.Controllers
         private readonly IMyLogger Logger;
         private readonly IRoutine Routine;
         private readonly IDataQueries DataQueries;
-        private readonly IDataAccess DataAccess;
+        private readonly IDBAccess DataAccess;
         private readonly IArtworkRepository ArtworkRepository;
         private readonly IStatExtractor StatExtractor;
         private readonly IUserRepository UserRepository;
         private readonly IExtraRepository ExtraRepository;
+        private readonly IWebScraper WebScraper;
 
         private readonly WebResponder WebResponder;
 
 
-        public AdminController(IMyLogger logger, IRoutine routine, IDataQueries dataQueries, IDataAccess dataAccess, IArtworkRepository artworkRepository, IStatExtractor statExtractor, IUserRepository userRepository, IExtraRepository extraRepository)
+        public AdminController(IMyLogger logger, IRoutine routine, IDataQueries dataQueries, IDBAccess dataAccess, IArtworkRepository artworkRepository, IStatExtractor statExtractor, IUserRepository userRepository, IExtraRepository extraRepository, IWebScraper webScraper)
         {
             Logger = logger;
             Routine = routine;
@@ -46,6 +47,7 @@ namespace VpServiceAPI.Controllers
             ExtraRepository = extraRepository;
 
             WebResponder = new("Admin", LogArea.Admin, true, logger);
+            WebScraper = webScraper;
         }
 
 
@@ -330,6 +332,21 @@ namespace VpServiceAPI.Controllers
                 await StatExtractor.Begin(date);
                 date = date.AddDays(1);
             }
+        }
+
+        [HttpGet]
+        [Route("/Test")]
+        public async Task Test()
+        {
+            //var users = await UserRepository.GetUsers();
+            //Logger.Debug(users);
+            //Func<string, string> GetVar = (string name) => Environment.GetEnvironmentVariable(name);
+
+            //DataAccess.ChangeConnection(GetVar("DB_2_HOST"), GetVar("DB_2_USER"), GetVar("DB_2_PW"), GetVar("DB_2_NAME"));
+            //foreach(var user in users)
+            //{
+            //    await DataQueries.Save("INSERT INTO users(name, address, grade, status) VALUES (@name, @address, @grade, 'NORMAL')", new { name = user.Name, address = user.Address, grade = user.Grade });
+            //}
         }
 
 

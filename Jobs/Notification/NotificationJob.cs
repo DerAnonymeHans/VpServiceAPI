@@ -98,7 +98,8 @@ namespace VpServiceAPI.Jobs.Notification
             try
             {
                 Logger.Info(LogArea.Notification, "Deleting Plan Cache");
-                await DataQueries.Save("UPDATE `routine_data` SET `value`='' WHERE `subject`='LAST_PLAN_CACHE'", new { });
+                await DataQueries.SetRoutineData("LAST_PLAN_CACHE", null, "");
+                //await DataQueries.Save("UPDATE `routine_data` SET `value`='' WHERE `subject`='LAST_PLAN_CACHE'", new { });
             }
             catch (Exception ex)
             {
@@ -115,6 +116,7 @@ namespace VpServiceAPI.Jobs.Notification
                 if(user.Grade != prevUser.Grade)
                 {
                     gradeBody = await GradeTask.Begin(PlanModel, user.Grade);
+                    Logger.Debug(gradeBody);
                     prevUser = user;
                 }
 

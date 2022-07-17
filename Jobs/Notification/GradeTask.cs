@@ -44,7 +44,7 @@ namespace VpServiceAPI.Jobs.Notification
         private async Task<bool> IsSendMail(string grade, bool isAffected)
         {
             bool isSendMail = isAffected;
-            //if (Environment.GetEnvironmentVariable("MODE") == "Testing") isSendMail = true;
+            if (Environment.GetEnvironmentVariable("MODE") == "Testing") isSendMail = true;
             return await GetGradeMode(grade) switch
             {
                 GradeMode.FORCE => true,

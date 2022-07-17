@@ -1,13 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Tools
 {
     public class DataQueries : IDataQueries
     {
-        private readonly IDataAccess DataAccess;
-        public DataQueries(IDataAccess dataAccess)
+        private readonly IDBAccess DataAccess;
+        public DataQueries(IDBAccess dataAccess)
         {
             DataAccess = dataAccess;
         }
@@ -47,14 +50,15 @@ namespace VpServiceAPI.Tools
 
             return rows;
         }
-        public async Task SetRoutineData(string subject, string name, string value)
+        public async Task SetRoutineData(string subject, string? name, string value)
         {
-            await DataAccess.Save("UPDATE `routine_data` SET `value`=@value WHERE `subject`=@subject AND `name`=@name", new { subject = subject, name = name, value = value });
-        }
-
-        public void ChangeConnection(string? host, string? user, string? pw, string? dbName)
-        {
-            throw new System.NotImplementedException();
+            if(name is null)
+            {
+                await DataAccess.Save("UPDATE `routine_data` SET `value`=@value WHERE `subject`=@subject", new { subject, value });
+                return;
+            }
+            await DataAccess.Save("UPDATE `routine_data` SET `value`=@value WHERE `subject`=@subject AND `name`=@name", new { subject, name, value });
+            
         }
 
         public async Task AddStatEntitiy(string type, string name)
@@ -73,6 +77,19 @@ namespace VpServiceAPI.Tools
             int rows = await Save(updateSql, parameters);
             if (rows > 0) return;
             await Save(insertSql, parameters);
+        }
+
+        public async Task<List<User>> GetUsers(string status="NORMAL")
+        {         
+            return await DataAccess.Load<User, dynamic>("SELECT name, address, grade FROM `users` WHERE status=@status ORDER BY `grade`", new { status });
+        }
+
+        public async Task AddUserToBackupDB(User user)
+        {
+            if (DataAccess.CurrentDB == 2) return;
+            DataAccess.SwitchToDB(2);
+            await Save("INSERT INTO users(name, address, grade, status, sub_day) VALUES (@name, @address, @grade, 'NORMAL', '01.01.2022')", new { name = user.Name, address = user.Address, grade = user.Grade });
+            DataAccess.SwitchToDB(1);
         }
     }
 }
