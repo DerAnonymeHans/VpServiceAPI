@@ -39,6 +39,8 @@
         "SITE_STATS_NAME": "",
         "SITE_STATS_PW": "",
 
+        "AUTO_START_ROUTINE": "true",
+
         "URL": "http://localhost:5000"
       },
       "applicationUrl": "https://localhost:5001;http://localhost:5000",

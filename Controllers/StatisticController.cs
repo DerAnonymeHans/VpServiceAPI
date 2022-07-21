@@ -49,7 +49,7 @@ namespace VpServiceAPI.Controllers
             try
             {
                 var form = Request.Form;
-                if (form["name"] != Environment.GetEnvironmentVariable("SITE_STATS_NAME") || form["pw"] != Environment.GetEnvironmentVariable("SITE_STATS_PW"))
+                if (form["name"].ToString().ToLower() != Environment.GetEnvironmentVariable("SITE_STATS_NAME") || form["pw"] != Environment.GetEnvironmentVariable("SITE_STATS_PW"))
                     throw new AppException("Nutzername oder Passwort sind nicht korrekt.");
 
                 if (form["accept-agb"] != "on") throw new AppException("Bitte akzeptieren Sie zuerst die AGB");
