@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
+using VpServiceAPI.Jobs.StatProviding;
 
 namespace VpServiceAPI.Tools
 {
@@ -63,7 +64,7 @@ namespace VpServiceAPI.Tools
 
         public async Task AddStatEntitiy(string type, string name)
         {
-            await Save("INSERT INTO `stat_entities`(`type`, `name`) VALUES (@type, @name)", new { type = type, name = name });
+            await Save("INSERT INTO `stat_entities`(`type`, `name`, `year`) VALUES (@type, @name, @year)", new { type, name, year = ProviderHelper.CurrentSchoolYear });
 
         }
 

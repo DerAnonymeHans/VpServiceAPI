@@ -3,6 +3,7 @@
     public record AnalysedRow
     {
         public int id { get; set; }
+        public string year { get; set; } = "";
         public string type { get; set; } = "";
         public string missing_teacher { get; set; } = "";
         public string substitute_teacher { get; set; } = "";

@@ -21,6 +21,7 @@ using VpServiceAPI.Repositories;
 using VpServiceAPI.Jobs.StatExtraction;
 using VpServiceAPI.Jobs.StatProviding;
 using VpServiceAPI.Middleware;
+using Microsoft.AspNetCore.Http;
 
 namespace VpServiceAPI
 {
@@ -60,7 +61,7 @@ namespace VpServiceAPI
 
             var dependencyInjector = new DependencyInjector(ref services);
             dependencyInjector.Inject();
-
+            services.AddHttpContextAccessor();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -71,6 +72,7 @@ namespace VpServiceAPI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -93,6 +95,7 @@ namespace VpServiceAPI
             {
                 endpoints.MapControllers();
             });
+            Tools.AppContext.Configure(app.ApplicationServices.GetRequiredService<IHttpContextAccessor>());
         }
     }
 }

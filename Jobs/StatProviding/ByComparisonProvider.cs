@@ -21,7 +21,7 @@ namespace VpServiceAPI.Jobs.StatProviding
         }
         private async Task<EntityType> GetEntityType(string name)
         {
-            var typeRes = await DataQueries.Load<string, dynamic>("SELECT type FROM stat_entities WHERE BINARY name = @name", new { name });
+            var typeRes = await DataQueries.Load<string, dynamic>("SELECT type FROM stat_entities WHERE BINARY name = @name AND year = @year", new { name, year=ProviderHelper.GetYear() });
             if (typeRes.Count == 0) throw new NameNotFoundException(name);
             Enum.TryParse<EntityType>(typeRes[0], out var type);
             return type;
@@ -31,8 +31,8 @@ namespace VpServiceAPI.Jobs.StatProviding
             double totalLessons;
             // <WOCHENSTUNDEN> / 5 * <ANZAHL AUFGEZEICHNETER TAGE>
             // if name and type are found in hard_stat_data
-            string selectSql = "SELECT (d.value / 5 * (SELECT COUNT(DISTINCT(vp_data.date)) FROM vp_data WHERE 1)) AS total_lessons FROM hard_stat_data d";
-            var res = await DataQueries.Load<double, dynamic>($"{selectSql} WHERE d.category='WEEKLY_LESSONS' AND type=@type AND BINARY d.name=@name", new { name, type = type.ToString() });
+            string selectSql = "SELECT (d.value / 5 * (SELECT COUNT(DISTINCT(vp_data.date)) FROM vp_data WHERE year = @year)) AS total_lessons FROM hard_stat_data d";
+            var res = await DataQueries.Load<double, dynamic>($"{selectSql} WHERE d.category='WEEKLY_LESSONS' AND type=@type AND BINARY d.name=@name", new { name, type = type.ToString(), year = ProviderHelper.GetYear() });
 
             if (res.Count == 0)
             {
@@ -52,7 +52,7 @@ namespace VpServiceAPI.Jobs.StatProviding
                     whereSql = $"type=@type AND name='average'";
                 }
                 
-                res = await DataQueries.Load<double, dynamic>($"{selectSql} WHERE category='WEEKLY_LESSONS' AND {whereSql}", new { name, type=type.ToString() });
+                res = await DataQueries.Load<double, dynamic>($"{selectSql} WHERE category='WEEKLY_LESSONS' AND {whereSql}", new { name, type=type.ToString(), year = ProviderHelper.GetYear() });
                 if (res.Count == 0) throw new NameNotFoundException(name);
                 totalLessons = res[0];
             }
@@ -63,7 +63,7 @@ namespace VpServiceAPI.Jobs.StatProviding
         {
             // <FEHLSTUNDEN> / <GESAMTSTUNDEN>
             int totalLessons = await GetTotalLessons(name, await GetEntityType(name));
-            var res = await DataQueries.Load<RelativeStatistic, dynamic>("SELECT e.name, e.type, ((c.missed - c.substituted) / @totalLessons) AS missed, (c.substituted / @totalLessons) AS substituted, @totalLessons AS hundredPercent FROM stat_entities e INNER JOIN stats_by_count c ON c.entity_id = e.id WHERE BINARY e.name=@name", new { totalLessons, name });
+            var res = await DataQueries.Load<RelativeStatistic, dynamic>("SELECT e.name, e.type, ((c.missed - c.substituted) / @totalLessons) AS missed, (c.substituted / @totalLessons) AS substituted, @totalLessons AS hundredPercent FROM stat_entities e INNER JOIN stats_by_count c ON c.entity_id = e.id WHERE BINARY e.name=@name AND e.year=@year", new { totalLessons, name, year = ProviderHelper.GetYear() });
             if (res.Count == 0) throw new NameNotFoundException(name);
 
             return new RelativeStatistic(res[0].Name, res[0].Missed, res[0].Substituted, totalLessons) { Type = res[0].Type };
@@ -78,7 +78,7 @@ namespace VpServiceAPI.Jobs.StatProviding
             //FROM stat_entities e
             //INNER JOIN stats_by_count c ON c.entity_id = e.id
             //WHERE e.type = 'KURS'
-            int days = (await DataQueries.Load<int, dynamic>("SELECT COUNT(DISTINCT(vp_data.date)) FROM vp_data WHERE 1", new {}))[0];
+            int days = (await DataQueries.Load<int, dynamic>("SELECT COUNT(DISTINCT(vp_data.date)) FROM vp_data WHERE year=@year", new { year = ProviderHelper.GetYear() }))[0];
 
             string sortSql = sortBy switch
             {
@@ -107,11 +107,11 @@ namespace VpServiceAPI.Jobs.StatProviding
                     (c.substituted / {totalLessonsSql}) AS substituted
                     FROM stat_entities e
                     INNER JOIN stats_by_count c ON c.entity_id = e.id
-                    WHERE e.type = @type
+                    WHERE e.type = @type AND e.year=@year
                     ORDER BY {sortSql} LIMIT 10
                 ";
 
-            var res = await DataQueries.Load<RelativeStatistic, dynamic>(sql, new { type=includeWho.ToString(), days });
+            var res = await DataQueries.Load<RelativeStatistic, dynamic>(sql, new { type=includeWho.ToString(), days, year = ProviderHelper.GetYear() });
 
             return res;
         }
@@ -149,20 +149,20 @@ namespace VpServiceAPI.Jobs.StatProviding
         {
             int totalLessons = await GetTotalLessons("average", type);
 
-            int typeCount = (await DataQueries.Load<int, dynamic>("SELECT COUNT(id) FROM stat_entities WHERE type=@type", new { type = type.ToString() }))[0];
+            int typeCount = (await DataQueries.Load<int, dynamic>("SELECT COUNT(id) FROM stat_entities WHERE type=@type AND year=@year", new { type = type.ToString(), year = ProviderHelper.GetYear() }))[0];
 
-            string selectSql = "SELECT SUM(((c.missed - c.substituted)) / (@totalLessons * @typeCount)) AS missed, SUM(c.substituted) / (@totalLessons * @typeCount) AS substituted FROM stat_entities e INNER JOIN stats_by_count c ON c.entity_id = e.id WHERE e.type=@type";
+            string selectSql = "SELECT SUM(((c.missed - c.substituted)) / (@totalLessons * @typeCount)) AS missed, SUM(c.substituted) / (@totalLessons * @typeCount) AS substituted FROM stat_entities e INNER JOIN stats_by_count c ON c.entity_id = e.id WHERE e.type=@type AND e.year=@year";
 
-            var res = await DataQueries.Load<RelativeStatistic, dynamic>($"{selectSql};", new { totalLessons, type=type.ToString(), typeCount });
+            var res = await DataQueries.Load<RelativeStatistic, dynamic>($"{selectSql};", new { totalLessons, type=type.ToString(), typeCount, year = ProviderHelper.GetYear() });
             return res[0];
         }
-
         public async Task<CountStatistic> AverageOf(EntityType type)
         {
             // <GESAMTFEHLSTUNDEN DES TYPS> / <ANZAHL ENTITÄTEN DES TYPS>
-            CountStatistic total = (await DataQueries.Load<CountStatistic, dynamic>("SELECT SUM(missed) AS missed, SUM(substituted) AS substituted FROM stat_entities e INNER JOIN stats_by_count c ON e.id = c.entity_id WHERE e.type=@type", new { type = type.ToString() }))[0];
-            int entityCount = (await DataQueries.Load<int, dynamic>("SELECT `value` FROM hard_stat_data WHERE category='COUNT' AND type=@type", new { type = type.ToString() }))[0];
-            return new CountStatistic("", type.ToString(), total.Missed / entityCount, total.Substituted / entityCount);
+            CountStatistic total = (await DataQueries.Load<CountStatistic, dynamic>("SELECT SUM(missed) AS missed, SUM(substituted) AS substituted FROM stat_entities e INNER JOIN stats_by_count c ON e.id = c.entity_id WHERE e.type=@type AND e.year=@year", new { type = type.ToString(), year = ProviderHelper.GetYear() }))[0];
+            int entityCount = (await DataQueries.Load<int, dynamic>("SELECT `value` FROM hard_stat_data WHERE category='COUNT' AND type=@type AND year=@year", new { type = type.ToString(), year = ProviderHelper.GetYear() }))[0];
+            //int entityCount = (await DataQueries.Load<int, dynamic>("SELECT COUNT(id) AS `count` FROM `stat_entities` WHERE type='TEACHER' AND year=@year", new { year = ProviderHelper.GetYear() }))[0];
+            return new CountStatistic("", type.ToString(), (total.Missed - total.Substituted) / entityCount, total.Substituted / entityCount);
         }
 
         

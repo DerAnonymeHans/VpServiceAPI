@@ -17,12 +17,12 @@ namespace VpServiceAPI.Jobs.StatProviding
 
         public async Task<int> GetDaysCount()
         {
-            return (await DataQueries.Load<int, dynamic>("SELECT COUNT(DISTINCT(date)) FROM vp_data WHERE 1", new {}))[0];
+            return (await DataQueries.Load<int, dynamic>("SELECT COUNT(DISTINCT(date)) FROM vp_data WHERE year=@year", new { year = ProviderHelper.GetYear() }))[0];
         }
 
         public async Task<List<string>> GetNames(EntityType entityType)
         {
-            return await DataQueries.Load<string, dynamic>("SELECT name FROM stat_entities WHERE type=@type", new { type = entityType.ToString() });
+            return await DataQueries.Load<string, dynamic>("SELECT name FROM stat_entities WHERE type=@type AND year=@year", new { type = entityType.ToString(), year = ProviderHelper.GetYear() });
         }
     }
 }

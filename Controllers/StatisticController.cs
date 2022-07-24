@@ -49,8 +49,13 @@ namespace VpServiceAPI.Controllers
             try
             {
                 var form = Request.Form;
-                if (form["name"].ToString().ToLower() != Environment.GetEnvironmentVariable("SITE_STATS_NAME") || form["pw"] != Environment.GetEnvironmentVariable("SITE_STATS_PW"))
+                bool isNormalAuth = form["name"].ToString().ToLower() == Environment.GetEnvironmentVariable("SITE_STATS_NAME") && form["pw"] == Environment.GetEnvironmentVariable("SITE_STATS_PW");
+                bool isSpecialAuth = form["name"] == "relaxdays" && form["pw"] == "re!axdays01";
+
+                if (!isNormalAuth && !isSpecialAuth)
                     throw new AppException("Nutzername oder Passwort sind nicht korrekt.");
+
+                if (isSpecialAuth) Logger.Info("Relaxdays has opened the website");
 
                 if (form["accept-agb"] != "on") throw new AppException("Bitte akzeptieren Sie zuerst die AGB");
 

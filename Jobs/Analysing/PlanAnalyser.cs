@@ -5,6 +5,7 @@ using System.Linq;
 using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Jobs.Checking;
+using VpServiceAPI.Jobs.StatProviding;
 
 namespace VpServiceAPI.Jobs.Analysing
 {
@@ -36,6 +37,7 @@ namespace VpServiceAPI.Jobs.Analysing
             {
                 var analysedRow = AnalyseRow(row);
                 if (analysedRow is null) continue;
+                analysedRow.year = ProviderHelper.CurrentSchoolYear;
                 newTable.Add(analysedRow);
             }
             return newTable;

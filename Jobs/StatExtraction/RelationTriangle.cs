@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using VpServiceAPI.Entities;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;
+using VpServiceAPI.Jobs.StatProviding;
 
 namespace VpServiceAPI.Jobs.StatExtraction
 {
@@ -57,7 +58,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
         {
             try
             {
-                var entities = await DataQueries.Select<StatEntity, dynamic>("stat_entities", "name=@teacher OR name=@subject OR BINARY name=@className", new { teacher = Teacher.Name, subject = Subject.Name, className = ClassName.Name });
+                var entities = await DataQueries.Load<StatEntity, dynamic>("SELECT type, name FROM stat_entities WHERE BINARY (name=@teacher OR BINARY name=@subject OR BINARY name=@className) AND year=@year", new { teacher = Teacher.Name, subject = Subject.Name, className = ClassName.Name, year = ProviderHelper.CurrentSchoolYear });
 
                 var entityNames = (from entity in entities select entity.Name).ToList();
 
@@ -81,7 +82,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
         }
         private async Task GetIds()
         {
-            var entities = await DataQueries.Select<StatEntity, dynamic>("stat_entities", "name=@teacher OR name=@subject OR BINARY name=@className", new { teacher = Teacher.Name, subject = Subject.Name, className = ClassName.Name });
+            var entities = await DataQueries.Select<StatEntity, dynamic>("stat_entities", "(name=@teacher OR name=@subject OR BINARY name=@className) AND year=@year", new { teacher = Teacher.Name, subject = Subject.Name, className = ClassName.Name, year = ProviderHelper.CurrentSchoolYear });
             foreach(StatEntity entity in entities)
             {
                 switch (entity.Type)
@@ -126,7 +127,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
         {
             try
             {
-                await DataQueries.Upsert("UPDATE stats_by_count SET missed=missed + @missed, substituted=substituted + @substituted WHERE entity_id=@entityId", "INSERT INTO stats_by_count(entity_id, missed, substituted) VALUES (@entityId, @missed, @substituted)", new { entityId = entity.Id, missed = missed, substituted = substituted });
+                await DataQueries.Upsert("UPDATE stats_by_count SET missed=missed + @missed, substituted=substituted + @substituted WHERE entity_id=@entityId", "INSERT INTO stats_by_count(year, entity_id, missed, substituted) VALUES (@year, @entityId, @missed, @substituted)", new { year = ProviderHelper.CurrentSchoolYear, entityId = entity.Id, missed, substituted });
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.StatExtraction, ex, "Tried to upsert stats_by_count");
@@ -144,9 +145,9 @@ namespace VpServiceAPI.Jobs.StatExtraction
                     $"SET {month}={month}+@lessonCount, {day}={day}+@lessonCount, first=first+@first, second=second+@second, third=third+@third, fourth=fourth+@fourth, fifth=fifth+@fifth, sixth=sixth+@sixth, seventh=seventh+@seventh, eigth=eigth+@eigth " +
                     $"WHERE entity_id=@entityId AND attendance=@attendance", 
 
-                    $"INSERT INTO stats_by_time(entity_id, attendance, {month}, {day}, first, second, third, fourth, fifth, sixth, seventh, eigth) " +
-                    $"VALUES (@entityId, @attendance, @lessonCount, @lessonCount, @first, @second, @third, @fourth, @fifth, @sixth, @seventh, @eigth)", 
-                    new { entityId = entity.Id, attendance = attendance, lessonCount = LessonCount, first = Lessons[0], second = Lessons[1], third = Lessons[2], fourth = Lessons[3], fifth = Lessons[4], sixth = Lessons[5], seventh = Lessons[6], eigth = Lessons[7] }
+                    $"INSERT INTO stats_by_time(year, entity_id, attendance, {month}, {day}, first, second, third, fourth, fifth, sixth, seventh, eigth) " +
+                    $"VALUES (@year, @entityId, @attendance, @lessonCount, @lessonCount, @first, @second, @third, @fourth, @fifth, @sixth, @seventh, @eigth)", 
+                    new { year = ProviderHelper.CurrentSchoolYear, entityId = entity.Id, attendance, lessonCount = LessonCount, first = Lessons[0], second = Lessons[1], third = Lessons[2], fourth = Lessons[3], fifth = Lessons[4], sixth = Lessons[5], seventh = Lessons[6], eigth = Lessons[7] }
                     );
             }catch(Exception ex)
             {
@@ -159,8 +160,8 @@ namespace VpServiceAPI.Jobs.StatExtraction
             {
                 await DataQueries.Upsert(
                     "UPDATE stats_by_who SET missed=missed + @missed, substituted=substituted + @substituted WHERE (entity_id_a=@idA AND entity_id_b=@idB) OR (entity_id_a=@idB AND entity_id_b=@idA)",
-                    "INSERT INTO stats_by_who(entity_id_a, entity_id_b, missed, substituted) VALUES (@idA, @idB, @missed, @substituted)",
-                    new { idA = a.Id, idB = b.Id, missed = missed, substituted = substituted }
+                    "INSERT INTO stats_by_who(year, entity_id_a, entity_id_b, missed, substituted) VALUES (@year, @idA, @idB, @missed, @substituted)",
+                    new { year = ProviderHelper.CurrentSchoolYear, idA = a.Id, idB = b.Id, missed, substituted }
                     );
             }catch(Exception ex)
             {

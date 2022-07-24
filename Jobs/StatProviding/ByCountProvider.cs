@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Web;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities.Statistics;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
+using System;
 
 namespace VpServiceAPI.Jobs.StatProviding
 {
@@ -16,7 +18,8 @@ namespace VpServiceAPI.Jobs.StatProviding
         }
         public async Task<CountStatistic> GetCountOf(string name)
         {
-            var res = await DataQueries.Load<CountStatistic, dynamic>("SELECT name, type, missed - substituted as missed, substituted FROM stat_entities e INNER JOIN stats_by_count c ON e.id = c.entity_id WHERE BINARY e.name=@name", new { name = name });
+            Console.WriteLine(ProviderHelper.GetYear());
+            var res = await DataQueries.Load<CountStatistic, dynamic>("SELECT name, type, missed - substituted as missed, substituted FROM stat_entities e INNER JOIN stats_by_count c ON e.id = c.entity_id WHERE BINARY e.name=@name AND e.year=@year", new { name, year = ProviderHelper.GetYear() });
             if (res.Count == 0) throw new NameNotFoundException(name);
             return res[0];
         }
@@ -31,7 +34,7 @@ namespace VpServiceAPI.Jobs.StatProviding
                 "ls" => "substituted",
                 _ => throw new SortNotFoundException(sortBy)
             };
-            var res = await DataQueries.Load<CountStatistic, dynamic>($"SELECT name, type, missed - substituted as missed, substituted FROM stat_entities e INNER JOIN stats_by_count c ON e.id = c.entity_id WHERE e.type=@type ORDER BY {sortSql} LIMIT @limit", new { type = includeWho.ToString(), limit = 10});
+            var res = await DataQueries.Load<CountStatistic, dynamic>($"SELECT name, type, missed - substituted as missed, substituted FROM stat_entities e INNER JOIN stats_by_count c ON e.id = c.entity_id WHERE e.type=@type AND e.year=@year ORDER BY {sortSql} LIMIT @limit", new { type = includeWho.ToString(), year = ProviderHelper.GetYear(), limit = 10});
             return res;
         }
     }

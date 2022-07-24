@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
+using VpServiceAPI.Jobs.StatProviding;
 
 namespace VpServiceAPI.Jobs.Analysing
 {
@@ -30,7 +31,7 @@ namespace VpServiceAPI.Jobs.Analysing
         {
             try
             {
-                await DataQueries.Save("INSERT INTO `vp_data` (`type`, `missing_teacher`, `substitute_teacher`, `missing_subject`, `substitute_subject`, `lesson`, `class_name`, `date`, `room`, `extra`) VALUES (@type, @missing_teacher, @substitute_teacher, @missing_subject, @substitute_subject, @lesson, @class_name, @date, @room, @extra)", row);
+                await DataQueries.Save("INSERT INTO `vp_data` (`year`, `type`, `missing_teacher`, `substitute_teacher`, `missing_subject`, `substitute_subject`, `lesson`, `class_name`, `date`, `room`, `extra`) VALUES (@year, @type, @missing_teacher, @substitute_teacher, @missing_subject, @substitute_subject, @lesson, @class_name, @date, @room, @extra)", row);
             }
             catch(Exception ex)
             {

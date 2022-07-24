@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+
+    <style>
+        .row-has-change {
+            color: [Color];
+        }
+
+        hr {
+            margin: 2em 0;
+        }
+
+        .link-container {
+            margin: 2em auto;
+            width: fit-content;
+        }
+
+        .container {
+            margin: 1em 0;
+        }
+    </style>
+</head>
+<body>
+    <img src="[ArtWorkSrc]" alt="Hallo [UserName]; [ArtWorkSrc]" style="width: 100vw; max-width: 500px;" />
+
+    <h2 style="color: [Color]; text-align: center">[GlobalExtra]</h2>
+
+    <div class="meta-container container">
+        <div>Es gibt einen neuen Vertretungsplan für deine Klassenstufe <b>[Grade]</b> für den <b>22.07.2022</b>. <i>(vom: 22.07.2022 um 3:12 Uhr.)</i></div>
+    </div>
+
+    <hr />
+
+    [[if Information]]
+    <div class="information-container container">
+        [Information]
+    </div>
+    <hr />
+    [[endif Information]]
+
+
+
+    <div class="plan-container container">
+        <b>Freitag:</b>
+        <table>
+            <colgroup>
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+                <col style="background-color:#eee">
+                <col style="background-color:#ddd">
+            </colgroup>
+            <tr>
+                <th>Klasse</th>
+                <th>Stunde</th>
+                <th>Fach</th>
+                <th>Lehrer</th>
+                <th>Raum</th>
+                <th>Info</th>
+            </tr>
+            <tr>
+                <td>18</td>
+                <td>5:56</td>
+                <td>Leben</td>
+                <td>Frau Kreutzer</td>
+                <td>Dresden</td>
+                <td>für Emma</td>
+            </tr>
+        </table>
+    </div>
+
+
+    <div class="link-container">
+        <a href="https://jkg-leipzig.de/vertretungsplan/"><button>Weitere Info</button></a>
+        <a href="https://kepleraner.herokuapp.com?name=[UserName]"><button href="#" style="color: [Color]">Webseite</button></a>
+    </div>
+
+    <hr />
+
+    <div class="small-extra-container container">
+        <div><b>Das heutige kleine aber feine Extra:</b></div>
+        <blockquote>
+            <i>
+                Du darfs jetzt: hochprozentigen Alkohol kaufen, mehr als 40 Stunden/Woche arbeiten :), heiraten ohne Eltern, mit Führerschein alleine Auto fahren, Kontos eröfnnen, Verträge jeder Art abschließen, USK 18 Filme schauen (hast du doch hoffentlich noch nie gemacht), Gerichtsprozesse selber führen, Tests selber unterschreiben, wählen gehen (nur die FDP natürlich     Spaß ja), ausziehen (gerne auch Kleidung ( ͡❛ ͜ʖ ͡❛) )
+            </i>
+        </blockquote>
+        <p style="text-align: right; margin-right: 15vw">~Pascal</p>
+    </div>
+
+    <hr />
+
+    <img src="[QrCodeSrc]" alt="qrcode" style="width: 100vw; max-width: 500px" />
+
+    <hr />
+
+    <span>Alle Angaben ohne Gewähr</span>
+</body>
+
+</html>
+
+

@@ -39,9 +39,9 @@ namespace VpServiceAPI.Jobs.StatProviding
         public async Task<TimeStatistic> GetTimesOf(TimeType timeType, string name)
         {
             string[] times = GetTimesArray(timeType);
-            string sql = $"SELECT name, type, attendance, entity_id, {string.Join(", ", times)} FROM stat_entities e INNER JOIN stats_by_time t ON e.id = t.entity_id WHERE BINARY e.name=@name";
+            string sql = $"SELECT name, type, attendance, entity_id, {string.Join(", ", times)} FROM stat_entities e INNER JOIN stats_by_time t ON e.id = t.entity_id WHERE BINARY e.name=@name AND e.year=@year";
 
-            var res = await DataQueries.Load<Times, dynamic>(sql, new { name = name });
+            var res = await DataQueries.Load<Times, dynamic>(sql, new { name, year = ProviderHelper.GetYear() });
             if (res.Count == 0) throw new NameNotFoundException(name);
             if(res.Count == 1)
             {
@@ -93,10 +93,10 @@ namespace VpServiceAPI.Jobs.StatProviding
 
             string selectSubstitutedSql = $"COALESCE((SELECT {timeName} FROM stats_by_time WHERE entity_id = myid AND attendance = 'Substituting'), 0) AS substituted";
 
-            string fromSql = $"FROM stat_entities e INNER JOIN stats_by_time t ON e.id = t.entity_id WHERE e.type = @type AND attendance = @attendance ORDER BY {sortSql} LIMIT @limit";
+            string fromSql = $"FROM stat_entities e INNER JOIN stats_by_time t ON e.id = t.entity_id WHERE e.type = @type AND attendance = @attendance AND e.year=@year ORDER BY {sortSql} LIMIT @limit";
 
             string sql = $"{selectSql}, {selectMissedSql}, {selectSubstitutedSql} {fromSql}";
-            var res = await DataQueries.Load<CountStatistic, dynamic>(sql, new { type = includeWho.ToString(), attendance, limit = 10 });
+            var res = await DataQueries.Load<CountStatistic, dynamic>(sql, new { type = includeWho.ToString(), attendance, year = ProviderHelper.GetYear(), limit = 10 });
             if (res.Count == 0) throw new NameNotFoundException(includeWho.ToString());
 
             return res;

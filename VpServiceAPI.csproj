@@ -35,6 +35,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Templates\Special\index.html" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <_WebToolingArtifacts Remove="Properties\launchSettingsGit.json" />
 	</ItemGroup>
 
