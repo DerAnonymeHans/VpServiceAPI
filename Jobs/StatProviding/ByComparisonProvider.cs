@@ -32,7 +32,7 @@ namespace VpServiceAPI.Jobs.StatProviding
             // <WOCHENSTUNDEN> / 5 * <ANZAHL AUFGEZEICHNETER TAGE>
             // if name and type are found in hard_stat_data
             string selectSql = "SELECT (d.value / 5 * (SELECT COUNT(DISTINCT(vp_data.date)) FROM vp_data WHERE year = @year)) AS total_lessons FROM hard_stat_data d";
-            var res = await DataQueries.Load<double, dynamic>($"{selectSql} WHERE d.category='WEEKLY_LESSONS' AND type=@type AND BINARY d.name=@name", new { name, type = type.ToString(), year = ProviderHelper.GetYear() });
+            var res = await DataQueries.Load<double, dynamic>($"{selectSql} WHERE d.category='WEEKLY_LESSONS' AND type=@type AND BINARY d.name=@name AND year=@year", new { name, type = type.ToString(), year = ProviderHelper.GetYear() });
 
             if (res.Count == 0)
             {
@@ -89,7 +89,7 @@ namespace VpServiceAPI.Jobs.StatProviding
                 _ => throw new SortNotFoundException(sortBy)
             };
 
-            string totalLessonsSelectSql = "SELECT `value` FROM hard_stat_data WHERE category = 'WEEKLY_LESSONS'";
+            string totalLessonsSelectSql = "SELECT `value` FROM hard_stat_data WHERE category = 'WEEKLY_LESSONS' AND year=@year";
 
             string totalLessonsWhereSql = includeWho switch
             {
