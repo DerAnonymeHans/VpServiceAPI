@@ -24,5 +24,10 @@ namespace VpServiceAPI.Jobs.StatProviding
         {
             return await DataQueries.Load<string, dynamic>("SELECT name FROM stat_entities WHERE type=@type AND year=@year", new { type = entityType.ToString(), year = ProviderHelper.GetYear() });
         }
+
+        public async Task<List<string>> GetYears()
+        {
+            return await DataQueries.Load<string, dynamic>("SELECT DISTINCT(year) FROM `hard_stat_data` WHERE 1", new { });
+        }
     }
 }

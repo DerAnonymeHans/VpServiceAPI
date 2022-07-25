@@ -20,7 +20,13 @@ namespace VpServiceAPI.Middleware
 
         public async Task Invoke(HttpContext httpContext)
         {
-            if(httpContext.Request.Path.Value is null)
+            if(Environment.GetEnvironmentVariable("MODE") == "Testing")
+            {
+                await _next.Invoke(httpContext);
+                return;
+            }
+
+            if (httpContext.Request.Path.Value is null)
             {
                 await _next.Invoke(httpContext);
                 return;

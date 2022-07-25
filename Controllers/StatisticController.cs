@@ -121,7 +121,12 @@ namespace VpServiceAPI.Controllers
         {
             return await WebResponder.RunWith(async () => await GeneralProvider.GetDaysCount(), Request.Path.Value);
         }
-
+        [HttpGet]
+        [Route("Years")]
+        public async Task<WebResponse<List<string>>> GetYears()
+        {
+            return await WebResponder.RunWith(async () => await GeneralProvider.GetYears(), Request.Path.Value);
+        }
 
         [HttpGet]
         [Route("CountOf/{name}")]

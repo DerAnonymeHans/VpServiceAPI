@@ -8,5 +8,6 @@ namespace VpServiceAPI.Interfaces
     {
         public Task<List<string>> GetNames(EntityType entityType);
         public Task<int> GetDaysCount();
+        public Task<List<string>> GetYears();
     }
 }
