@@ -11,6 +11,7 @@ using VpServiceAPI.Entities.Statistics;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
+using VpServiceAPI.Jobs.StatProviding;
 using VpServiceAPI.Tools;
 using VpServiceAPI.WebResponse;
 
@@ -126,6 +127,12 @@ namespace VpServiceAPI.Controllers
         public async Task<WebResponse<List<string>>> GetYears()
         {
             return await WebResponder.RunWith(async () => await GeneralProvider.GetYears(), Request.Path.Value);
+        }
+        [HttpGet]
+        [Route("Years/Current")]
+        public WebResponse<string> GetCurrentYear()
+        {
+            return WebResponder.RunWithSync(() => ProviderHelper.CurrentSchoolYear, Request.Path.Value);
         }
 
         [HttpGet]
