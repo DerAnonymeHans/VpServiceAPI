@@ -18,7 +18,6 @@ namespace VpServiceAPI.Jobs.StatProviding
         }
         public async Task<CountStatistic> GetCountOf(string name)
         {
-            Console.WriteLine(ProviderHelper.GetYear());
             var res = await DataQueries.Load<CountStatistic, dynamic>("SELECT name, type, missed - substituted as missed, substituted FROM stat_entities e INNER JOIN stats_by_count c ON e.id = c.entity_id WHERE BINARY e.name=@name AND e.year=@year", new { name, year = ProviderHelper.GetYear() });
             if (res.Count == 0) throw new NameNotFoundException(name);
             return res[0];
