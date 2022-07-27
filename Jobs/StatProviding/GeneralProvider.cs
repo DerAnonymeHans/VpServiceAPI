@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using VpServiceAPI.Enums;
+using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.StatProviding
@@ -9,10 +10,19 @@ namespace VpServiceAPI.Jobs.StatProviding
     {
         private readonly IDataQueries DataQueries;
         private readonly IMyLogger Logger;
-        public GeneralProvider(IDataQueries dataQueries, IMyLogger logger)
+        private readonly IDBAccess DBAccess;
+        public GeneralProvider(IDataQueries dataQueries, IMyLogger logger, IDBAccess dBAccess)
         {
             DataQueries = dataQueries;
             Logger = logger;
+            DBAccess = dBAccess;
+        }
+
+        public async Task CheckDataFreshness()
+        {
+            if (DBAccess.CurrentDB == 1) return;
+            string backupDate = (await DataQueries.GetRoutineData("BACKUP", "date"))[0];
+            throw new AppException($"Wegen eines Datenbank Problem kann es sein, dass die angezeigten Daten nicht ganz aktuell sind. Bei den Daten handelt es sich um ein Backup vom {backupDate}. Bitte entschuldige die Unannehmlichkeiten.");
         }
 
         public async Task<int> GetDaysCount()

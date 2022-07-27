@@ -111,6 +111,13 @@ namespace VpServiceAPI.Controllers
         }
 
         [HttpGet]
+        [Route("CheckDataFreshness")]
+        public async Task<WebMessage> CheckDataFreshness() 
+        {
+            return await WebResponder.RunWith(async () => await GeneralProvider.CheckDataFreshness(), Request.Path.Value);
+        }
+
+        [HttpGet]
         [Route("Names/{entityType}")]
         public async Task<WebResponse<List<string>>> GetNames(EntityType entityType)
         {
