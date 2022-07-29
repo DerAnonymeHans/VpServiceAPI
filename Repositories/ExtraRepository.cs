@@ -45,7 +45,7 @@ namespace VpServiceAPI.Repositories
             }
 
             if (extra.Text.Length > 1024) throw new AppException("Der Text darf die Länge von 1024 Zeichen nicht überschreiten.");
-            var matches = Regex.Matches(extra.Text, @"[^\wäöüÄÖÜß\s\-()[\]&%$§€!.,;:+*/#""\'^°]");
+            var matches = Regex.Matches(extra.Text, @"[^\wäöüÄÖÜß\s\-()[\]&%$§€!?.,;:+*/#""\'^°]");
             if (matches.Count > 0) throw new AppException($"Der Text beinhaltet folgende nicht erlaubte Zeichen: '{string.Join(", ", matches.Cast<Match>().Select(m => m.Value))}'");
 
             if (extra.Author.Length > 64) throw new AppException("Der Autor darf die Länge von 64 Zeichen nicht überschreiten.");

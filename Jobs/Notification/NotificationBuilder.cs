@@ -68,7 +68,8 @@ namespace VpServiceAPI.Jobs.Notification
                 { "SmallExtra", NotificationBody.SmallExtra.Text },
                 { "SmallExtraAuthor", NotificationBody.SmallExtra.Author },
                 { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/GetQrcode" },
-                { "Information",  GenerateInformation() }
+                { "Information",  GenerateInformation() },
+                { "StatLoginParams", $"stat-user={Environment.GetEnvironmentVariable("SITE_STATS_NAME")}&stat-pw={Environment.GetEnvironmentVariable("SITE_STATS_PW")}" }
 
             };
         }
