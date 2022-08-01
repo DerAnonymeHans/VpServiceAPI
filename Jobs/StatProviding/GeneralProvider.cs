@@ -18,6 +18,12 @@ namespace VpServiceAPI.Jobs.StatProviding
             DBAccess = dBAccess;
         }
 
+        public async Task CheckDataAmount()
+        {
+            int rowCount = (await DataQueries.Load<int, dynamic>("SELECT COUNT(DISTINCT(date)) FROM vp_data WHERE year=@year", new { year = ProviderHelper.GetYear() }))[0];
+            if (rowCount == 0) throw new AppException("Es scheint noch keine Daten für dieses Schuljahr zu geben. Versuche doch in ein älteres Schuljahr zu wechseln.");
+        }
+
         public async Task CheckDataFreshness()
         {
             if (DBAccess.CurrentDB == 1) return;

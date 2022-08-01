@@ -10,5 +10,6 @@ namespace VpServiceAPI.Interfaces
         public Task<int> GetDaysCount();
         public Task<List<string>> GetYears();
         public Task CheckDataFreshness();
+        public Task CheckDataAmount();
     }
 }

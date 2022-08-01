@@ -116,6 +116,12 @@ namespace VpServiceAPI.Controllers
         {
             return await WebResponder.RunWith(async () => await GeneralProvider.CheckDataFreshness(), Request.Path.Value);
         }
+        [HttpGet]
+        [Route("CheckDataAmount")]
+        public async Task<WebMessage> CheckDataAmount()
+        {
+            return await WebResponder.RunWith(async () => await GeneralProvider.CheckDataAmount(), Request.Path.Value);
+        }
 
         [HttpGet]
         [Route("Names/{entityType}")]
