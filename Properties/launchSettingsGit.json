@@ -38,6 +38,7 @@
         "SITE_STAT_AUTH": "",
         "SITE_STATS_NAME": "",
         "SITE_STATS_PW": "",
+        "SITE_USER_AUTH_KEY": "",
 
         "AUTO_START_ROUTINE": "true",
 

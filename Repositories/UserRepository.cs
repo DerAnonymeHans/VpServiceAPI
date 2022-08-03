@@ -8,6 +8,9 @@ using VpServiceAPI.Interfaces;
 using System.Net.Mail;
 using System;
 using VpServiceAPI.Tools;
+using System.Security.Cryptography;
+using System.Text;
+using System.Net;
 
 namespace VpServiceAPI.Repositories
 {
@@ -18,9 +21,9 @@ namespace VpServiceAPI.Repositories
             return;
         }
 
-        public Task<User> GetUser(int id)
+        public async Task<User> GetUser(string mail)
         {
-            throw new System.NotImplementedException();
+            return (await GetUsers()).Find((user) => user.Address == mail);
         }
 
         public async Task<List<User>> GetUsers(string status="NORMAL")
@@ -70,6 +73,21 @@ namespace VpServiceAPI.Repositories
         {
             throw new NotImplementedException();
         }
+
+        public async Task<bool> UserExists(string mail, string status = "NORMAL")
+        {
+            return (await GetUsers()).Exists((user) => user.Address == mail);
+        }
+
+        public Task<bool> IsAuthenticated(string mail, string mailHash)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetAuthenticationHash(string mail)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class ProdUserRepository : IUserRepository
@@ -87,9 +105,9 @@ namespace VpServiceAPI.Repositories
             await DataQueries.Save("INSERT INTO users(name, address, grade, status, sub_day) VALUES (@name, @address, @grade, 'REQUEST', @date)", new { name = user.Name, address = user.Address, grade = user.Grade, date = DateTime.Now.ToString("dd.MM.yyyy") });
         }
 
-        public Task<User> GetUser(int id)
+        public async Task<User> GetUser(string mail)
         {
-            throw new System.NotImplementedException();
+            return (await DataQueries.Load<User, dynamic>("SELECT name, address, grade FROM `users` WHERE address=@mail", new { mail }))[0];
         }
 
         public async Task<List<User>> GetUsers(string status="NORMAL")
@@ -146,6 +164,36 @@ namespace VpServiceAPI.Repositories
         public async Task RejectUser(string mail)
         {
             await DataQueries.Delete("DELETE FROM users WHERE address=@address AND status='REQUEST'", new { address = mail });
+        }
+
+        public async Task<bool> IsAuthenticated(string mail, string mailHash)
+        {
+            User user;
+            try
+            {
+                user = await GetUser(mail);
+            }
+            catch
+            {
+                return false;
+            }
+            //Logger.Debug("real hash", GetAuthenticationHash(mail));
+            var encoded = WebUtility.UrlDecode(mailHash).Replace(' ', '+');
+            //Logger.Debug("my hash", mailHash);
+            //Logger.Debug("encoded hash", encoded);
+            return StringCipher.Decrypt(encoded) == Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
+        }
+
+        public string GetAuthenticationHash(string mail)
+        {
+            var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
+            var hash = StringCipher.Encrypt(base64);
+            return hash;
+        }
+
+        public async Task<bool> UserExists(string mail, string status = "NORMAL")
+        {
+            return (await DataQueries.Load<string, dynamic>("SELECT name, address, grade FROM `users` WHERE address=@mail AND status=@status LIMIT 1", new { mail, status })).Count == 1;
         }
     }
 }

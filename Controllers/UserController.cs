@@ -16,6 +16,7 @@ using VpServiceAPI.Jobs.Notification;
 using System.IO;
 using VpServiceAPI.WebResponse;
 using VpServiceAPI.Exceptions;
+using Microsoft.Extensions.Primitives;
 
 
 #nullable enable
@@ -91,6 +92,49 @@ namespace VpServiceAPI.Controllers
                 AttackDetector.Detect(Request.Form["text"]);
                 await DataQueries.Save("INSERT INTO proposals(text) VALUES (@text)", new { text = Request.Form["text"] });
             }, Request.Path.Value, "Es hat geklappt! Deine Anregung wird in kürze beachtet werden.");            
+        }
+
+        [HttpGet]
+        [Route("/IsUserAuthenticated")]
+        public async Task<WebResponse<bool>> IsUserAuthenticated()
+        {
+            if(Request.Cookies.TryGetValue("user-auth-mail", out string userAuthMail) && Request.Cookies.TryGetValue("user-auth-hash", out string userAuthHash))
+            {
+                if(userAuthMail is not null && userAuthHash is not null)
+                {
+                    return await WebResponder.RunWith(async () => await UserRepository.IsAuthenticated(userAuthMail, userAuthHash), Request.Path.Value);
+                }
+                
+            }
+            return new WebResponse<bool>
+            {
+                Body = false,
+                IsSuccess = true,
+                Message = "Cookies not provided"
+            };
+        }
+
+        [HttpGet]
+        [Route("/GetHash/{mail}")]
+        public string GetHash(string mail)
+        {
+            return UserRepository.GetAuthenticationHash(mail);
+        }
+
+        [HttpPost]
+        [Route("/SetAuthentication")]
+        public WebMessage SetAuthentication()
+        {
+            return WebResponder.RunWithSync(() =>
+            {
+                var form = Request.Form;
+                if (!form.TryGetValue("user-auth-mail", out StringValues userAuthMail)) throw new AppException("Es wurde keine Email Addresse angegeben.");
+                if (!form.TryGetValue("user-auth-hash", out StringValues userAuthHash)) throw new AppException("Es wurde kein Email Hash angegeben.");
+                Logger.Debug(userAuthHash[0]);
+                Response.Cookies.Append("user-auth-mail", userAuthMail[0]);
+                Response.Cookies.Append("user-auth-hash", userAuthHash[0]);
+
+            }, Request.Path.Value, "Du wurdest erfolgreich angemeldet.");
         }
     }
 }

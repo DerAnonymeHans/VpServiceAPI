@@ -16,6 +16,7 @@ using VpServiceAPI.Jobs.Notification;
 using System.IO;
 using VpServiceAPI.WebResponse;
 using VpServiceAPI.Exceptions;
+using System.Collections.Generic;
 
 
 #nullable enable
@@ -30,6 +31,7 @@ namespace VpServiceAPI.Controllers
         private readonly IDataQueries DataQueries;
         private readonly IArtworkRepository ArtworkRepository;
         private readonly IUserRepository UserRepository;
+        private readonly WebResponder WebResponder;
 
 
 
@@ -40,6 +42,7 @@ namespace VpServiceAPI.Controllers
             DataQueries = dataQueries;
             ArtworkRepository = artworkRepository;
             UserRepository = userRepository;
+            WebResponder = new();
         }
 
 
@@ -81,6 +84,27 @@ namespace VpServiceAPI.Controllers
             return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/qrcode.png"), "image/png");
         }
 
+        [HttpGet]
+        [Route("/GetPlanRows")]
+        public async Task<WebResponse<List<NotificationRow>>> GetPlanRows()
+        {
+            return await WebResponder.RunWith(async () =>
+            {
+                if (Request.Cookies.TryGetValue("user-auth-mail", out string? userAuthMail) && Request.Cookies.TryGetValue("user-auth-hash", out string? userAuthHash))
+                {
+                    if (userAuthMail is not null && userAuthHash is not null)
+                    {
+                        if(await UserRepository.IsAuthenticated(userAuthMail, userAuthHash))
+                        {
+                            var user = await UserRepository.GetUser(userAuthMail);
+                            return await DataQueries.Load<NotificationRow, dynamic>("SELECT * FROM notification_rows WHERE klasse LIKE '%@grade%'", new { grade = user.Grade });
+                        }
+                    }
+
+                }
+                throw new AppException("Du musst angemeldet sein um die Plandaten zu sehen.");
+            }, Request.Path.Value);
+        }
         
     }
 }

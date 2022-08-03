@@ -112,7 +112,7 @@ namespace VpServiceAPI.Jobs.Notification
                 });
             }
             return rows;
-        }
+        }        
         private async Task<string[]> GetCachedRows(string grade)
         {
             // LAST_PLAN_CACHE provides the last rows of the grade separated like aaaa|bbbb|cccc
