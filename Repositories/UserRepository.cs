@@ -275,7 +275,7 @@ namespace VpServiceAPI.Repositories
         {
             if (linkTo is null)
             {
-                linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung" : "http://localhost:3000/Benachrichtigung";
+                linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung?codeModal=true" : "http://localhost:3000/Benachrichtigung?codeModal=true";
             }
             EmailJob.Send(new Entities.Notification
             {
