@@ -17,7 +17,7 @@ namespace VpServiceAPI.Jobs.Notification
         private NotificationBody? NotificationBody { get; set; }
         private Dictionary<string, string>? HTMLNotificationData { get; set; }
 
-        private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/GetArtwork";
+        private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/Notification/GetArtwork";
         private readonly string TemplatePath  = AppDomain.CurrentDomain.BaseDirectory + "Templates";
         private string TemplateName { get; set; } = "Default";
 
@@ -67,7 +67,7 @@ namespace VpServiceAPI.Jobs.Notification
                 { "SecondPlanRows", GeneratePlanRows(true) },
                 { "SmallExtra", NotificationBody.SmallExtra.Text },
                 { "SmallExtraAuthor", NotificationBody.SmallExtra.Author },
-                { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/GetQrcode" },
+                { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/Notification/GetQrcode" },
                 { "Information",  GenerateInformation() },
                 { "StatLoginParams", $"stat-user={Environment.GetEnvironmentVariable("SITE_STATS_NAME")}&stat-pw={Environment.GetEnvironmentVariable("SITE_STATS_PW")}" }
 
@@ -141,16 +141,4 @@ namespace VpServiceAPI.Jobs.Notification
         }
     }
 
-    public record HTMLNotificationData
-    {
-        public string ArtWorkSrc { get; set; } = "";
-        public string Grade { get; set; } = "";
-        public string AffectedDate { get; set; } = "";
-        public string OriginDate { get; set; } = "";
-        public string OriginTime { get; set; } = "";
-        public string MissingTeachers { get; set; } = "";
-        public string PlanTable { get; set; } = "";
-        public string SmallExtra { get; set; } = "";
-        public string SmallExtraAuthor { get; set; } = "";
-    }
 }

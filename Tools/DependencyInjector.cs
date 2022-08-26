@@ -18,9 +18,17 @@ namespace VpServiceAPI.Tools
         private static Func<string, string?> GetEnvVar = Environment.GetEnvironmentVariable;
         private static Func<bool> IsProduction = () => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
 
-        private bool _allUsersWithTestNotificator = true; // or test users with prod notificator
+        private bool _allUsersWithTestNotificator = false; // or test users with prod notificator
         private bool _forceTestUsers = false;
         private bool _forceTestNotificator = false;
+
+        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
+        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
+        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
+        private bool _forceProdNotificator = false;
+        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
+        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
+        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
 
         public DependencyInjector(ref IServiceCollection services)
         {
@@ -35,7 +43,9 @@ namespace VpServiceAPI.Tools
             InjectRepositories();
             InjectStatisticCreation();
             InjectStatisticProviding();
-            
+            InjectAuthentication();
+
+
         }
         private void InjectTools()
         {
@@ -87,14 +97,16 @@ namespace VpServiceAPI.Tools
                 .AddSingleton<INotificationBuilder, NotificationBuilder>();
 
 
-            if (IsProduction())
+            if (IsProduction() || _forceProdNotificator)
             {
                 Services
-                    .AddSingleton<INotificator, ProdNotificator>();
+                    .AddSingleton<IEmailJob, ProdEmailJob>()
+                    .AddSingleton<IPushJob, ProdPushJob>();                    
             }
             else
             {
-                InjectWithCondition<INotificator, TestNotificator, ProdNotificator>(_allUsersWithTestNotificator || _forceTestNotificator);
+                InjectWithCondition<IEmailJob, TestEmailJob, ProdEmailJob>(_allUsersWithTestNotificator || _forceTestNotificator);
+                InjectWithCondition<IPushJob, TestPushJob, ProdPushJob>(_allUsersWithTestNotificator || _forceTestNotificator);
             }
         }
         private void InjectRepositories()
@@ -130,15 +142,18 @@ namespace VpServiceAPI.Tools
                 .AddSingleton<IByGeneralProvider, GeneralProvider>()
                 .AddSingleton<IByMetaProvider, ByMetaProvider>();
         }
+        private void InjectAuthentication()
+        {
+
+        }
 
 
-
-        private void InjectWithCondition<TInterface, TTrue, TFalse>(bool mode) 
+        private void InjectWithCondition<TInterface, TTrue, TFalse>(bool condition) 
             where TInterface : class 
             where TTrue : class, TInterface 
             where TFalse : class, TInterface
         {
-            if (mode)
+            if (condition)
             {
                 Services.AddSingleton<TInterface, TTrue>();
             }

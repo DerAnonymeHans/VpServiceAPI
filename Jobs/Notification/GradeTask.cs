@@ -29,13 +29,13 @@ namespace VpServiceAPI.Jobs.Notification
             List<NotificationRow> rows2 = new();
             if(PlanModel.Table2 is not null)
             {
-                rows2 = GetNotificationRows(new string[0], grade, out bool dummy, true);
+                rows2 = GetNotificationRows(new string[0], grade, out bool _, true);
             }            
 
             return new GradeNotificationBody
             {
                 Grade = grade,
-                IsSendMail = await IsSendMail(grade, isAffected),
+                IsNotify = await IsSendMail(grade, isAffected),
                 GradeExtra = await GetGradeExtra(grade),
                 Rows = rows,
                 Rows2 = rows2,
@@ -112,7 +112,7 @@ namespace VpServiceAPI.Jobs.Notification
                 });
             }
             return rows;
-        }        
+        }                
         private async Task<string[]> GetCachedRows(string grade)
         {
             // LAST_PLAN_CACHE provides the last rows of the grade separated like aaaa|bbbb|cccc

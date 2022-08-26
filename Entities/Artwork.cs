@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Text.Json.Serialization;
 
 namespace VpServiceAPI.Entities
 {
@@ -8,8 +9,8 @@ namespace VpServiceAPI.Entities
     {
         public string Name { get; init; }
         public string Color { get; init; }
-        public Color FontColor { get; init; }
-        public Timespan Timespan { get; init; }
+        [JsonIgnore] public Color FontColor { get; init; }
+        [JsonIgnore] public Timespan Timespan { get; init; }
         public ArtworkMeta(string name, string start_date, string end_date, string color, string font_color)
         {
             Name = name;
@@ -27,6 +28,12 @@ namespace VpServiceAPI.Entities
                 "pink" => System.Drawing.Color.Pink,
                 _ => System.Drawing.Color.White
             };
+        }
+        [JsonConstructor]
+        public ArtworkMeta(string name, string color)
+        {
+            Name = name;
+            Color = color;
         }
     }
     public class Artwork : ArtworkMeta

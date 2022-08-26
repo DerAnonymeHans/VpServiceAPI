@@ -6,32 +6,32 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class TestNotificator : INotificator
+    public class TestEmailJob : IEmailJob
     {
         private readonly IMyLogger Logger;
 
-        public TestNotificator(IMyLogger logger)
+        public TestEmailJob(IMyLogger logger)
         {
             Logger = logger;
         }
-        public void Notify(Entities.Notification Notification)
+        public void Send(Entities.Notification Notification)
         {
             Logger.Info(LogArea.Notification, $"Would have sended Email to {Notification.Receiver}.");
-            if(Environment.GetEnvironmentVariable("MODE") == "Testing") Logger.Debug(Notification.Body);
+            //if(Environment.GetEnvironmentVariable("MODE") == "Testing") Logger.Debug(Notification.Body);
         }
     }
 
-    public class ProdNotificator : INotificator
+    public class ProdEmailJob : IEmailJob
     {
         private readonly IMyLogger Logger;
         static private readonly string SmtpAddress = "smtp.gmail.com";
         static private readonly int SmtpPort= 587;
         static private readonly bool EnableSSL = true;
-        public ProdNotificator(IMyLogger logger)
+        public ProdEmailJob(IMyLogger logger)
         {
             Logger = logger;
         }
-        public void Notify(Entities.Notification notification)
+        public void Send(Entities.Notification notification)
         {
             try
             {

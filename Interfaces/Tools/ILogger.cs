@@ -31,6 +31,7 @@ namespace VpServiceAPI.Interfaces
         StatExtraction,
         StatAPI,
         UserAPI,
+        NotificationAPI,
         Admin,
         Attack,
         Artwork

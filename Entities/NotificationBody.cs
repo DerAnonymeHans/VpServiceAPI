@@ -18,6 +18,11 @@ namespace VpServiceAPI.Entities
 
         public ArtworkMeta? Artwork { get; set; }
         public List<string> MissingTeachers { get; set; } = new();
+
+        public GlobalNotificationBody()
+        {
+
+        }
     }
 
     public record GradeNotificationBody : IGradeNotificationBody
@@ -25,7 +30,7 @@ namespace VpServiceAPI.Entities
         public string Grade { get; set; } = "";
         public List<NotificationRow> Rows { get; set; } = new();
         public List<NotificationRow> Rows2 { get; set; } = new();
-        public bool IsSendMail { get; set; }
+        public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
     }
 
@@ -53,7 +58,7 @@ namespace VpServiceAPI.Entities
         public string Grade { get; set; } = "";
         public List<NotificationRow> Rows { get; set; } = new();
         public List<NotificationRow> Rows2 { get; set; } = new();
-        public bool IsSendMail { get; set; }
+        public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
 
 

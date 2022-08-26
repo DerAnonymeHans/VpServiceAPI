@@ -24,7 +24,7 @@ namespace VpServiceAPI.Interfaces
     public interface IGradeNotificationBody
     {
         public string Grade { get; set; }
-        public bool IsSendMail { get; set; }
+        public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
         public List<NotificationRow> Rows { get; set; }
         public List<NotificationRow> Rows2 { get; set; }

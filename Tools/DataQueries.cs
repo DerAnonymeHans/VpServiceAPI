@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Jobs.StatProviding;
 
@@ -78,11 +79,6 @@ namespace VpServiceAPI.Tools
             int rows = await Save(updateSql, parameters);
             if (rows > 0) return;
             await Save(insertSql, parameters);
-        }
-
-        public async Task<List<User>> GetUsers(string status="NORMAL")
-        {         
-            return await DataAccess.Load<User, dynamic>("SELECT name, address, grade FROM `users` WHERE status=@status ORDER BY `grade`", new { status });
         }
 
         public async Task AddUserToBackupDB(User user)

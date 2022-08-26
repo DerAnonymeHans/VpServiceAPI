@@ -35,7 +35,7 @@ namespace VpServiceAPI.Jobs.Checking
             if(await IsForceMail())
             {
                 Logger.Debug("Force");
-                PlanModel._forceMail = true;
+                PlanModel._forceNotify = true;
                 return true;
             }
 

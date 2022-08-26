@@ -17,6 +17,8 @@ using System.IO;
 using VpServiceAPI.WebResponse;
 using VpServiceAPI.Exceptions;
 using Microsoft.Extensions.Primitives;
+using Microsoft.AspNetCore.Http;
+using VpServiceAPI.Enums;
 
 
 #nullable enable
@@ -47,7 +49,7 @@ namespace VpServiceAPI.Controllers
             WebResponder = new("User", LogArea.UserAPI, false, logger);
         }
 
-        
+
         [HttpGet]
         [Route("/GetUserCount")]
         public async Task<WebResponse<int>> GetUserCount()
@@ -62,9 +64,9 @@ namespace VpServiceAPI.Controllers
             {
                 var form = Request.Form;
                 if (form["accept-agb"] != "on") throw new AppException("Bitte akzeptiere zuerst die AGB.");
-                var user = await UserRepository.ValidateUser(form["name"], form["mail"], form["grade"]);
+                var user = await UserRepository.ValidateUser(form["name"], form["mail"], form["grade"], form["notify-mode"]);
                 await UserRepository.AddUserRequest(user);
-            }, Request.Path.Value, "Es hat geklappt! Jetzt muss die Anfrage nur noch manuell geprüft werden, dann erhälst auch du die Mails.");
+            }, Request.Path.Value, $"Es hat geklappt! Jetzt muss deine Anfrage nur noch manuell geprüft werden, dies kann bis zu ein paar Tage dauern.");
         }
         [HttpPost]
         [Route("/ProposeSmallExtra")]
@@ -95,10 +97,10 @@ namespace VpServiceAPI.Controllers
         }
 
         [HttpGet]
-        [Route("/IsUserAuthenticated")]
+        [Route("IsAuthenticated")]
         public async Task<WebResponse<bool>> IsUserAuthenticated()
         {
-            if(Request.Cookies.TryGetValue("user-auth-mail", out string userAuthMail) && Request.Cookies.TryGetValue("user-auth-hash", out string userAuthHash))
+            if(Request.Cookies.TryGetValue("userAuthMail", out string userAuthMail) && Request.Cookies.TryGetValue("userAuthHash", out string userAuthHash))
             {
                 if(userAuthMail is not null && userAuthHash is not null)
                 {
@@ -114,27 +116,84 @@ namespace VpServiceAPI.Controllers
             };
         }
 
-        [HttpGet]
-        [Route("/GetHash/{mail}")]
-        public string GetHash(string mail)
+        [HttpPost]
+        [Route("RequestHashReset")]
+        public async Task<WebMessage> RequestHashReset()
         {
-            return UserRepository.GetAuthenticationHash(mail);
+            Request.Form.TryGetValue("mail", out StringValues mail);            
+            return await WebResponder.RunWith(async () => await UserRepository.SendHashResetMail(mail[0]), Request.Path.Value, "Die Email wurde versendet.");
         }
 
         [HttpPost]
-        [Route("/SetAuthentication")]
-        public WebMessage SetAuthentication()
+        [Route("ResetHash")]
+        public async Task<WebMessage> SetAuthentication()
         {
-            return WebResponder.RunWithSync(() =>
+            return await WebResponder.RunWith(async () =>
             {
-                var form = Request.Form;
-                if (!form.TryGetValue("user-auth-mail", out StringValues userAuthMail)) throw new AppException("Es wurde keine Email Addresse angegeben.");
-                if (!form.TryGetValue("user-auth-hash", out StringValues userAuthHash)) throw new AppException("Es wurde kein Email Hash angegeben.");
-                Logger.Debug(userAuthHash[0]);
-                Response.Cookies.Append("user-auth-mail", userAuthMail[0]);
-                Response.Cookies.Append("user-auth-hash", userAuthHash[0]);
+                //Request.Form.TryGetValue("mail", out StringValues mail);
+                Request.Form.TryGetValue("key", out StringValues key);
+                var pair = await UserRepository.EndHashResetAndGetMailHashPair(key);
+
+                DateTime expireDate = DateTime.UtcNow;
+                expireDate = expireDate.AddYears(10);
+                expireDate = DateTime.SpecifyKind(expireDate, DateTimeKind.Utc);
+                DateTimeOffset utcTime2 = expireDate;
+
+                Response.Cookies.Append("userAuthMail", pair.Mail, new CookieOptions
+                {
+                    SameSite = SameSiteMode.None,
+                    Secure = true,
+                    Expires = expireDate
+                });
+                Response.Cookies.Append("userAuthHash", pair.Hash, new CookieOptions
+                {
+                    SameSite = SameSiteMode.None,
+                    Secure = true,
+                    Expires = expireDate
+                });
 
             }, Request.Path.Value, "Du wurdest erfolgreich angemeldet.");
+        }
+
+        [HttpPost]
+        [Route("ChangeNotifyMode/{mode}")]
+        public async Task<WebMessage> ChangeNotifyMode(string mode)
+        {
+            return await WebResponder.RunWith(async () =>
+            {
+                var _mode = mode switch
+                {
+                    "pwa" => NotifyMode.PWA,
+                    "mail" => NotifyMode.EMAIL,
+                    _ => throw new AppException("Bitte gib einen validen Benachrichtigungsweg an.")
+                };
+
+                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+
+                await DataQueries.Save("UPDATE users SET mode=@mode WHERE address=@mail", new { mode = _mode.ToString(), mail = user.Address });
+
+            }, Request.Path.Value, "Der Benachrichtigunsweg wurde geändert.");
+        }
+        [HttpGet]
+        [Route("GetNotifyMode")]
+        public async Task<WebResponse<string>> GetNotifyMode()
+        {
+            return await WebResponder.RunWith(async () =>
+            {
+                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                return user.NotifyMode.ToString();
+            }, Request.Path.Value);
+        }
+
+        [HttpPost]
+        [Route("SetPushId/{id}")]
+        public async Task<WebMessage> SetPushId(long id)
+        {
+            return await WebResponder.RunWith(async () =>
+            {
+                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                await DataQueries.Save("UPDATE users SET push_id=@id WHERE address=@mail", new { id, mail = user.Address });
+            }, Request.Path.Value, "Push_id wurde gesetzt.");
         }
     }
 }

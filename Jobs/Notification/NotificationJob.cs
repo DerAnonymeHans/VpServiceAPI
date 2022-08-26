@@ -5,18 +5,23 @@ using System.Threading.Tasks;
 using System.Linq;
 using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
+using System.Text.Json;
+using VpServiceAPI.Enums;
+using System.Net.Http;
+using VpServiceAPI.Exceptions;
 
 namespace VpServiceAPI.Jobs.Notification
 {
     public class NotificationJob : INotificationJob
     {
         private readonly IMyLogger Logger;
-        private readonly INotificator Notificator;
+        private readonly IEmailJob Notificator;
         private readonly IUserRepository UserProvider;
         private readonly IDataQueries DataQueries;
         private readonly INotificationBuilder NotificationBuilder;
         private readonly IArtworkRepository ArtworkRepository;
         private readonly IExtraRepository ExtraRepository;
+        private readonly IPushJob PushJob;
         private readonly GlobalTask GlobalTask;
         private readonly GradeTask GradeTask;
         private readonly UserTask UserTask;
@@ -25,14 +30,14 @@ namespace VpServiceAPI.Jobs.Notification
         private IGlobalNotificationBody GlobalBody { get; set; } = new GlobalNotificationBody();
 
         public NotificationJob(
-            IMyLogger logger, 
-            INotificator notificator,
-            IUserRepository userProvider, 
-            IDataQueries dataQueries, 
+            IMyLogger logger,
+            IEmailJob notificator,
+            IUserRepository userProvider,
+            IDataQueries dataQueries,
             INotificationBuilder notificationBuilder,
             IArtworkRepository artworkRepository,
-            IExtraRepository extraRepository
-            )
+            IExtraRepository extraRepository,
+            IPushJob pushJob)
         {
             Logger = logger;
             Notificator = notificator;
@@ -41,6 +46,7 @@ namespace VpServiceAPI.Jobs.Notification
             NotificationBuilder = notificationBuilder;
             ArtworkRepository = artworkRepository;
             ExtraRepository = extraRepository;
+            PushJob = pushJob;
             GlobalTask = new(logger, dataQueries, artworkRepository);
             GradeTask = new(logger, dataQueries);
             UserTask = new(logger, dataQueries, extraRepository);
@@ -56,7 +62,8 @@ namespace VpServiceAPI.Jobs.Notification
                 await DeleteCache();
             }
             Users = await UserProvider.GetUsers();
-            GlobalBody = await GlobalTask.Begin(PlanModel);;
+            GlobalBody = await GlobalTask.Begin(PlanModel);
+            await CacheGlobalModel(GlobalBody);
             CycleUsers();
         }
 
@@ -109,20 +116,33 @@ namespace VpServiceAPI.Jobs.Notification
 
         private async void CycleUsers()
         {
-            var prevUser = new User { Name = "$%", Address = "", Grade = "0" };
+            var prevUser = new User("$%&", "", "0", "", "", "", "");
             IGradeNotificationBody gradeBody = new GradeNotificationBody();
             foreach(User user in Users)
             {
                 if(user.Grade != prevUser.Grade)
                 {
                     gradeBody = await GradeTask.Begin(PlanModel, user.Grade);
-                    Logger.Debug(gradeBody);
+                    await CacheGradeModel(gradeBody);
                     prevUser = user;
                 }
 
-                if (!PlanModel._forceMail)
+                if (!PlanModel._forceNotify)
                 {
-                    if (!gradeBody.IsSendMail) continue;
+                    if (!gradeBody.IsNotify) continue;
+                }
+
+                if(user.NotifyMode == NotifyMode.PWA)
+                {
+                    try
+                    {
+                        await PushJob.Push(user, GlobalBody, gradeBody);
+                        continue;
+                    }
+                    catch (AppException ex)
+                    {
+                        Logger.Warn(LogArea.Notification, ex, "Could not send push notification. Sending Email instead", user);
+                    }
                 }
 
                 var userBody = await UserTask.Begin(user);
@@ -131,11 +151,18 @@ namespace VpServiceAPI.Jobs.Notification
                 notifBody.Set(GlobalBody).Set(gradeBody).Set(userBody);
                 notifBody.GlobalExtra = gradeBody.GradeExtra ?? notifBody.GlobalExtra;
                 var notification = NotificationBuilder.Build(notifBody, user.Address);
-                Notificator.Notify(notification);
+                Notificator.Send(notification);
             }
         }
-
-        
+        private async Task CacheGlobalModel(IGlobalNotificationBody model)
+        {
+            await DataQueries.SetRoutineData("MODEL_CACHE", "global", JsonSerializer.Serialize(model));
+        }
+        private async Task CacheGradeModel(IGradeNotificationBody model)
+        {
+            await DataQueries.SetRoutineData("MODEL_CACHE", model.Grade, JsonSerializer.Serialize(model));
+        }
+              
         
 
     }

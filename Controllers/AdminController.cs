@@ -172,7 +172,7 @@ namespace VpServiceAPI.Controllers
         [Route("MailRequests")]
         public async Task<WebResponse<List<User>>> GetMailRequests()
         {
-            return await WebResponder.RunWith(async () => await UserRepository.GetUsers("REQUEST"), Request.Path.Value);
+            return await WebResponder.RunWith(async () => await UserRepository.GetUsers(UserStatus.REQUEST), Request.Path.Value);
         }
         [HttpPost]
         [Route("AcceptUser")]

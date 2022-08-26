@@ -51,12 +51,11 @@ namespace VpServiceAPI
 
             services.AddCors(options =>
             {
-                options.AddPolicy(name: MyCorsPolicy,
-                                    policy =>
-                                      {
-                                          policy.WithOrigins("https://kepleraner.herokuapp.com", "http://kepleraner.herokuapp.com", "http://localhost:3000");
-                                          policy.AllowAnyHeader().AllowCredentials();
-                                      });
+                options.AddPolicy(name: MyCorsPolicy, policy =>
+                    {
+                        policy.WithOrigins("https://kepleraner.herokuapp.com", "http://kepleraner.herokuapp.com", "https://kepleraner-test.herokuapp.com", "http://kepleraner-test.herokuapp.com", "http://localhost:3000", "http://localhost:8080");
+                        policy.AllowAnyHeader().AllowCredentials();
+                    });
             });
 
             var dependencyInjector = new DependencyInjector(ref services);

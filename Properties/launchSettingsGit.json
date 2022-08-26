@@ -33,6 +33,10 @@
         "SMTP_USER": "vp.mailservice.kepler@gmail.com",
         "SMTP_PW": "",
 
+        "PUSH_URL": "https://api.webpushr.com/v1/notification/send/sid",
+        "PUSH_KEY": "",
+        "PUSH_AUTH": "",
+
         "SITE_ADMIN_NAME": "",
         "SITE_ADMIN_PW": "",
         "SITE_STAT_AUTH": "",
@@ -41,6 +45,8 @@
         "SITE_USER_AUTH_KEY": "",
 
         "AUTO_START_ROUTINE": "true",
+
+        "CLIENT_URL": "https://kepleraner.herokupp.com",
 
         "URL": "http://localhost:5000"
       },

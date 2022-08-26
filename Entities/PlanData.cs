@@ -26,7 +26,7 @@ namespace VpServiceAPI.Entities
 
     public record PlanModel
     {
-        public bool _forceMail { get; set; } = false;
+        public bool _forceNotify { get; set; } = false;
         public MetaData MetaData { get; init; } = new();
         public List<PlanRow> Table { get; init; } = new();
 
