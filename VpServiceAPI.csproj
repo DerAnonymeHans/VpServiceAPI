@@ -15,10 +15,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Testing\" />
-  </ItemGroup>
-
 	<ItemGroup>
 		<Content Include="Pictures\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -29,6 +25,13 @@
 		<Content Include="Views\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Testing\**" />
+	  <Content Remove="Testing\**" />
+	  <EmbeddedResource Remove="Testing\**" />
+	  <None Remove="Testing\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -50,6 +53,10 @@
 	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 	    <CopyToPublishDirectory>Never</CopyToPublishDirectory>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Tests\" />
 	</ItemGroup>
 
 

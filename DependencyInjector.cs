@@ -8,12 +8,14 @@ using VpServiceAPI.Jobs.Routines;
 using VpServiceAPI.Jobs.StatExtraction;
 using VpServiceAPI.Jobs.StatProviding;
 using VpServiceAPI.Repositories;
+using VpServiceAPI.Tools;
 
-namespace VpServiceAPI.Tools
+namespace VpServiceAPI
 {
     public class DependencyInjector
     {
         private IServiceCollection Services { get; init; }
+        private UTestDependencyInjector? UTestInjector { get; init; }
 
         private static Func<string, string?> GetEnvVar = Environment.GetEnvironmentVariable;
         private static Func<bool> IsProduction = () => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
@@ -32,11 +34,20 @@ namespace VpServiceAPI.Tools
 
         public DependencyInjector(ref IServiceCollection services)
         {
-            Services = services;            
+            if (GetEnvVar("MODE") == "UTesting")
+            {                
+                UTestInjector = new UTestDependencyInjector(ref services);
+            }
+            Services = services;
         }
         public void Inject()
         {
-            Console.WriteLine($"Mode: {GetEnvVar("ASPNETCORE_ENVIRONMENT")}");
+            Console.WriteLine($"Environment: {GetEnvVar("ASPNETCORE_ENVIRONMENT")}");
+            if(UTestInjector is not null)
+            {
+                UTestInjector.Inject();
+                return;
+            }
             InjectTools();
             InjectUpdateChecking();
             InjectNotification();
@@ -88,7 +99,7 @@ namespace VpServiceAPI.Tools
                         .AddSingleton<IPlanHTMLProvider, TestPlanProvider>()
                         .AddSingleton<IPlanConverter, PlanConverterVP24>();
                     break;
-            }                
+            }
         }
         private void InjectNotification()
         {
@@ -101,7 +112,7 @@ namespace VpServiceAPI.Tools
             {
                 Services
                     .AddSingleton<IEmailJob, ProdEmailJob>()
-                    .AddSingleton<IPushJob, ProdPushJob>();                    
+                    .AddSingleton<IPushJob, ProdPushJob>();
             }
             else
             {
@@ -119,7 +130,7 @@ namespace VpServiceAPI.Tools
 
             if (IsProduction())
             {
-                Services.AddSingleton<IUserRepository, ProdUserRepository>();            
+                Services.AddSingleton<IUserRepository, ProdUserRepository>();
             }
             else
             {
@@ -148,9 +159,9 @@ namespace VpServiceAPI.Tools
         }
 
 
-        private void InjectWithCondition<TInterface, TTrue, TFalse>(bool condition) 
-            where TInterface : class 
-            where TTrue : class, TInterface 
+        private void InjectWithCondition<TInterface, TTrue, TFalse>(bool condition)
+            where TInterface : class
+            where TTrue : class, TInterface
             where TFalse : class, TInterface
         {
             if (condition)
@@ -161,7 +172,123 @@ namespace VpServiceAPI.Tools
             {
                 Services.AddSingleton<TInterface, TFalse>();
             }
-            
+
+        }
+    }
+
+
+
+    public class UTestDependencyInjector
+    {
+        private IServiceCollection Services { get; init; }
+
+        private const string VpSource = "STATIC";
+
+
+        public UTestDependencyInjector(ref IServiceCollection services)
+        {
+            Services = services;
+        }
+        public void Inject()
+        {
+            Console.WriteLine($"Environment: UnitTesting");
+            InjectTools();
+            InjectUpdateChecking();
+            InjectNotification();
+            InjectRepositories();
+            InjectStatisticCreation();
+            InjectStatisticProviding();
+            InjectAuthentication();
+        }
+        private void InjectTools()
+        {
+            Services
+                .AddSingleton<IMyLogger, Logger>()
+                .AddSingleton<IRoutine, Routine>()
+                .AddSingleton<IDBAccess, DBAccess>()
+                .AddSingleton<IDataQueries, UTestingDataQueries>()
+                .AddSingleton<IWebScraper, WebScraper>()
+                .AddSingleton<IOutputter, ConsoleOutputter>();
+        }
+        private void InjectUpdateChecking()
+        {
+            Services
+                .AddSingleton<IUpdateChecker, UpdateChecker>()
+                .AddSingleton<IRoutine, Routine>();
+
+            switch (VpSource)
+            {
+                case "VP24":
+                    Services
+                        .AddSingleton<IPlanHTMLProvider, ProdPlanProviderVP24>()
+                        .AddSingleton<IPlanConverter, PlanConverterVP24>();
+                    break;
+                case "KEPLER":
+                    Services
+                        .AddSingleton<IPlanHTMLProvider, ProdPlanProviderKEPLER>()
+                        .AddSingleton<IPlanConverter, PlanConverterKEPLER>();
+                    break;
+                case "STATIC":
+                    Services
+                        .AddSingleton<IPlanHTMLProvider, TestPlanProvider>()
+                        .AddSingleton<IPlanConverter, PlanConverterVP24>();
+                    break;
+            }
+        }
+        private void InjectNotification()
+        {
+            Services
+                .AddSingleton<INotificationJob, NotificationJob>()
+                .AddSingleton<INotificationBuilder, NotificationBuilder>()
+                .AddSingleton<IEmailJob, TestEmailJob>()
+                .AddSingleton<IPushJob, TestPushJob>();
+
+        }
+        private void InjectRepositories()
+        {
+            Services
+                .AddSingleton<IArtworkRepository, ArtworkRepository>()
+                .AddSingleton<IStatExtractor, StatExtractor>()
+                .AddSingleton<IExtraRepository, ExtraRepository>()
+                .AddSingleton<ITeacherRepository, TeacherRepository>()
+                .AddSingleton<IUserRepository, ProdUserRepository>();
+        }
+        private void InjectStatisticCreation()
+        {
+            Services
+                .AddSingleton<IPlanAnalyser, PlanAnalyser>()
+                .AddSingleton<IAnalysedPlanSaver, AnalysedPlanSaver>();
+        }
+        private void InjectStatisticProviding()
+        {
+            Services
+                .AddSingleton<IByCountProvider, ByCountProvider>()
+                .AddSingleton<IByTimeProvider, ByTimeProvider>()
+                .AddSingleton<IByWhoProvider, ByWhoProvider>()
+                .AddSingleton<IByComparisonProvider, ByComparisonProvider>()
+                .AddSingleton<IByGeneralProvider, GeneralProvider>()
+                .AddSingleton<IByMetaProvider, ByMetaProvider>();
+        }
+        private void InjectAuthentication()
+        {
+
+        }
+
+
+        private void InjectWithCondition<TInterface, TTrue, TFalse>(bool condition)
+            where TInterface : class
+            where TTrue : class, TInterface
+            where TFalse : class, TInterface
+        {
+            if (condition)
+            {
+                Services.AddSingleton<TInterface, TTrue>();
+            }
+            else
+            {
+                Services.AddSingleton<TInterface, TFalse>();
+            }
+
         }
     }
 }

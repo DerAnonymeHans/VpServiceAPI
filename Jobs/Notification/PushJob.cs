@@ -27,13 +27,22 @@ namespace VpServiceAPI.Jobs.Notification
         }
         public async Task Push(User user, IGlobalNotificationBody globalBody, IGradeNotificationBody gradeBody)
         {
-            var options = new PushOptions("Neuer Vertretungsplan", globalBody.Subject, $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung", (long)user.PushId)
+            var options = new PushOptions(
+                "Neuer Vertretungsplan",
+                globalBody.Subject,
+                $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung",
+                (long)user.PushId
+            )
             {
                 Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/GetLogo"
             };
-            string JSON = JsonSerializer.Serialize(options);
-            Logger.Info(LogArea.Notification, "Would have pushed notification to: "+ user.Address);
-            //Logger.Debug(JSON);
+            var client = new RestClient("https://api.webpushr.com");
+            var request = new RestRequest("v1/notification/send/sid", Method.Post);
+            request.AddBody(JsonSerializer.Serialize(options));
+            request.AddHeader("webpushrKey", Environment.GetEnvironmentVariable("PUSH_KEY"));
+            request.AddHeader("webpushrAuthToken", Environment.GetEnvironmentVariable("PUSH_AUTH"));
+            request.AddHeader("Content-Type", "application/json");
+            Logger.Info(LogArea.Notification, "Would have sended push Notification to: " + user.Address);
         }
     }
 
@@ -70,18 +79,6 @@ namespace VpServiceAPI.Jobs.Notification
             }
             Logger.Info(LogArea.Notification, "Send push Notification to: " + user.Address);
             Thread.Sleep(1000);
-            // curl -X POST -H "webpushrKey: ebceb14755779d437de9412d748fa9b5" -H "webpushrAuthToken: 55543" -H "Content-Type: application/json" -d "{\"title\":\"test\", \"message\": \"MOIN\", \"target_url\": \"https://kepleraner-test.herokuapp.com/Benachrichtigung\", \"sid\": \"25538702\"}" https://api.webpushr.com/v1/notification/send/sid
-
-            //var content = new StringContent(optionsJSON, Encoding.UTF8, "application/json");
-
-
-            //Logger.Info(LogArea.Notification, "Pushed Notification to: " + user.Address);
-            ////var res = await Client.PostAsync(Environment.GetEnvironmentVariable("PUSH_URL"), content);
-            //Logger.Debug("STATUS:", res.StatusCode);
-            //Logger.Debug(res.RequestMessage);
-            //var message = new StreamReader(res.Content.ReadAsStream()).ReadToEnd();
-            //Logger.Debug(message);
-
         }
     }
 

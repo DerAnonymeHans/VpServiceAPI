@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VpServiceAPI", "VpServiceAPI.csproj", "{FE1B27BD-D33C-4877-81C8-D07557EFAE66}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "..\Testing\Testing.csproj", "{EF181D3C-56EF-4465-918F-1987E1AE6A1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,14 @@ Global
 		{FE1B27BD-D33C-4877-81C8-D07557EFAE66}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FE1B27BD-D33C-4877-81C8-D07557EFAE66}.Release|x64.ActiveCfg = Release|x64
 		{FE1B27BD-D33C-4877-81C8-D07557EFAE66}.Release|x64.Build.0 = Release|x64
+		{EF181D3C-56EF-4465-918F-1987E1AE6A1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF181D3C-56EF-4465-918F-1987E1AE6A1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF181D3C-56EF-4465-918F-1987E1AE6A1C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EF181D3C-56EF-4465-918F-1987E1AE6A1C}.Debug|x64.Build.0 = Debug|Any CPU
+		{EF181D3C-56EF-4465-918F-1987E1AE6A1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF181D3C-56EF-4465-918F-1987E1AE6A1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF181D3C-56EF-4465-918F-1987E1AE6A1C}.Release|x64.ActiveCfg = Release|Any CPU
+		{EF181D3C-56EF-4465-918F-1987E1AE6A1C}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

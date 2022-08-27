@@ -60,13 +60,15 @@ namespace VpServiceAPI.Controllers
         [Route("/Subscribe")]
         public async Task<WebMessage> Subscribe()
         {
-            return await WebResponder.RunWith(async () =>
+            var res = await WebResponder.RunWith(async () =>
             {
                 var form = Request.Form;
                 if (form["accept-agb"] != "on") throw new AppException("Bitte akzeptiere zuerst die AGB.");
                 var user = await UserRepository.ValidateUser(form["name"], form["mail"], form["grade"], form["notify-mode"]);
                 await UserRepository.AddUserRequest(user);
             }, Request.Path.Value, $"Es hat geklappt! Jetzt muss deine Anfrage nur noch manuell geprüft werden, dies kann bis zu ein paar Tage dauern.");
+            Logger.Debug(res);
+            return res;
         }
         [HttpPost]
         [Route("/ProposeSmallExtra")]
@@ -90,7 +92,6 @@ namespace VpServiceAPI.Controllers
             return await WebResponder.RunWith(async () =>
             {
                 if (string.IsNullOrWhiteSpace(Request.Form["text"])) throw new AppException("Das Textfeld darf nicht leer sein");
-                if (string.IsNullOrEmpty(Request.Form["text"])) throw new AppException("Das Textfeld darf nicht leer sein");
                 AttackDetector.Detect(Request.Form["text"]);
                 await DataQueries.Save("INSERT INTO proposals(text) VALUES (@text)", new { text = Request.Form["text"] });
             }, Request.Path.Value, "Es hat geklappt! Deine Anregung wird in kürze beachtet werden.");            
