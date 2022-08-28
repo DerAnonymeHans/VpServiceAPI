@@ -18,22 +18,29 @@ namespace VpServiceAPI.Repositories
 {
     public class TestUserRepository : IUserRepository
     {
+        private List<User> Users { get; init; }
+
+        public TestUserRepository()
+        {
+            Users = new()
+            {
+                new User("Pascal", "pascal.setzer@gmail.com", "12", UserStatus.NORMAL.ToString(), NotifyMode.PWA.ToString(), "", "25636001")
+            };
+        }
+
         public async Task AddUserRequest(User user)
         {
-            return;
+            Users.Add(user);
         }
 
         public async Task<User> GetUser(string mail)
         {
-            return (await GetUsers()).Find((user) => user.Address == mail);
+            return Users.Find((user) => user.Address == mail);
         }
 
         public async Task<List<User>> GetUsers(UserStatus status= UserStatus.NORMAL)
         {
-            return new List<User> 
-            { 
-                new User("Pascal", "pascal.setzer@gmail.com", "12", UserStatus.NORMAL.ToString(), NotifyMode.PWA.ToString(), "", "25636001")
-            };
+            return Users.FindAll((user) => user.Status == status);
         }
 
         public async Task<User> ValidateUser(string? name, string? mail, string? grade)
@@ -73,22 +80,42 @@ namespace VpServiceAPI.Repositories
 
         public async Task<bool> UserExists(string mail, UserStatus status = UserStatus.NORMAL)
         {
-            return (await GetUsers()).Exists((user) => user.Address == mail);
+            return Users.Exists((user) => user.Address == mail);
         }
 
-        public Task<bool> IsAuthenticated(string mail, string mailHash)
+        public async Task<bool> IsAuthenticated(string mail, string mailHash)
         {
-            throw new NotImplementedException();
+            if (!await UserExists(mail))
+            {
+                return false;
+            };
+            var encoded = WebUtility.UrlDecode(mailHash).Replace(' ', '+');
+            return StringCipher.Decrypt(encoded) == Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
         }
 
         public string GetAuthenticationHash(string mail)
         {
-            throw new NotImplementedException();
+            var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
+            var hash = StringCipher.Encrypt(base64);
+            return hash;
         }
 
-        public Task<string> StartHashResetAndGetKey(string mail)
+        public async Task<string> StartHashResetAndGetKey(string mail)
         {
-            throw new NotImplementedException();
+            if (!await UserExists(mail)) throw new AppException("Das Schlüssel kann nicht ausgestellt werden, da die Email Addresse nicht existiert.");
+            var randomBytes = new byte[4]; // 32 Bytes will give us 256 bits.
+            using (var rngCsp = new RNGCryptoServiceProvider())
+            {
+                rngCsp.GetBytes(randomBytes);
+            }
+            var stringBuilder = new StringBuilder();
+            foreach (var _byte in randomBytes)
+            {
+                stringBuilder.Append(_byte.ToString("X2"));
+            }
+            string key = stringBuilder.ToString();
+            string timestamp = DateTime.Now.Ticks.ToString();
+            return key;
         }
 
         public Task<MailHashPair> EndHashResetAndGetMailHashPair(string key)
@@ -221,10 +248,7 @@ namespace VpServiceAPI.Repositories
             {
                 return false;
             };
-            //Logger.Debug("real hash", GetAuthenticationHash(mail));
             var encoded = WebUtility.UrlDecode(mailHash).Replace(' ', '+');
-            //Logger.Debug("my hash", mailHash);
-            //Logger.Debug("encoded hash", encoded);
             return StringCipher.Decrypt(encoded) == Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
         }
 
@@ -275,7 +299,7 @@ namespace VpServiceAPI.Repositories
         {
             if (linkTo is null)
             {
-                linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung?codeModal=true" : "http://localhost:3000/Benachrichtigung?codeModal=true";
+                linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}" : "http://localhost:3000";
             }
             EmailJob.Send(new Entities.Notification
             {
@@ -292,8 +316,7 @@ namespace VpServiceAPI.Repositories
             {
                 "<h1>Hallo!</h1>",
                 "<p>Mit Hilfe dieser Mail wirst du bei Kepleraner angemeldet. Dafür musst du nur auf folgeden Code kopieren und wieder auf die Seite wechseln. Wenn du dort nach unten scrollst, findest du einen 'Code eingeben' Knopf, auf welchen du drücken musst.</p>",
-                $@"<h2>{key}</h2>",
-                $@"<br><hr>(<a href=""{linkTo}"">Link zur Seite</a>)"
+                $@"<h2><a href=""{linkTo}/Benachrichtigung?code={key}"">Diesen Link drücken</a></h2>"
             });
         }
 

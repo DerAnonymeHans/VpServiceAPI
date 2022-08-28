@@ -93,9 +93,9 @@ namespace VpServiceAPI.Jobs.Notification
         {
             try
             {
-                var cachedDate = (await DataQueries.GetRoutineData("DATETIME", "last_cache_delete"))[0];
+                var lastCacheDelete = (await DataQueries.GetRoutineData("DATETIME", "last_cache_delete"))[0];
                 var today = DateTime.Now.ToString("dd.MM");
-                if (cachedDate == today) return;
+                if (lastCacheDelete == today) return;
                 await DataQueries.SetRoutineData("DATETIME", "last_cache_delete", today);
             }
             catch (Exception ex)

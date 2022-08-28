@@ -65,9 +65,9 @@ namespace VpServiceAPI.Jobs.Checking
             WebScraper = webScraper;
         }
 
-        public async Task<string> GetPlanHTML(int daysFromToday=0)
+        public async Task<string> GetPlanHTML(int dayShift=0)
         {
-            var date = GetDate(daysFromToday);
+            var date = GetDate(dayShift);
             try
             {
                 PlanHTML = await WebScraper.GetFromVP24($"/vplan/vdaten/VplanKl{date}.xml?_=1653914187991");
@@ -81,29 +81,35 @@ namespace VpServiceAPI.Jobs.Checking
         }
         private string GetDate(int dayShift=0)
         {
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-            var today = DateTime.Now;
-            DateTime date;
-            if(today.Hour < 7)
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");           
+
+            Func<DateTime> GetWeekday = () =>
             {
-                date = today; 
-            }else
-            {
+                var today = DateTime.Now;
+                // skip weekends
+                if (today.DayOfWeek == DayOfWeek.Saturday)
+                {
+                    return today.AddDays(2);
+                }
+                if (today.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    return today.AddDays(1);
+                }
+
+                // plan for next weekday only after 7 o clock
+                if (today.Hour < 7)
+                {
+                    return today;
+                }
+                // next weekday after friday is monday
                 if (today.DayOfWeek == DayOfWeek.Friday)
                 {
-                    date = today.AddDays(3);
+                    return today.AddDays(3);
                 }
-                else if (today.DayOfWeek == DayOfWeek.Saturday)
-                {
-                    date = today.AddDays(2);
-                }
-                else
-                {
-                    date = today.AddDays(1);
-                }
-            }
+                return today.AddDays(1);
+            };
 
-            date = date.AddDays(dayShift);
+            DateTime date = GetWeekday().AddDays(dayShift);
             
             return date.ToString("yyyyMMdd");
         }

@@ -39,9 +39,7 @@ namespace VpServiceAPI.Jobs.Checking
                 return true;
             }
 
-            if (!await IsPlanNew()) return false;
-
-            return true;
+            return await IsPlanNew();
         }
         private async Task<bool> IsForceMail()
         {
