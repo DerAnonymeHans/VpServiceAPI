@@ -91,6 +91,7 @@ namespace VpServiceAPI.Jobs.Notification
             hasChange = false;
             var table = isSecondPlan ? PlanModel.Table2 : PlanModel.Table;
             if (table is null) return rows;
+            grade = grade == "11" || grade == "12" ? $"JG{grade}" : grade; // because of Kurs Bezeichnung - Kurs JG11/de123 would also count for grade 12
             foreach (var row in table)
             {
                 if (!row.Klasse.Contains(grade)) continue;

@@ -22,6 +22,6 @@ namespace VpServiceAPI.Interfaces
         public string GetAuthenticationHash(string mail);
         public Task<string> StartHashResetAndGetKey(string mail);
         public Task<MailHashPair> EndHashResetAndGetMailHashPair(string key);
-        public Task SendHashResetMail(string mail, string? linkTo = null);
+        public Task SendHashResetMail(string mail);
     }
 }

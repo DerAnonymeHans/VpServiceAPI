@@ -133,7 +133,7 @@ namespace VpServiceAPI.Repositories
             throw new NotImplementedException();
         }
 
-        public Task SendHashResetMail(string mail, string? linkTo = null)
+        public Task SendHashResetMail(string mail)
         {
             throw new NotImplementedException();
         }
@@ -215,7 +215,7 @@ namespace VpServiceAPI.Repositories
         }
         public async Task AcceptUser(string mail)
         {
-            await DataQueries.Save("UPDATE users SET status=@status WHERE address=@address", new { address = mail, status=UserStatus.NORMAL });
+            await DataQueries.Save("UPDATE users SET status=@status WHERE address=@address", new { address = mail, status=UserStatus.NORMAL.ToString() });
             User user = await GetUser(mail);
             await DataQueries.AddUserToBackupDB(user);
             if(user.NotifyMode == NotifyMode.PWA)
@@ -295,12 +295,10 @@ namespace VpServiceAPI.Repositories
             return new MailHashPair(rows[0].Mail, GetAuthenticationHash(rows[0].Mail));
         }
 
-        public async Task SendHashResetMail(string mail, string? linkTo=null)
+        public async Task SendHashResetMail(string mail)
         {
-            if (linkTo is null)
-            {
-                linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}" : "http://localhost:3000";
-            }
+            string linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}" : "http://localhost:3000";
+            
             EmailJob.Send(new Entities.Notification
             {
                 Body = await GenerateBody(mail, linkTo),
@@ -312,10 +310,11 @@ namespace VpServiceAPI.Repositories
         private async Task<string> GenerateBody(string mail, string linkTo)
         {            
             string key = await StartHashResetAndGetKey(mail);
+            User user = await GetUser(mail);
             return string.Join("<br>", new string[]
             {
-                "<h1>Hallo!</h1>",
-                "<p>Mit Hilfe dieser Mail wirst du bei Kepleraner angemeldet. Dafür musst du nur auf folgeden Code kopieren und wieder auf die Seite wechseln. Wenn du dort nach unten scrollst, findest du einen 'Code eingeben' Knopf, auf welchen du drücken musst.</p>",
+                $"<h1>Hallo {user.Name}!</h1>",
+                "<p>Mit Hilfe dieser Mail wirst du bei Kepleraner angemeldet. Dafür musst du nur auf folgenden Link drücken:.</p>",
                 $@"<h2><a href=""{linkTo}/Benachrichtigung?code={key}"">Diesen Link drücken</a></h2>"
             });
         }
