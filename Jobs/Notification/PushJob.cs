@@ -62,17 +62,20 @@ namespace VpServiceAPI.Jobs.Notification
                 globalBody.Subject,
                 $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung",
                 user.PushId ?? throw new AppException($"Tried to send push to {user.Address} but user has no pushId.")
-            )
-            {
-                Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/GetLogo"
-            };
+            );
+            //{
+            //    Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/GetLogo"
+            //};
+
             var client = new RestClient("https://api.webpushr.com");
             var request = new RestRequest("v1/notification/send/sid", Method.Post);
             request.AddBody(JsonSerializer.Serialize(options));
-            request.AddHeader("webpushrKey", Environment.GetEnvironmentVariable("PUSH_KEY"));
-            request.AddHeader("webpushrAuthToken", Environment.GetEnvironmentVariable("PUSH_AUTH"));
-            request.AddHeader("Content-Type", "application/json");
+            request.AddHeader("webpushrKey", Environment.GetEnvironmentVariable("PUSH_KEY"))
+                .AddHeader("webpushrAuthToken", Environment.GetEnvironmentVariable("PUSH_AUTH"))
+                .AddHeader("Content-Type", "application/json");
+
             var response = await client.ExecuteAsync(request);
+
             if (!response.IsSuccessful)
             {
                 throw new AppException($"Status: {response.StatusCode}; Message: {response.Content}");

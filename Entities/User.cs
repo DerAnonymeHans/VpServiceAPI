@@ -10,7 +10,7 @@ namespace VpServiceAPI.Entities
         public string Grade { get; init; }
         public UserStatus Status { get; init; }
         public NotifyMode NotifyMode { get; init; }
-        public string Sub_Day { get; init; }
+        public string SubDay { get; init; }
         public long? PushId { get; init; }
         public User(string name, string address, string grade, string status, string mode, string sub_day, string? push_id)
         {
@@ -30,7 +30,7 @@ namespace VpServiceAPI.Entities
                 "PWA" => NotifyMode.PWA,
                 _ => NotifyMode.EMAIL
             };
-            Sub_Day = sub_day;
+            SubDay = sub_day;
             PushId = string.IsNullOrEmpty(push_id) ? null : long.Parse(push_id);
         }
     }

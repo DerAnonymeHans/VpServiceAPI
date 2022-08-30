@@ -19,12 +19,14 @@ namespace VpServiceAPI.Jobs.Notification
 
         public async Task<IUserNotificationBody> Begin(User user)
         {
-            return new UserNotificationBody
+            var body = new UserNotificationBody
             {
                 UserName = user.Name,
                 SmallExtra = await ExtraRepository.GetRandSmallExtra()
             };
+            return body;
         }
+
 
     }
 }

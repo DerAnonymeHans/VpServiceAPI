@@ -34,6 +34,7 @@ namespace VpServiceAPI.Interfaces
     {
         public string UserName { get; set; }
         public SmallExtra SmallExtra { get; set; }
+        public List<string> PersonalInformation { get; }
     }
 
     public interface INotificationBody : IGlobalNotificationBody, IGradeNotificationBody, IUserNotificationBody

@@ -18,10 +18,9 @@ namespace VpServiceAPI.Jobs.Notification
         private readonly IEmailJob Notificator;
         private readonly IUserRepository UserProvider;
         private readonly IDataQueries DataQueries;
-        private readonly INotificationBuilder NotificationBuilder;
-        private readonly IArtworkRepository ArtworkRepository;
-        private readonly IExtraRepository ExtraRepository;
+        private readonly IEmailBuilder NotificationBuilder;
         private readonly IPushJob PushJob;
+        private readonly IUserRepository UserRepository;
         private readonly GlobalTask GlobalTask;
         private readonly GradeTask GradeTask;
         private readonly UserTask UserTask;
@@ -34,19 +33,19 @@ namespace VpServiceAPI.Jobs.Notification
             IEmailJob notificator,
             IUserRepository userProvider,
             IDataQueries dataQueries,
-            INotificationBuilder notificationBuilder,
+            IEmailBuilder notificationBuilder,
             IArtworkRepository artworkRepository,
             IExtraRepository extraRepository,
-            IPushJob pushJob)
+            IPushJob pushJob,
+            IUserRepository userRepository)
         {
             Logger = logger;
             Notificator = notificator;
             UserProvider = userProvider;
             DataQueries = dataQueries;
             NotificationBuilder = notificationBuilder;
-            ArtworkRepository = artworkRepository;
-            ExtraRepository = extraRepository;
             PushJob = pushJob;
+            UserRepository = userRepository;
             GlobalTask = new(logger, dataQueries, artworkRepository);
             GradeTask = new(logger, dataQueries);
             UserTask = new(logger, dataQueries, extraRepository);
@@ -132,7 +131,9 @@ namespace VpServiceAPI.Jobs.Notification
                     if (!gradeBody.IsNotify) continue;
                 }
 
-                if(user.NotifyMode == NotifyMode.PWA)
+                var userBody = await UserTask.Begin(user);
+
+                if (user.NotifyMode == NotifyMode.PWA)
                 {
                     try
                     {
@@ -142,10 +143,15 @@ namespace VpServiceAPI.Jobs.Notification
                     catch (AppException ex)
                     {
                         Logger.Warn(LogArea.Notification, ex, "Could not send push notification. Sending Email instead", user);
+                    }catch(Exception ex)
+                    {
+                        Logger.Error(LogArea.Notification, ex, "Could not send push notification. Sending Email instead", user);
                     }
+                    string key = await UserRepository.StartHashResetAndGetKey(user.Address);
+                    userBody.PersonalInformation.Add(@$"Beim Versuch dir eine Push Nachricht zu senden ist ein Problem aufgetreten, weshalb du stattdessen eine Email erhalten hast. Die häufigste Ursache dafür ist, dass du Benachrichtigungen nicht erlaubt hast. Drücke folgenden Link und erlaube anschließend Benachrichtigungen: <a href=""{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung?code={key}"">Link drücken</a>");
                 }
 
-                var userBody = await UserTask.Begin(user);
+                
 
                 var notifBody = new NotificationBody();
                 notifBody.Set(GlobalBody).Set(gradeBody).Set(userBody);

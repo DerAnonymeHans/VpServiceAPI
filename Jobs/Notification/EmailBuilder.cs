@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class NotificationBuilder : INotificationBuilder
+    public class EmailBuilder : IEmailBuilder
     {
         private readonly IMyLogger Logger;
         private NotificationBody? NotificationBody { get; set; }
@@ -21,7 +21,7 @@ namespace VpServiceAPI.Jobs.Notification
         private readonly string TemplatePath  = AppDomain.CurrentDomain.BaseDirectory + "Templates";
         private string TemplateName { get; set; } = "Default";
 
-        public NotificationBuilder(IMyLogger logger)
+        public EmailBuilder(IMyLogger logger)
         {
             Logger = logger;
         }
@@ -69,7 +69,8 @@ namespace VpServiceAPI.Jobs.Notification
                 { "SmallExtraAuthor", NotificationBody.SmallExtra.Author },
                 { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/Notification/GetQrcode" },
                 { "Information",  GenerateInformation() },
-                { "StatLoginParams", $"stat-user={Environment.GetEnvironmentVariable("SITE_STATS_NAME")}&stat-pw={Environment.GetEnvironmentVariable("SITE_STATS_PW")}" }
+                { "StatLoginParams", $"stat-user={Environment.GetEnvironmentVariable("SITE_STATS_NAME")}&stat-pw={Environment.GetEnvironmentVariable("SITE_STATS_PW")}" },
+                { "PersonalInformation", string.Join("<br>", NotificationBody.PersonalInformation) }
 
             };
         }

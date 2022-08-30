@@ -38,6 +38,8 @@ namespace VpServiceAPI.Entities
     {
         public string UserName { get; set; } = "";
         public SmallExtra SmallExtra { get; set; } = new();
+
+        public List<string> PersonalInformation { get; } = new();
     }
 
     public record NotificationBody : INotificationBody
@@ -53,6 +55,7 @@ namespace VpServiceAPI.Entities
 
         public ArtworkMeta? Artwork { get; set; }
         public List<string> MissingTeachers { get; set; } = new();
+        public List<string> Information { get; set; } = new();
 
 
         public string Grade { get; set; } = "";
@@ -64,7 +67,7 @@ namespace VpServiceAPI.Entities
 
         public string UserName { get; set; } = "";
         public SmallExtra SmallExtra { get; set; } = new();
-        public List<string> Information { get; set; } = new();
+        public List<string> PersonalInformation { get; private set; } = new();
 
         public INotificationBody Set<T>(T body)
         {

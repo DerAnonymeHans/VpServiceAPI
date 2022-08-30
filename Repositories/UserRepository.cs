@@ -24,7 +24,7 @@ namespace VpServiceAPI.Repositories
         {
             Users = new()
             {
-                new User("Pascal", "pascal.setzer@gmail.com", "6", UserStatus.NORMAL.ToString(), NotifyMode.PWA.ToString(), "", "25636001")
+                new User("Pascal", "pascal.setzer@gmail.com", "6", UserStatus.NORMAL.ToString(), NotifyMode.PWA.ToString(), "", "256360010")
             };
         }
 
