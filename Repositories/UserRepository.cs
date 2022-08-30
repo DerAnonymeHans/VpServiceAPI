@@ -24,7 +24,7 @@ namespace VpServiceAPI.Repositories
         {
             Users = new()
             {
-                new User("Pascal", "pascal.setzer@gmail.com", "12", UserStatus.NORMAL.ToString(), NotifyMode.PWA.ToString(), "", "25636001")
+                new User("Pascal", "pascal.setzer@gmail.com", "6", UserStatus.NORMAL.ToString(), NotifyMode.PWA.ToString(), "", "25636001")
             };
         }
 
@@ -163,7 +163,7 @@ namespace VpServiceAPI.Repositories
         }
         public async Task<List<User>> GetUsers(UserStatus status = UserStatus.NORMAL)
         {
-            return await DataQueries.Load<User, dynamic>("SELECT name, address, grade, status, mode, sub_day, push_id FROM `users` WHERE status=@status ORDER BY `grade`", new { status = status.ToString() });
+            return await DataQueries.Load<User, dynamic>("SELECT name, address, grade, status, mode, sub_day, push_id FROM `users` WHERE status=@status ORDER BY `grade`, `mode`", new { status = status.ToString() });
         }
         public async Task<User> ValidateUser(string name, string mail, string grade, string mode)
         {

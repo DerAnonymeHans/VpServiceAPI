@@ -61,7 +61,7 @@ namespace VpServiceAPI.Jobs.Notification
                 "Neuer Vertretungsplan",
                 globalBody.Subject,
                 $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung",
-                (long)user.PushId
+                user.PushId ?? throw new AppException($"Tried to send push to {user.Address} but user has no pushId.")
             )
             {
                 Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/GetLogo"
@@ -72,13 +72,13 @@ namespace VpServiceAPI.Jobs.Notification
             request.AddHeader("webpushrKey", Environment.GetEnvironmentVariable("PUSH_KEY"));
             request.AddHeader("webpushrAuthToken", Environment.GetEnvironmentVariable("PUSH_AUTH"));
             request.AddHeader("Content-Type", "application/json");
-            var response = client.Execute(request);
+            var response = await client.ExecuteAsync(request);
             if (!response.IsSuccessful)
             {
                 throw new AppException($"Status: {response.StatusCode}; Message: {response.Content}");
             }
             Logger.Info(LogArea.Notification, "Send push Notification to: " + user.Address);
-            Thread.Sleep(1000);
+            Thread.Sleep(1000); // webpushr only allows push once per second
         }
     }
 
