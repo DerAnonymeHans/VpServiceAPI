@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using System.Web;
+using System.Net.Mime;
 
 
 #nullable enable
@@ -54,7 +55,7 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpGet]
-        [Route("GetArtwork/{artName}/{name}")]
+        [Route("Artwork/{artName}/{name}")]
         public async Task<IActionResult> Test(string artName, string name)
         {
             if (!await ArtworkRepository.IncludesArtwork(artName))
@@ -85,13 +86,13 @@ namespace VpServiceAPI.Controllers
         }
 
         [HttpGet]
-        [Route("GetQrcode")]
+        [Route("Qrcode")]
         public IActionResult GetQrcode()
         {
             return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/qrcode.png"), "image/png");
         }
         [HttpGet]
-        [Route("GetLogo")]
+        [Route("Logo.png")]
         public IActionResult GetLogo()
         {
             return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/logo.png"), "image/png");

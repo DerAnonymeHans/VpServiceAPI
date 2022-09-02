@@ -148,7 +148,7 @@ namespace VpServiceAPI.Jobs.Notification
                         Logger.Error(LogArea.Notification, ex, "Could not send push notification. Sending Email instead", user);
                     }
                     string key = await UserRepository.StartHashResetAndGetKey(user.Address);
-                    userBody.PersonalInformation.Add(@$"Beim Versuch dir eine Push Nachricht zu senden ist ein Problem aufgetreten, weshalb du stattdessen eine Email erhalten hast. Die häufigste Ursache dafür ist, dass du Benachrichtigungen nicht erlaubt hast. Drücke folgenden Link und erlaube anschließend Benachrichtigungen: <a href=""{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung?code={key}"">Link drücken</a>");
+                    userBody.PersonalInformation.Add(@$"ACHTUNG: Es wurde versucht dir eine Push Nachticht zu senden, wobei ein Fehler aufkam. Meist liegt die Ursache an fehlenden Benachtichtigungsrechten. Drücke den Link und erlaube sie: <a href=""{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung?code={key}"">Link drücken</a>");
                 }
 
                 

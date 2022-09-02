@@ -17,7 +17,7 @@ namespace VpServiceAPI.Jobs.Notification
         private NotificationBody? NotificationBody { get; set; }
         private Dictionary<string, string>? HTMLNotificationData { get; set; }
 
-        private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/Notification/GetArtwork";
+        private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Artwork";
         private readonly string TemplatePath  = AppDomain.CurrentDomain.BaseDirectory + "Templates";
         private string TemplateName { get; set; } = "Default";
 
@@ -67,7 +67,7 @@ namespace VpServiceAPI.Jobs.Notification
                 { "SecondPlanRows", GeneratePlanRows(true) },
                 { "SmallExtra", NotificationBody.SmallExtra.Text },
                 { "SmallExtraAuthor", NotificationBody.SmallExtra.Author },
-                { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/Notification/GetQrcode" },
+                { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/Notification/Qrcode" },
                 { "Information",  GenerateInformation() },
                 { "StatLoginParams", $"stat-user={Environment.GetEnvironmentVariable("SITE_STATS_NAME")}&stat-pw={Environment.GetEnvironmentVariable("SITE_STATS_PW")}" },
                 { "PersonalInformation", string.Join("<br>", NotificationBody.PersonalInformation) }
