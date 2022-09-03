@@ -12,7 +12,7 @@
             Time = time;
             Type = type;
             Message = message;
-            Extra = extra;
+            Extra = string.Join("<br>", extra.Split("|"));
         }
 
         public override string ToString()
@@ -26,7 +26,18 @@
                 "DEBUG" => "aqua",
                 _ => "black"
             };
-            return $"<div><div><span style=\"color: {color}\">{Time}:  </span>  {Message}</div><div>{Extra}</div></div>";
+            return
+                $@"
+                    <div>
+                        <div>
+                            <span style=""color: {color}"">{Time}:  </span>
+                            <span>{Message}</span>
+                        </div>
+                        <div>
+                            {Extra}
+                        </div>
+                    </div>
+                ";
         }
     }
 }
