@@ -70,7 +70,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
         {
             try
             {
-                return await DataQueries.Load<AnalysedRow, dynamic>("SELECT * FROM vp_data WHERE date=@date", new { date = Date.ToString("dd.MM.yyyy") });
+                return await DataQueries.Load<AnalysedRow, dynamic>("SELECT year, type, missing_teacher, substitute_teacher, missing_subject, substitute_subject, lesson, class_name, date, room, extra FROM vp_data WHERE date=@date", new { date = Date.ToString("dd.MM.yyyy") });
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.StatExtraction, ex, "Tried to extract analysed rows for date " + Date.ToString("dd.MM.yyyy"));

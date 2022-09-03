@@ -109,7 +109,7 @@ namespace VpServiceAPI.Jobs.Analysing
                 Type = "AUS",
 
                 MissingTeacher = GetTeacher(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\sfällt aus)").Match(row.Info).Value),
-                MissingSubject = GetSubject(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\s[a-zA-ZäÄöÖüÜß]+\sfällt aus)").Match(row.Info).Value),
+                MissingSubject = GetSubject(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\s[a-zA-ZäÄöÖüÜß/]+\sfällt aus)").Match(row.Info).Value),
                 Lesson = GetLessons(row.Stunde),
                 ClassName = GetClasses(row.Klasse)
             };
@@ -124,7 +124,7 @@ namespace VpServiceAPI.Jobs.Analysing
 
                 MissingTeacher = GetTeacher(new Regex(@"(?<=für)\s[0-9a-zA-ZäÄöÖüÜß]+\s([0-9a-zA-ZäÄöÖüÜß]+)").Matches(row.Info)[0].Groups[1].Value),
                 SubstituteTeacher = GetTeacher(row.Lehrer),
-                MissingSubject = GetSubject(new Regex(@"(?<=für\s)[0-9a-zA-ZäÄöÖüÜß]+").Match(row.Info).Value),
+                MissingSubject = GetSubject(new Regex(@"(?<=für\s)[0-9a-zA-ZäÄöÖüÜß/]+").Match(row.Info).Value),
                 SubstituteSubject = GetSubject(row.Fach),
                 Lesson = GetLessons(row.Stunde),
                 ClassName = GetClasses(row.Klasse)
@@ -169,7 +169,7 @@ namespace VpServiceAPI.Jobs.Analysing
         }
         private string GetSubject(string field)
         {
-            return Regex.Match(field, "[a-zA-Z]+").Value.ToUpper();
+            return Regex.Match(field, ".+").Value.ToUpper();
         }
 
     }
