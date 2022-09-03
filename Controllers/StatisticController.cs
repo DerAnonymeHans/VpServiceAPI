@@ -60,7 +60,7 @@ namespace VpServiceAPI.Controllers
 
                 if (form["accept-agb"] != "on") throw new AppException("Bitte akzeptieren Sie zuerst die AGB");
 
-                Response.Cookies.Append("statAuth", Environment.GetEnvironmentVariable("SITE_STAT_AUTH"), new CookieOptions
+                Response.Cookies.Append("statAuth", Environment.GetEnvironmentVariable("SITE_STAT_AUTH") ?? "", new CookieOptions
                 {
                     SameSite = SameSiteMode.None,
                     Secure = true

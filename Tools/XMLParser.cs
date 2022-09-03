@@ -5,19 +5,19 @@ namespace VpServiceAPI.Tools
 {
     public class XMLParser
     {
-        public string? XML { get; set; }
+        public string XML { get; set; }
         public XMLParser(string xml)
         {
             XML = xml;
         }
         public XMLParser ExtractNode(string nodeTag)
         {
-            XML = GetNode(XML, nodeTag);
+            XML = GetNode(XML, nodeTag) ?? XML;
             return this;
         }
         public XMLParser ExtractNodeContent(string nodeTag)
         {
-            XML = GetNodeContent(XML, nodeTag);
+            XML = GetNodeContent(XML, nodeTag) ?? XML;
             return this;
         }
 
@@ -26,7 +26,6 @@ namespace VpServiceAPI.Tools
         {
             try
             {
-
                 int startIdx = xml.IndexOf($"<{nodeTag}");
                 int endIdx;
 
@@ -73,7 +72,7 @@ namespace VpServiceAPI.Tools
 
         public override string ToString()
         {
-            return XML;
+            return XML ?? "";
         }
     }
 }

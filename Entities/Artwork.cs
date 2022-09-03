@@ -29,12 +29,12 @@ namespace VpServiceAPI.Entities
                 _ => System.Drawing.Color.White
             };
         }
-        [JsonConstructor]
-        public ArtworkMeta(string name, string color)
-        {
-            Name = name;
-            Color = color;
-        }
+        //[JsonConstructor]
+        //public ArtworkMeta(string name, string color)
+        //{
+        //    Name = name;
+        //    Color = color;
+        //}
     }
     public class Artwork : ArtworkMeta
     {

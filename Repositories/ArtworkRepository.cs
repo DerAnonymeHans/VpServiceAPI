@@ -38,6 +38,7 @@ namespace VpServiceAPI.Repositories
                 return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE 1 LIMIT 1", new { }))[0];
             }catch(Exception ex)
             {
+                Logger.Error(LogArea.Artwork, ex, "Tried to get default artwork.");
                 return new Artwork("rainbow_car", await ReadArtworkFile("rainbow_car"), "red", "white", "0.0.", "0.0.");
             }
         }
@@ -75,12 +76,14 @@ namespace VpServiceAPI.Repositories
                 return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE name=@name", new { name = name }))[0];
             }catch(Exception ex)
             {
+                Logger.Error(LogArea.Artwork, ex, $"Tried to get artwork '{name}'. Now trying to read from disk...");
                 try
                 {
                     return new Artwork(name, await ReadArtworkFile(name), "red", "white", "0.0.", "0.0.");
                 }
-                catch
+                catch(Exception ex2)
                 {
+                    Logger.Error(LogArea.Artwork, ex2, $"Tried to read Artwork '{name}' from local disk. Now falling back to local");
                     return await Default();
                 }
             }
@@ -94,6 +97,7 @@ namespace VpServiceAPI.Repositories
                 return (await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE name=@name", new { name = name }))[0];
             }catch(Exception ex)
             {
+                Logger.Error(LogArea.Artwork, ex, $"Tried to get artwork meta '{name}'. Now falling back to default..");
                 return new ArtworkMeta(name, "0.0.", "0.0.", "red", "white");
             }
         }

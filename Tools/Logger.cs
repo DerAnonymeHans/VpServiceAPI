@@ -18,9 +18,9 @@ namespace VpServiceAPI.Tools
         private static string CurrentDateTime { get { return DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"); } }
         private static readonly string Space = "   ";
         private static readonly int MAX_CHARS = 200;
-        private static string SpliceText(string text, int lineLength)
+        private static string SpliceText(string? text, int lineLength)
         {
-            return Regex.Replace(text, "(.{" + lineLength + "})", "$1" + Environment.NewLine + Space);
+            return Regex.Replace(text ?? "", "(.{" + lineLength + "})", "$1" + Environment.NewLine + Space);
         }
 
 

@@ -101,7 +101,7 @@ namespace VpServiceAPI.Controllers
         [Route("IsAuthenticated")]
         public async Task<WebResponse<bool>> IsUserAuthenticated()
         {
-            if(Request.Cookies.TryGetValue("userAuthMail", out string userAuthMail) && Request.Cookies.TryGetValue("userAuthHash", out string userAuthHash))
+            if(Request.Cookies.TryGetValue("userAuthMail", out string? userAuthMail) && Request.Cookies.TryGetValue("userAuthHash", out string? userAuthHash))
             {
                 if(userAuthMail is not null && userAuthHash is not null)
                 {

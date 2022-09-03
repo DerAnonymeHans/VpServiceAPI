@@ -14,8 +14,8 @@ namespace VpServiceAPI.Jobs.Notification
     public class EmailBuilder : IEmailBuilder
     {
         private readonly IMyLogger Logger;
-        private NotificationBody? NotificationBody { get; set; }
-        private Dictionary<string, string>? HTMLNotificationData { get; set; }
+        private NotificationBody NotificationBody { get; set; }
+        private Dictionary<string, string> HTMLNotificationData { get; set; }
 
         private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Artwork";
         private readonly string TemplatePath  = AppDomain.CurrentDomain.BaseDirectory + "Templates";
@@ -24,6 +24,8 @@ namespace VpServiceAPI.Jobs.Notification
         public EmailBuilder(IMyLogger logger)
         {
             Logger = logger;
+            NotificationBody = new();
+            HTMLNotificationData = new();
         }
 
         public void ChangeTemplate(string name)
@@ -50,10 +52,11 @@ namespace VpServiceAPI.Jobs.Notification
         }
         private Dictionary<string, string> GetHTMLNotificationData()
         {
+
             return new Dictionary<string, string>
             {
-                { "ArtWorkSrc", @$"{GeneratedPicRoute}/{NotificationBody.Artwork.Name}/{NotificationBody.UserName}" },
-                { "Color", NotificationBody.Artwork.Color },
+                { "ArtWorkSrc", @$"{GeneratedPicRoute}/{NotificationBody.Artwork?.Name}/{NotificationBody.UserName}" },
+                { "Color", NotificationBody.Artwork?.Color ?? "red" },
                 { "UserName", NotificationBody.UserName },
                 { "Grade", NotificationBody.Grade },
                 { "AffectedDate", NotificationBody.AffectedDate },

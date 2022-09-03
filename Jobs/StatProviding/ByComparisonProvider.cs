@@ -118,7 +118,7 @@ namespace VpServiceAPI.Jobs.StatProviding
         public async Task<ComparisonStatistic> RelativeOfInComparison(string name)
         {
             // <RELATIVE FEHLSTUNDEN> / <DURCHSCHNITTLICHE RELATIVE FEHLSTUNDEN DES TYPS>
-            var specific = await RelativeOf(name);
+            RelativeStatistic specific = await RelativeOf(name);
             Enum.TryParse<EntityType>(specific.Type, out var type);
             RelativeStatistic average;
             if(type == EntityType.KEPLER)
@@ -137,7 +137,7 @@ namespace VpServiceAPI.Jobs.StatProviding
             return new ComparisonStatistic
             {
                 Name = specific.Name,
-                Type = specific.Type.ToString(),
+                Type = specific.Type?.ToString(),
                 Missed = (specific.Missed / average.Missed) - 1,
                 Substituted = (specific.Substituted / average.Substituted) - 1,
                 MissedAverage = average.Missed,

@@ -37,7 +37,7 @@ namespace VpServiceAPI.Jobs.Analysing
             {
                 var analysedRow = AnalyseRow(row);
                 if (analysedRow is null) continue;
-                analysedRow.year = ProviderHelper.CurrentSchoolYear;
+                analysedRow.Year = ProviderHelper.CurrentSchoolYear;
                 newTable.Add(analysedRow);
             }
             return newTable;
@@ -73,16 +73,16 @@ namespace VpServiceAPI.Jobs.Analysing
             if (substTeacher is null) return ParenthesisCase(row);
             return new AnalysedRow
             {
-                date = PlanModel.MetaData.AffectedDate.Date,
-                extra = row.Info,
-                type = "VER",
+                Date = PlanModel.MetaData.AffectedDate.Date,
+                Extra = row.Info,
+                Type = "VER",
 
-                missing_teacher = GetTeacher(Regex.Match(row.Lehrer, @"(?<=\().+(?=\))").Value),
-                missing_subject = GetSubject(row.Fach),
-                substitute_teacher = substTeacher.ShortName,
-                substitute_subject = GetSubject(row.Fach),
-                lesson = GetLessons(row.Stunde),
-                class_name = GetClasses(row.Klasse)
+                MissingTeacher = GetTeacher(Regex.Match(row.Lehrer, @"(?<=\().+(?=\))").Value),
+                MissingSubject = GetSubject(row.Fach),
+                SubstituteTeacher = substTeacher.ShortName,
+                SubstituteSubject = GetSubject(row.Fach),
+                Lesson = GetLessons(row.Stunde),
+                ClassName = GetClasses(row.Klasse)
             };
         }
 
@@ -90,44 +90,44 @@ namespace VpServiceAPI.Jobs.Analysing
         {
             return new AnalysedRow
             {
-                date = PlanModel.MetaData.AffectedDate.Date,
-                extra = row.Info,
-                type = "AUS",
+                Date = PlanModel.MetaData.AffectedDate.Date,
+                Extra = row.Info,
+                Type = "AUS",
 
-                missing_teacher = GetTeacher(Regex.Match(row.Lehrer, @"(?<=\().+(?=\))").Value),
-                missing_subject = GetSubject(row.Fach),
-                lesson = GetLessons(row.Stunde),
-                class_name = GetClasses(row.Klasse)
+                MissingTeacher = GetTeacher(Regex.Match(row.Lehrer, @"(?<=\().+(?=\))").Value),
+                MissingSubject = GetSubject(row.Fach),
+                Lesson = GetLessons(row.Stunde),
+                ClassName = GetClasses(row.Klasse)
             };
         }
         private AnalysedRow FälltAusCase(PlanRow row)
         {
             return new AnalysedRow
             {
-                date = PlanModel.MetaData.AffectedDate.Date,
-                extra = row.Info,
-                type = "AUS",
+                Date = PlanModel.MetaData.AffectedDate.Date,
+                Extra = row.Info,
+                Type = "AUS",
 
-                missing_teacher = GetTeacher(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\sfällt aus)").Match(row.Info).Value),
-                missing_subject = GetSubject(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\s[a-zA-ZäÄöÖüÜß]+\sfällt aus)").Match(row.Info).Value),
-                lesson = GetLessons(row.Stunde),
-                class_name = GetClasses(row.Klasse)
+                MissingTeacher = GetTeacher(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\sfällt aus)").Match(row.Info).Value),
+                MissingSubject = GetSubject(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\s[a-zA-ZäÄöÖüÜß]+\sfällt aus)").Match(row.Info).Value),
+                Lesson = GetLessons(row.Stunde),
+                ClassName = GetClasses(row.Klasse)
             };
         }
         private AnalysedRow FürCase(PlanRow row)
         {
             return new AnalysedRow
             {
-                date = PlanModel.MetaData.AffectedDate.Date,
-                extra = row.Info,
-                type = "VER",
+                Date = PlanModel.MetaData.AffectedDate.Date,
+                Extra = row.Info,
+                Type = "VER",
 
-                missing_teacher = GetTeacher(new Regex(@"(?<=für)\s[0-9a-zA-ZäÄöÖüÜß]+\s([0-9a-zA-ZäÄöÖüÜß]+)").Matches(row.Info)[0].Groups[1].Value),
-                substitute_teacher = GetTeacher(row.Lehrer),
-                missing_subject = GetSubject(new Regex(@"(?<=für\s)[0-9a-zA-ZäÄöÖüÜß]+").Match(row.Info).Value),
-                substitute_subject = GetSubject(row.Fach),
-                lesson = GetLessons(row.Stunde),
-                class_name = GetClasses(row.Klasse)
+                MissingTeacher = GetTeacher(new Regex(@"(?<=für)\s[0-9a-zA-ZäÄöÖüÜß]+\s([0-9a-zA-ZäÄöÖüÜß]+)").Matches(row.Info)[0].Groups[1].Value),
+                SubstituteTeacher = GetTeacher(row.Lehrer),
+                MissingSubject = GetSubject(new Regex(@"(?<=für\s)[0-9a-zA-ZäÄöÖüÜß]+").Match(row.Info).Value),
+                SubstituteSubject = GetSubject(row.Fach),
+                Lesson = GetLessons(row.Stunde),
+                ClassName = GetClasses(row.Klasse)
             };
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Tools;
 
@@ -188,8 +189,10 @@ namespace VpServiceAPI.Jobs.Checking
         {
             try
             {
-                string title = XMLParser.GetNodeContent(PlanHTML, "titel");
-                string originDateString = XMLParser.GetNodeContent(PlanHTML, "datum");
+                string? title = XMLParser.GetNodeContent(PlanHTML, "titel");
+                string? originDateString = XMLParser.GetNodeContent(PlanHTML, "datum");
+
+                if (title is null || originDateString is null) throw new AppException($"VP Title is: {title}. Origin String: {originDateString}");
 
                 var affectedDate = GetAffectedDate(title);
                 var originDate = GetOriginDate(originDateString);
@@ -201,11 +204,15 @@ namespace VpServiceAPI.Jobs.Checking
                     AffectedDate = affectedDate,
                 };
             }
+            catch(AppException ex)
+            {
+                Logger.Error(LogArea.PlanProviding, ex, "Tried to extract MetaData.", ex.Message);
+            }
             catch (Exception ex)
             {
                 Logger.Error(LogArea.PlanConverting, ex, "Tried to extract MetaData.");
-                return null;
             }
+            return null;
 
         }
         private AffectedDate GetAffectedDate(string title)

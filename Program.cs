@@ -25,22 +25,25 @@ namespace VpServiceAPI
 
         private static async void StartRoutine()
         {
-            using(var client = new HttpClient())
-            {
-                Console.WriteLine("Automatically starting Routine");
-                await client.GetAsync($"{Environment.GetEnvironmentVariable("URL")}/Login");
+            using var client = new HttpClient();
+            Console.WriteLine("Automatically starting Routine");
+            await client.GetAsync($"{Environment.GetEnvironmentVariable("URL")}/Login");
 
-                var values = new Dictionary<string, string>()
+            var name = Environment.GetEnvironmentVariable("SITE_ADMIN_NAME");
+            var pw = Environment.GetEnvironmentVariable("SITE_ADMIN_PW");
+            if (name is null) Console.WriteLine("Tried to start routine but missing SITE_ADMIN_NAME.");
+            if (pw is null) Console.WriteLine("Tried to start routine but missing SITE_ADMIN_PW.");
+
+            var values = new List<KeyValuePair<string?, string?>>()
                 {
-                    { "name", Environment.GetEnvironmentVariable("SITE_ADMIN_NAME") },
-                    { "pw", Environment.GetEnvironmentVariable("SITE_ADMIN_PW") },
-
+                    new KeyValuePair<string?, string?>("name", name),
+                    new KeyValuePair<string?, string?>("pw", pw),
                 };
-                var content = new FormUrlEncodedContent(values);
-                await client.PostAsync($"{Environment.GetEnvironmentVariable("URL")}/login", content);
 
-                await client.PostAsync(Environment.GetEnvironmentVariable("URL") + "/Routine/Begin", new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()));
-            }
+            var content = new FormUrlEncodedContent(values);
+            await client.PostAsync($"{Environment.GetEnvironmentVariable("URL")}/login", content);
+
+            await client.PostAsync(Environment.GetEnvironmentVariable("URL") + "/Routine/Begin", new FormUrlEncodedContent(new List<KeyValuePair<string?, string?>>()));
 
         }
 

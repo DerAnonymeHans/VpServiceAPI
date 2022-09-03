@@ -24,7 +24,8 @@ namespace VpServiceAPI.Jobs.StatProviding
             {
                 TimeType.month => Converter.Months,
                 TimeType.day => Converter.Days,
-                TimeType.lesson => Converter.Lessons
+                TimeType.lesson => Converter.Lessons,
+                _ => throw new NotImplementedException($"Tried to get times array with not supported timetype {timeType}")
             };
         }
         private int[] ToArray(Times times, TimeType timeType)
@@ -33,7 +34,8 @@ namespace VpServiceAPI.Jobs.StatProviding
             {
                 TimeType.month => new int[] { times.January, times.February, times.March, times.April, times.May, times.June, times.July, times.August, times.September, times.October, times.November, times.December },
                 TimeType.day => new int[] { times.Monday, times.Tuesday, times.Wednesday, times.Thursday, times.Friday },
-                TimeType.lesson => new int[] { times.First, times.Second, times.Third, times.Fourth, times.Fifth, times.Sixth, times.Seventh, times.Eigth }
+                TimeType.lesson => new int[] { times.First, times.Second, times.Third, times.Fourth, times.Fifth, times.Sixth, times.Seventh, times.Eigth },
+                _ => throw new NotImplementedException($"Tried to call ToArray with not supported timetype {timeType}")
             };
         }
         public async Task<TimeStatistic> GetTimesOf(TimeType timeType, string name)
@@ -107,9 +109,9 @@ namespace VpServiceAPI.Jobs.StatProviding
 
     public class Times
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public string Attendance { get; set; }
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Attendance { get; set; } = "";
 
         public int January { get; set; }
         public int February { get; set; }

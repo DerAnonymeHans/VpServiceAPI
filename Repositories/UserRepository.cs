@@ -33,7 +33,7 @@ namespace VpServiceAPI.Repositories
             Users.Add(user);
         }
 
-        public async Task<User> GetUser(string mail)
+        public async Task<User?> GetUser(string mail)
         {
             return Users.Find((user) => user.Address == mail);
         }
@@ -157,9 +157,11 @@ namespace VpServiceAPI.Repositories
         {
             return (await DataQueries.Load<string, dynamic>("SELECT id FROM `users` WHERE address=@mail AND status=@status", new { mail, status=status.ToString() })).Count == 1;
         }
-        public async Task<User> GetUser(string mail)
-        {
-            return (await DataQueries.Load<User, dynamic>("SELECT name, address, grade, status, mode, sub_day, push_id FROM `users` WHERE address=@mail", new { mail }))[0];
+        public async Task<User?> GetUser(string mail)        {
+
+            var res = await DataQueries.Load<User, dynamic>("SELECT name, address, grade, status, mode, sub_day, push_id FROM `users` WHERE address=@mail", new { mail });
+            if (res.Count == 0) return null;
+            return res[0];
         }
         public async Task<List<User>> GetUsers(UserStatus status = UserStatus.NORMAL)
         {
@@ -216,7 +218,8 @@ namespace VpServiceAPI.Repositories
         public async Task AcceptUser(string mail)
         {
             await DataQueries.Save("UPDATE users SET status=@status WHERE address=@address", new { address = mail, status=UserStatus.NORMAL.ToString() });
-            User user = await GetUser(mail);
+            var user = await GetUser(mail);
+            if (user is null) throw new AppException("Cannot accept user who is not existing");
             await DataQueries.AddUserToBackupDB(user);
             if(user.NotifyMode == NotifyMode.PWA)
             {
@@ -237,10 +240,14 @@ namespace VpServiceAPI.Repositories
             isLoggedIn = isLoggedIn && userAuthMail is not null && userAuthHash is not null;
             if (isLoggedIn)
             {
-                isLoggedIn = await IsAuthenticated(userAuthMail, userAuthHash);
+                if(await IsAuthenticated(userAuthMail ?? "", userAuthHash ?? ""))
+                {
+#pragma warning disable CS8603 // Possible null reference return.
+                    return await GetUser(userAuthMail ?? "");
+#pragma warning restore CS8603 // Possible null reference return.
+                };
             }
-            if (!isLoggedIn) throw new AppException("Du musst angemeldet sein um diese Daten zu sehen.");
-            return await GetUser(userAuthMail);
+            throw new AppException("Du musst angemeldet sein um diese Daten zu sehen.");
         }
         public async Task<bool> IsAuthenticated(string mail, string mailHash)
         {
@@ -310,7 +317,8 @@ namespace VpServiceAPI.Repositories
         private async Task<string> GenerateBody(string mail, string linkTo)
         {            
             string key = await StartHashResetAndGetKey(mail);
-            User user = await GetUser(mail);
+            var user = await GetUser(mail);
+            if (user is null) throw new AppException("Cannot generateMail Body for not existing user");
             return string.Join("<br>", new string[]
             {
                 $"<h1>Hallo {user.Name}!</h1>",

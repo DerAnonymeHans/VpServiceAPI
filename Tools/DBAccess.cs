@@ -7,17 +7,17 @@ using VpServiceAPI.Interfaces;
 using MySql.Data.MySqlClient;
 using Dapper;
 using System.Threading.Tasks;
+using VpServiceAPI.Exceptions;
 
 namespace VpServiceAPI.Tools
 {
     public class DBAccess : IDBAccess
     {
-        private string DBConString { get; set; }
+        private string DBConString { get; set; } = "";
         public int CurrentDB { get; private set; }
 
         public DBAccess()
         {
-            var host = Environment.GetEnvironmentVariable("DB_1_HOST");
             SwitchToDB(1);
         }
         public async Task<List<T>> Load<T, U>(string sql, U parameters, int tryNumber=1)
@@ -84,7 +84,10 @@ namespace VpServiceAPI.Tools
         public void SwitchToDB(int number)
         {
             CurrentDB = number;
-            Func<string, string> GetDBVar = (string name) => Environment.GetEnvironmentVariable($"DB_{number}_{name}");
+            Func<string, string> GetDBVar = (string name) => 
+                Environment.GetEnvironmentVariable($"DB_{number}_{name}") 
+                ?? throw new AppException($"Failed to switch to DB {number} because of missing env var 'DB_{number}_{name}'");
+
             ChangeConnection(GetDBVar("HOST"), GetDBVar("USER"), GetDBVar("PW"), GetDBVar("NAME"));
         }
     }

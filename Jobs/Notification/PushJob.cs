@@ -19,41 +19,19 @@ namespace VpServiceAPI.Jobs.Notification
     public class TestPushJob : IPushJob
     {
         private readonly IMyLogger Logger;
-        private readonly HttpClient Client;
+        private readonly string PUSH_KEY;
+        private readonly string PUSH_AUTH_TOKEN;
         public TestPushJob(IMyLogger logger)
         {
             Logger = logger;
-            Client = new();
-        }
-        public async Task Push(User user, IGlobalNotificationBody globalBody, IGradeNotificationBody gradeBody)
-        {
-            var options = new PushOptions(
-                "Neuer Vertretungsplan",
-                globalBody.Subject,
-                $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung",
-                (long)user.PushId
-            )
-            {
-                Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/GetLogo"
-            };
-            var client = new RestClient("https://api.webpushr.com");
-            var request = new RestRequest("v1/notification/send/sid", Method.Post);
-            request.AddBody(JsonSerializer.Serialize(options));
-            request.AddHeader("webpushrKey", Environment.GetEnvironmentVariable("PUSH_KEY"));
-            request.AddHeader("webpushrAuthToken", Environment.GetEnvironmentVariable("PUSH_AUTH"));
-            request.AddHeader("Content-Type", "application/json");
-            Logger.Info(LogArea.Notification, "Would have sended push Notification to: " + user.Address);
-        }
-    }
 
-    public class ProdPushJob : IPushJob
-    {
-        private readonly IMyLogger Logger;
-        private readonly HttpClient Client;
-        public ProdPushJob(IMyLogger logger)
-        {
-            Logger = logger;
-            Client = new();
+            var pushKey = Environment.GetEnvironmentVariable("PUSH_KEY");
+            var pushAuthToken = Environment.GetEnvironmentVariable("PUSH_AUTH");
+
+            if (pushKey is null || pushAuthToken is null) Logger.Warn(LogArea.Notification, "Missing PUSH_KEY OR PUSH_AUTH_TOKEN", new {pushKey, pushAuthToken});
+
+            PUSH_KEY = pushKey ?? "";
+            PUSH_AUTH_TOKEN = pushAuthToken ?? "";
         }
         public async Task Push(User user, IGlobalNotificationBody globalBody, IGradeNotificationBody gradeBody)
         {
@@ -70,8 +48,49 @@ namespace VpServiceAPI.Jobs.Notification
             var client = new RestClient("https://api.webpushr.com");
             var request = new RestRequest("v1/notification/send/sid", Method.Post);
             request.AddBody(JsonSerializer.Serialize(options));
-            request.AddHeader("webpushrKey", Environment.GetEnvironmentVariable("PUSH_KEY"))
-                .AddHeader("webpushrAuthToken", Environment.GetEnvironmentVariable("PUSH_AUTH"))
+            request.AddHeader("webpushrKey", PUSH_KEY)
+                .AddHeader("webpushrAuthToken", PUSH_AUTH_TOKEN)
+                .AddHeader("Content-Type", "application/json");
+
+            Logger.Info(LogArea.Notification, "Would have sended push Notification to: " + user.Address);
+            Thread.Sleep(1000); // webpushr only allows push once per second
+        }
+    }
+
+    public class ProdPushJob : IPushJob
+    {
+        private readonly IMyLogger Logger;
+        private readonly string PUSH_KEY;
+        private readonly string PUSH_AUTH_TOKEN;
+        public ProdPushJob(IMyLogger logger)
+        {
+            Logger = logger;
+
+            var pushKey = Environment.GetEnvironmentVariable("PUSH_KEY");
+            var pushAuthToken = Environment.GetEnvironmentVariable("PUSH_AUTH");
+
+            if (pushKey is null || pushAuthToken is null) Logger.Warn(LogArea.Notification, "Missing PUSH_KEY OR PUSH_AUTH_TOKEN", new { pushKey, pushAuthToken });
+
+            PUSH_KEY = pushKey ?? "";
+            PUSH_AUTH_TOKEN = pushAuthToken ?? "";
+        }
+        public async Task Push(User user, IGlobalNotificationBody globalBody, IGradeNotificationBody gradeBody)
+        {
+            var options = new PushOptions(
+                "Neuer Vertretungsplan",
+                globalBody.Subject,
+                $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung",
+                user.PushId ?? throw new AppException($"Tried to send push to {user.Address} but user has no pushId.")
+            )
+            {
+                Icon = $"https://vp-service-api.herokuapp.com/Notification/Logo.png"
+            };
+
+            var client = new RestClient("https://api.webpushr.com");
+            var request = new RestRequest("v1/notification/send/sid", Method.Post);
+            request.AddBody(JsonSerializer.Serialize(options));
+            request.AddHeader("webpushrKey", PUSH_KEY)
+                .AddHeader("webpushrAuthToken", PUSH_AUTH_TOKEN)
                 .AddHeader("Content-Type", "application/json");
 
             var response = await client.ExecuteAsync(request);
@@ -89,8 +108,8 @@ namespace VpServiceAPI.Jobs.Notification
     class PushOptions
     {
         
-        private string title;        
-        private string message;
+        private string title = "";        
+        private string message = "";
         [JsonPropertyName("target_url")]
         public string TargetUrl { get; set; }
         [JsonPropertyName("sid")]

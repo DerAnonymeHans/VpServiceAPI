@@ -31,7 +31,7 @@ namespace VpServiceAPI.Jobs.Analysing
         {
             try
             {
-                await DataQueries.Save("INSERT INTO `vp_data` (`year`, `type`, `missing_teacher`, `substitute_teacher`, `missing_subject`, `substitute_subject`, `lesson`, `class_name`, `date`, `room`, `extra`) VALUES (@year, @type, @missing_teacher, @substitute_teacher, @missing_subject, @substitute_subject, @lesson, @class_name, @date, @room, @extra)", row);
+                await DataQueries.Save("INSERT INTO `vp_data` (`year`, `type`, `missing_teacher`, `substitute_teacher`, `missing_subject`, `substitute_subject`, `lesson`, `class_name`, `date`, `room`, `extra`) VALUES (@year, @type, @missing_teacher, @substitute_teacher, @missing_subject, @substitute_subject, @lesson, @class_name, @date, @room, @extra)", row.ToParameters() );
             }
             catch(Exception ex)
             {

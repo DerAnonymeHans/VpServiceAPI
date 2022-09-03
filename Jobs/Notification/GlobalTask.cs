@@ -138,9 +138,9 @@ namespace VpServiceAPI.Jobs.Notification
             foreach(var day in days)
             {
                 var date = new DateTime(
-                    int.Parse(day.dayDate.Substring(0, 4)), 
-                    int.Parse(day.dayDate.Substring(5, 2)), 
-                    int.Parse(day.dayDate.Substring(8, 2))
+                    int.Parse(day.DayDate.Substring(0, 4)), 
+                    int.Parse(day.DayDate.Substring(5, 2)), 
+                    int.Parse(day.DayDate.Substring(8, 2))
                     );
                 if (date.ToString("dd.MM.yyyy") == PlanModel.MetaData.AffectedDate._dateTime.ToString("dd.MM.yyyy"))
                 {
@@ -149,7 +149,7 @@ namespace VpServiceAPI.Jobs.Notification
                 }
             }
 
-            return importantDay.icon switch
+            return importantDay.Icon switch
             {
                 1 => "sunny",           // Sonne
                 2 => "sunny_bit_cloudy",// Sonne, leicht bewölkt

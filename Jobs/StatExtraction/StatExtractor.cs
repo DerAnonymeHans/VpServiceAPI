@@ -82,7 +82,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
 
             foreach(var row in Rows)
             {
-                List<string> classNames = row.class_name.Split(',').ToList();
+                List<string> classNames = row.ClassName.Split(',').ToList();
                 classNames.Add(new Regex(@"\d+").Match(classNames[0]).Value);
                 classNames.Add("kepler");
 
@@ -97,7 +97,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
         }
         private async Task ExtractData(AnalysedRow row, string className, bool rowAlreadyChanged)
         {
-            var matches = new Regex(@"\d").Matches(row.lesson);
+            var matches = new Regex(@"\d").Matches(row.Lesson);
             int[] lessons = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
             foreach(Match match in matches)
             {
@@ -105,7 +105,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
                 lessons[idx] = 1;
             }
             int lessonCount = matches.Count;
-            var missingTriangle = new RelationTriangle(Logger, DataQueries, row.missing_teacher, className, row.missing_subject, Date, lessons)
+            var missingTriangle = new RelationTriangle(Logger, DataQueries, row.MissingTeacher, className, row.MissingSubject, Date, lessons)
             {
                 LessonCount = lessonCount,
                 Attendance = Attendance.Missing,
@@ -115,9 +115,9 @@ namespace VpServiceAPI.Jobs.StatExtraction
             await missingTriangle.Save();
 
 
-            if (row.type == "VER")
+            if (row.Type == "VER")
             {
-                var substituteTriangle = new RelationTriangle(Logger, DataQueries, row.substitute_teacher, className, row.substitute_subject, Date, lessons)
+                var substituteTriangle = new RelationTriangle(Logger, DataQueries, row.SubstituteTeacher, className, row.SubstituteSubject, Date, lessons)
                 {
                     LessonCount = lessonCount,
                     Attendance = Attendance.Substituting,

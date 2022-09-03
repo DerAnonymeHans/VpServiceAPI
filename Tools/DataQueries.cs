@@ -43,11 +43,11 @@ namespace VpServiceAPI.Tools
             List<string> rows;
             if(name is null)
             {
-                rows = await DataAccess.Load<string, dynamic>("SELECT `value` FROM `routine_data` WHERE `subject`=@subject", new { subject = subject });
+                rows = await DataAccess.Load<string, dynamic>("SELECT `value` FROM `routine_data` WHERE `subject`=@subject", new { subject });
             }
             else
             {
-                rows = await DataAccess.Load<string, dynamic>("SELECT `value` FROM `routine_data` WHERE `subject`=@subject AND `name`=@name", new { subject = subject, name = name });
+                rows = await DataAccess.Load<string, dynamic>("SELECT `value` FROM `routine_data` WHERE `subject`=@subject AND `name`=@name", new { subject, name });
             }
 
             return rows;
@@ -178,51 +178,53 @@ namespace VpServiceAPI.Tools
         }
         public static List<RoutineDataRow> DefaultData()
         {
-            var table = new List<RoutineDataRow>();
-            table.Add(new RoutineDataRow("DATETIME", "last_origin_datetime", "26.08.2022, 12:08"));
-            table.Add(new RoutineDataRow("DATETIME", "last_cache_delete", "26.08."));
-            table.Add(new RoutineDataRow("DATETIME", "last_stats_date", "26.08."));
-            table.Add(new RoutineDataRow("DATETIME", "last_affected_date", "29.08.2022."));
+            var table = new List<RoutineDataRow>
+            {
+                new RoutineDataRow("DATETIME", "last_origin_datetime", "26.08.2022, 12:08"),
+                new RoutineDataRow("DATETIME", "last_cache_delete", "26.08."),
+                new RoutineDataRow("DATETIME", "last_stats_date", "26.08."),
+                new RoutineDataRow("DATETIME", "last_affected_date", "29.08.2022."),
 
-            table.Add(new RoutineDataRow("EXTRA", "global_extra", ""));
-            table.Add(new RoutineDataRow("EXTRA", "special_extra", ""));
-            table.Add(new RoutineDataRow("EXTRA", "forced_artwork_name", "NICHTS"));
+                new RoutineDataRow("EXTRA", "global_extra", ""),
+                new RoutineDataRow("EXTRA", "special_extra", ""),
+                new RoutineDataRow("EXTRA", "forced_artwork_name", "NICHTS"),
 
-            table.Add(new RoutineDataRow("CACHE", "information", ""));
+                new RoutineDataRow("CACHE", "information", ""),
 
-            table.Add(new RoutineDataRow("BACKUP", "date", ""));
+                new RoutineDataRow("BACKUP", "date", ""),
 
-            table.Add(new RoutineDataRow("FORCE_MODE", "on_info_change", "false"));
+                new RoutineDataRow("FORCE_MODE", "on_info_change", "false"),
 
-            table.Add(new RoutineDataRow("LAST_PLAN_CACHE", "5", ""));
-            table.Add(new RoutineDataRow("LAST_PLAN_CACHE", "6", ""));
-            table.Add(new RoutineDataRow("LAST_PLAN_CACHE", "7", ""));
-            table.Add(new RoutineDataRow("LAST_PLAN_CACHE", "8", ""));
-            table.Add(new RoutineDataRow("LAST_PLAN_CACHE", "9", ""));
-            table.Add(new RoutineDataRow("LAST_PLAN_CACHE", "10", ""));
-            table.Add(new RoutineDataRow("LAST_PLAN_CACHE", "11", ""));
-            table.Add(new RoutineDataRow("LAST_PLAN_CACHE", "12", ""));
+                new RoutineDataRow("LAST_PLAN_CACHE", "5", ""),
+                new RoutineDataRow("LAST_PLAN_CACHE", "6", ""),
+                new RoutineDataRow("LAST_PLAN_CACHE", "7", ""),
+                new RoutineDataRow("LAST_PLAN_CACHE", "8", ""),
+                new RoutineDataRow("LAST_PLAN_CACHE", "9", ""),
+                new RoutineDataRow("LAST_PLAN_CACHE", "10", ""),
+                new RoutineDataRow("LAST_PLAN_CACHE", "11", ""),
+                new RoutineDataRow("LAST_PLAN_CACHE", "12", ""),
 
-            table.Add(new RoutineDataRow("MODEL_CACHE", "5", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "6", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "7", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "8", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "9", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "10", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "11", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "12", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "12", ""));
-            table.Add(new RoutineDataRow("MODEL_CACHE", "global", ""));
+                new RoutineDataRow("MODEL_CACHE", "5", ""),
+                new RoutineDataRow("MODEL_CACHE", "6", ""),
+                new RoutineDataRow("MODEL_CACHE", "7", ""),
+                new RoutineDataRow("MODEL_CACHE", "8", ""),
+                new RoutineDataRow("MODEL_CACHE", "9", ""),
+                new RoutineDataRow("MODEL_CACHE", "10", ""),
+                new RoutineDataRow("MODEL_CACHE", "11", ""),
+                new RoutineDataRow("MODEL_CACHE", "12", ""),
+                new RoutineDataRow("MODEL_CACHE", "12", ""),
+                new RoutineDataRow("MODEL_CACHE", "global", ""),
 
-            table.Add(new RoutineDataRow("GRADE_MODE", "5", "false"));
-            table.Add(new RoutineDataRow("GRADE_MODE", "6", "NORMAL"));
-            table.Add(new RoutineDataRow("GRADE_MODE", "7", "NORMAL"));
-            table.Add(new RoutineDataRow("GRADE_MODE", "8", "NORMAL"));
-            table.Add(new RoutineDataRow("GRADE_MODE", "9", "NORMAL"));
-            table.Add(new RoutineDataRow("GRADE_MODE", "10", "NORMAL"));
-            table.Add(new RoutineDataRow("GRADE_MODE", "11", "NORMAL"));
-            table.Add(new RoutineDataRow("GRADE_MODE", "12", "NORMAL"));
-            table.Add(new RoutineDataRow("GRADE_MODE", "12", "NORMAL"));
+                new RoutineDataRow("GRADE_MODE", "5", "false"),
+                new RoutineDataRow("GRADE_MODE", "6", "NORMAL"),
+                new RoutineDataRow("GRADE_MODE", "7", "NORMAL"),
+                new RoutineDataRow("GRADE_MODE", "8", "NORMAL"),
+                new RoutineDataRow("GRADE_MODE", "9", "NORMAL"),
+                new RoutineDataRow("GRADE_MODE", "10", "NORMAL"),
+                new RoutineDataRow("GRADE_MODE", "11", "NORMAL"),
+                new RoutineDataRow("GRADE_MODE", "12", "NORMAL"),
+                new RoutineDataRow("GRADE_MODE", "12", "NORMAL")
+            };
 
             return table;
         }

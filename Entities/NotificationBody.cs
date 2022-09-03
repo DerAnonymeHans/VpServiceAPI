@@ -76,7 +76,7 @@ namespace VpServiceAPI.Entities
 
             foreach(var prop in properties)
             {
-                GetType().GetProperty(prop.Name).SetValue(this, prop.GetValue(body));
+                GetType().GetProperty(prop.Name)?.SetValue(this, prop.GetValue(body));
             }
             return this;
         }
