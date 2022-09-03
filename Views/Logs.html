@@ -27,6 +27,11 @@
             font-family: monospace;
             font-size: .7rem;
         }
+
+        #page-buttons{
+            max-width: 100vw;
+            overflow-x: auto;
+        }
     </style>
 
 </head>
@@ -39,11 +44,13 @@
     <div id="page-buttons" class="flex">
         
     </div>
+    <button id="delete-logs-button" onclick="deleteOldLogs()">Alte Logs löschen</button>
+
 </body>
 </html>
 
 <script>
-    const ROW_COUNT = 100;
+    const ROW_COUNT = 300;
     async function insertLogs(offset=0) {
         let rows = await request(`/Logs/Rows/${ROW_COUNT}/${offset * ROW_COUNT}`);
         rows.reverse();
@@ -66,7 +73,8 @@
 
     async function insertButtons(){
         let count = await request("/Logs/Count");
-        const buttonContainerEl = document.getElementById("page-buttons")
+        const buttonContainerEl = document.getElementById("page-buttons");
+        buttonContainerEl.innerHTML = "";
 
         const tailButton = document.createElement("button");
         tailButton.textContent = "Tail";
@@ -85,17 +93,20 @@
     }
     insertButtons();
 
+    async function deleteOldLogs() {
+        await request(`/DeleteOldLogs/Rows/${ROW_COUNT}`, {method: "POST"});
+        insertButtons();
+    }
+
     
     let interval;
 
     function selectTailPage() {
         interval = setInterval(() => {
             insertLogs(0)
-            console.log("insert")
         }, 5000)
     }
     function deSelectTailPage() {
-        console.log("deselect")
         clearInterval(interval)
     }
 

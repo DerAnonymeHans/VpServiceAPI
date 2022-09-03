@@ -153,11 +153,23 @@ namespace VpServiceAPI.Controllers
             return await WebResponder.RunWith(async () => 
                 string.Join('|', 
                     await DataQueries.Load<LogRow, dynamic>(
-                        "SELECT time, type, message, extra FROM logs ORDER BY time DESC LIMIT @limit OFFSET @offset", 
+                        "SELECT time, type, message, extra FROM logs ORDER BY STR_TO_DATE(`time`, '%d/%m/%Y %H:%i:%s') DESC LIMIT @limit OFFSET @offset", 
                         new { limit = count, offset }
                     )
                 ).Split('|')
             , Request.Path.Value);
+        }
+        [HttpPost]
+        [Route("/DeleteOldLogs/Rows/{count}")]
+        public async Task<WebMessage> DeleteLogRows(int count = 1000)
+        {
+            return await WebResponder.RunWith(async () =>
+            {
+                await DataQueries.Save<dynamic>(
+                        "DELETE FROM `logs` WHERE 1 ORDER BY STR_TO_DATE(`time`, '%d/%m/%Y %H:%i:%s') ASC LIMIT @limit",
+                        new { limit = count }
+                    );
+            }, Request.Path.Value);
         }
         [HttpGet]
         [Route("/Logs/Count")]
