@@ -269,7 +269,7 @@ namespace VpServiceAPI.Repositories
         public async Task<string> StartHashResetAndGetKey(string mail)
         {
             if (!await UserExists(mail)) throw new AppException("Das Schlüssel kann nicht ausgestellt werden, da die Email Addresse nicht existiert.");
-            var randomBytes = new byte[4]; // 32 Bytes will give us 256 bits.
+            var randomBytes = new byte[8]; // 32 Bytes will give us 256 bits.
             using (var rngCsp = new RNGCryptoServiceProvider())
             {
                 rngCsp.GetBytes(randomBytes);
@@ -280,24 +280,16 @@ namespace VpServiceAPI.Repositories
                 stringBuilder.Append(_byte.ToString("X2"));
             }
             string key = stringBuilder.ToString();
-            string timestamp = DateTime.Now.Ticks.ToString();
-            await DataQueries.Save("UPDATE users SET reset_key=@resetKey WHERE address=@mail", new { mail, resetKey = $"{timestamp}-{key}" });
+            await DataQueries.Save("UPDATE users SET reset_key=@resetKey WHERE address=@mail", new { mail, resetKey = key });
             return key;
         }
         public async Task<MailHashPair> EndHashResetAndGetMailHashPair(string key)
         {
-            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrEmpty(key)) throw new AppException("Der Code ist ungültig. Er muss aus Zahlen und Buchstaben bestehen.");
+            if (string.IsNullOrWhiteSpace(key)) throw new AppException("Der Code ist ungültig. Er darf nicht leer sein.");
 
-            var rows = await DataQueries.Load<KeyMailHelper, dynamic>("SELECT reset_key, address FROM users WHERE reset_key LIKE @mykey", new { mykey=$"%{key}%"});
+            var rows = await DataQueries.Load<KeyMailHelper, dynamic>("SELECT reset_key, address FROM users WHERE reset_key = @key", new { key });
             if (rows.Count == 0) throw new AppException("Der Code ist ungültig.");
 
-            var splitted = rows[0].ResetKey.Split('-');
-            long timestamp = long.Parse(splitted[0]);
-            string realKey = splitted[1];
-
-            if (realKey != key) throw new AppException("Der Code ist ungültig.");
-
-            //if ((DateTime.Now.Ticks - timestamp) / TimeSpan.TicksPerMillisecond > MAX_RESET_DURA) throw new AppException($"Der Schlüssel kann nicht ausgestellt werden, da die Zeit (max: {MAX_RESET_DURA / 1000 / 60}min) abgelaufen ist.");
             await DataQueries.Save("UPDATE users SET reset_key='' WHERE address=@mail", new { mail = rows[0].Mail });
             return new MailHashPair(rows[0].Mail, GetAuthenticationHash(rows[0].Mail));
         }
