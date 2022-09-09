@@ -118,7 +118,7 @@ namespace VpServiceAPI.Repositories
                 if (artwork.Timespan.IncludeAll) continue;
                 if (artwork.Timespan.Includes(dateTime))
                 {
-                    return await GetArtworkMeta(artwork.Name);
+                    return artwork;
                 };
             }
             return null;

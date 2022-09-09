@@ -11,7 +11,7 @@ namespace VpServiceAPI.Jobs.Checking
         private readonly IPlanConverter PlanConverter;
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
-        public PlanModel PlanModel { get; set; } = new();
+        private PlanModel PlanModel { get; set; } = new();
 
         public UpdateChecker(IMyLogger logger, IPlanHTMLProvider planHTMLProvider, IDataQueries dataQueries, IPlanConverter planConverter)
         {
@@ -21,25 +21,26 @@ namespace VpServiceAPI.Jobs.Checking
             PlanConverter = planConverter;
         }
 
-        public async Task<bool?> Check(bool isSecondPlan=false, int dayShift=0)
+        public async Task<StatusWrapper<PlanModel>> Check(bool isSecondPlan=false, int dayShift=0)
         {            
             string html = await PlanHTMLProvider.GetPlanHTML(isSecondPlan ? 1 + dayShift : 0 + dayShift);
-            if (string.IsNullOrEmpty(html)) return null;
-            var testModel = PlanConverter.Convert(html);
-            if(testModel == null) return null;
-            PlanModel = testModel;
+            if (string.IsNullOrEmpty(html)) return new StatusWrapper<PlanModel>(Status.NULL, null);
+            var planModel = PlanConverter.Convert(html);
+            if(planModel is null) return new StatusWrapper<PlanModel>(Status.NULL, null);
+            PlanModel = planModel;
 
-            if (isSecondPlan) return true;
-
+            if (isSecondPlan) return new StatusWrapper<PlanModel>(Status.SUCCESS, PlanModel);
 
             if(await IsForceMail())
             {
                 Logger.Debug("Force");
-                PlanModel._forceNotify = true;
-                return true;
+                planModel._forceNotify = true;
+                return new StatusWrapper<PlanModel>(Status.SUCCESS, PlanModel);
             }
 
-            return await IsPlanNew();
+            if(!await IsPlanNew()) return new StatusWrapper<PlanModel>(Status.FAIL, null);
+            return new StatusWrapper<PlanModel>(Status.SUCCESS, PlanModel);
+
         }
         private async Task<bool> IsForceMail()
         {
@@ -82,9 +83,12 @@ namespace VpServiceAPI.Jobs.Checking
             try
             {
                 var lastPlanTime = (await DataQueries.GetRoutineData("DATETIME", "last_origin_datetime"))[0];
-                if(lastPlanTime != PlanModel.MetaData.OriginDate.DateTime && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
+                var lastAffectedDate = (await DataQueries.GetRoutineData("DATETIME", "last_affected_date"))[0];
+                if((lastPlanTime != PlanModel.MetaData.OriginDate.DateTime || lastAffectedDate != PlanModel.MetaData.AffectedDate.Date) 
+                    && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
                 {
                     await DataQueries.SetRoutineData("DATETIME", "last_origin_datetime", PlanModel.MetaData.OriginDate.DateTime);
+                    // last_affected_date get set at NotificationJob
                     return true;
                 }
             }

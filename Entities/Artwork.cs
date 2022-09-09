@@ -29,12 +29,13 @@ namespace VpServiceAPI.Entities
                 _ => System.Drawing.Color.White
             };
         }
-        //[JsonConstructor]
-        //public ArtworkMeta(string name, string color)
-        //{
-        //    Name = name;
-        //    Color = color;
-        //}
+        // is needed when deserializing global model cache
+        [JsonConstructor]
+        public ArtworkMeta(string name, string color)
+        {
+            Name = name;
+            Color = color;
+        }
     }
     public class Artwork : ArtworkMeta
     {

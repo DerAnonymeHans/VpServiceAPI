@@ -115,6 +115,7 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 string action = new Regex(@"(?<=\[\[)\w+").Match(match.Value).Value;
                 string parameter = new Regex(@"\w+(?=\]\])").Match(match.Value).Value;
+                string cutout;
                 switch (action)
                 {
                     case "if":
@@ -129,9 +130,25 @@ namespace VpServiceAPI.Jobs.Notification
                         };
                         int idxIf = HTML.IndexOf(_if);
                         int idxEndIf = HTML.IndexOf(_endIf);
-                        string cutout = HTML.Substring(idxIf, idxEndIf + _endIf.Length - idxIf);
+                        cutout = HTML.Substring(idxIf, idxEndIf + _endIf.Length - idxIf);
                         HTML = HTML.Replace(cutout, "");
                         break;
+                    case "ifnot":
+                        string _ifNot = $"[[ifnot {parameter}]]";
+                        string _endIfNot = $"[[endifnot {parameter}]]";
+                        // if key and value is not present in notif data and not empty
+                        if (string.IsNullOrEmpty(HTMLNotificationData[parameter]))
+                        {
+                            // cut [[if ...]] and endif out
+                            HTML = HTML.Replace(_ifNot, "").Replace(_endIfNot, "");
+                            continue;
+                        };
+                        int idxIfNot = HTML.IndexOf(_ifNot);
+                        int idxEndIfNot = HTML.IndexOf(_endIfNot);
+                        cutout = HTML.Substring(idxIfNot, idxEndIfNot + _endIfNot.Length - idxIfNot);
+                        HTML = HTML.Replace(cutout, "");
+                        break;
+
                 }
             }
             foreach(Match match in new Regex(@"\[\w+\]").Matches(HTML))

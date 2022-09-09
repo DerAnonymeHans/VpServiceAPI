@@ -151,14 +151,21 @@ namespace VpServiceAPI.Controllers
         }
 
         [HttpGet]
-        [Route("IsNewPlan/{originDate}")]
-        public async Task<WebResponse<bool>> IsNewPlan(string? originDate)
+        [Route("IsNewPlan/{dates}")]
+        public async Task<WebResponse<bool>> IsNewPlan(string? dates)
         {
             return await WebResponder.RunWith(async () =>
             {
-                if (string.IsNullOrWhiteSpace(originDate)) return true;
+                if (string.IsNullOrWhiteSpace(dates)) return true;
+                var datesSplitted = dates.Split("-");
+                if (datesSplitted.Length != 2) return true;
+                var originDate = datesSplitted[0];
+                var affectedDate = datesSplitted[1];
+
                 var newOriginDate = (await DataQueries.GetRoutineData("DATETIME", "last_origin_datetime"))[0];
-                return newOriginDate != originDate;
+                var newAffectedDate = (await DataQueries.GetRoutineData("DATETIME", "last_affected_date"))[0];
+
+                return newOriginDate != originDate || affectedDate != newAffectedDate;
             }, Request.Path.Value);
         }
         

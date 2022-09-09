@@ -59,6 +59,7 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 await SetLastAffectedDate(planModel.MetaData.AffectedDate.Date);
                 await DeleteCache();
+                planModel._forceNotify = true;
             }
             Users = await UserProvider.GetUsers();
             GlobalBody = await GlobalTask.Begin(PlanModel);

@@ -8,5 +8,6 @@ namespace VpServiceAPI.Interfaces
     {
         public Task UpdateTeacherList();
         public Teacher? GetTeacher(string name);
+        public bool ShouldUpdateTeacherList { get; }
     }
 }

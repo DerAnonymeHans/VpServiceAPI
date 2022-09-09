@@ -50,6 +50,7 @@
 
     <div class="plan-container container">
         <b>[AffectedWeekday]:</b>
+        [[if PlanRows]]
         <table>
             <colgroup>
                 <col style="background-color:#eee">
@@ -69,6 +70,10 @@
             </tr>
             [PlanRows]
         </table>
+        [[endif PlanRows]]
+        [[ifnot PlanRows]]
+        Keine Änderungen...Wahnsinn!
+        [[endifnot PlanRows]]
     </div>
 
     <hr />

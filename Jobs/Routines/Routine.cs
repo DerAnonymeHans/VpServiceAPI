@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Timers;
+using VpServiceAPI.Entities;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Jobs.Checking;
@@ -88,22 +89,26 @@ namespace VpServiceAPI.Jobs.Routines
 
                 var date = DateTime.Now;
                 int dayShift = 0;
+                PlanModel planModel = new();
                 for(;dayShift < 5; dayShift++)
                 {
-                    var isNew = await UpdateChecker.Check(false, dayShift);
-                    if (isNew == true) break;                    
-                    if (dayShift == 4 || isNew == false) return;
+                    var wrapper = await UpdateChecker.Check(false, dayShift);
+                    if (wrapper.Status == Status.SUCCESS)
+                    {
+                        planModel = wrapper.Body ?? throw new AppException("Status is success but body is null");
+                        break;
+                    }
+                    if (dayShift == 4 || wrapper.Status == Status.FAIL) return;
                     if (Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC") break;
                 }
 
-                var planModel = UpdateChecker.PlanModel;
-                var isSecondPlan = await UpdateChecker.Check(true, dayShift);
+                var wrapper2 = await UpdateChecker.Check(true, dayShift);
+                if(wrapper2.Body is null) Logger.Warn(LogArea.Routine, "Status on second plan is success but body is null", "");
 
-                if (isSecondPlan == true)
+                if (wrapper2.Status == Status.SUCCESS && wrapper2.Body is not null)
                 {
-                    var secondPlanModel = UpdateChecker.PlanModel;
-                    planModel.MetaData2 = secondPlanModel.MetaData;
-                    planModel.Table2 = secondPlanModel.Table;
+                    planModel.MetaData2 = wrapper2.Body.MetaData;
+                    planModel.Table2 = wrapper2.Body.Table;
                 }
 
                 Logger.Info("New Plan: " + planModel.MetaData.Title);
@@ -127,7 +132,7 @@ namespace VpServiceAPI.Jobs.Routines
         private async Task TimedEvents()
         {
             var now = DateTime.Now;
-            if((now.Hour > 8 && now.Minute < 15) || Environment.GetEnvironmentVariable("MODE") == "Testing")
+            if(TeacherRepository.ShouldUpdateTeacherList)
             {
                 await TeacherRepository.UpdateTeacherList();
             }

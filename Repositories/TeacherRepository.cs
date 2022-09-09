@@ -15,6 +15,9 @@ namespace VpServiceAPI.Repositories
         private readonly IDataQueries DataQueries;
         private readonly IWebScraper WebScraper;
         private List<Teacher> Teachers = new();
+
+        public bool ShouldUpdateTeacherList => Teachers.Count == 0;
+
         public TeacherRepository(IMyLogger logger, IDataQueries dataQueries, IWebScraper webScraper)
         {
             Logger = logger;
