@@ -26,7 +26,7 @@ namespace VpServiceAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class UserController : ControllerBase
+    public sealed class UserController : ControllerBase
     {
         private readonly IMyLogger Logger;
         private readonly IRoutine Routine;

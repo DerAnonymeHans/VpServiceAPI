@@ -9,7 +9,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Repositories
 {
-    public class TeacherRepository : ITeacherRepository
+    public sealed class TeacherRepository : ITeacherRepository
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;

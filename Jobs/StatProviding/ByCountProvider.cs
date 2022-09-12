@@ -9,7 +9,7 @@ using System;
 
 namespace VpServiceAPI.Jobs.StatProviding
 {
-    public class ByCountProvider : IByCountProvider
+    public sealed class ByCountProvider : IByCountProvider
     {
         private readonly IDataQueries DataQueries;
         public ByCountProvider(IDataQueries dataQueries)

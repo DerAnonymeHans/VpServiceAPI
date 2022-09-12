@@ -2,7 +2,7 @@
 
 namespace VpServiceAPI.Entities
 {
-    public class AnalysedRow : DBEntityBase
+    public sealed class AnalysedRow : DBEntityBase
     {
         public string Year { get; set; } = "";
         public string Type { get; set; } = "";

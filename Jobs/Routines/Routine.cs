@@ -9,7 +9,7 @@ using VpServiceAPI.Jobs.Notification;
 
 namespace VpServiceAPI.Jobs.Routines
 {
-    public class Routine : IRoutine
+    public sealed class Routine : IRoutine
     {
         private readonly IMyLogger Logger;
         private readonly IUpdateChecker UpdateChecker;

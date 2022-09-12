@@ -5,7 +5,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.WebResponse
 {
-    public class WebResponder
+    public sealed class WebResponder
     {
         private readonly string ControllerName;
         private readonly LogArea Logarea;

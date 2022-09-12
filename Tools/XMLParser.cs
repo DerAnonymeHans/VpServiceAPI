@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace VpServiceAPI.Tools
 {
-    public class XMLParser
+    public sealed class XMLParser
     {
         public string XML { get; set; }
         public XMLParser(string xml)

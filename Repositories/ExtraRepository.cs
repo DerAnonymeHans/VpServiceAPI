@@ -10,7 +10,7 @@ using VpServiceAPI.Tools;
 
 namespace VpServiceAPI.Repositories
 {
-    public class ExtraRepository : IExtraRepository
+    public sealed class ExtraRepository : IExtraRepository
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;

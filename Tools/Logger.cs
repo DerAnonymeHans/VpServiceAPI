@@ -6,7 +6,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Tools
 {
-    public class Logger : IMyLogger
+    public sealed class Logger : IMyLogger
     {
         private readonly IOutputter outputter;
         public Logger(IOutputter outputter)

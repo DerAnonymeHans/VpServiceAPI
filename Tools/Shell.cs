@@ -2,7 +2,7 @@
 
 namespace VpServiceAPI.Tools
 {
-    //public static class Shell
+    //public static sealed class Shell
     //{
     //    public static string RunBash(string cmd)
     //    {

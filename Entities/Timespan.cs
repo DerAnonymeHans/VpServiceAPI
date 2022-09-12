@@ -2,7 +2,7 @@
 
 namespace VpServiceAPI.Entities
 {
-    public class Timespan
+    public sealed class Timespan
     {
         public (int day, int month) From { get; init; }
         public (int day, int month) To { get; init; }

@@ -11,7 +11,7 @@ using VpServiceAPI.Interfaces;
 #nullable enable
 namespace VpServiceAPI.Jobs.Checking
 {
-    public class ProdPlanProviderKEPLER : IPlanHTMLProvider
+    public sealed class ProdPlanProviderKEPLER : IPlanHTMLProvider
     {
         private readonly IMyLogger Logger;
         private readonly IWebScraper WebScraper;
@@ -51,7 +51,7 @@ namespace VpServiceAPI.Jobs.Checking
     }
 
 
-    public class ProdPlanProviderVP24 : IPlanHTMLProvider
+    public sealed class ProdPlanProviderVP24 : IPlanHTMLProvider
     {
         private readonly IMyLogger Logger;
         private readonly IWebScraper WebScraper;
@@ -119,7 +119,7 @@ namespace VpServiceAPI.Jobs.Checking
 
 
 
-    public class TestPlanProvider : IPlanHTMLProvider
+    public sealed class TestPlanProvider : IPlanHTMLProvider
     {
         public async Task<string> GetPlanHTML(int daysFromToday)
         {

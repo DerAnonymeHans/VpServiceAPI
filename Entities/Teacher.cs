@@ -2,7 +2,7 @@
 
 namespace VpServiceAPI.Entities
 {
-    public class Teacher
+    public sealed class Teacher
     {
         public string Title { get; set; }
         public string FullName { get; set; }

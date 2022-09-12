@@ -12,13 +12,13 @@ using VpServiceAPI.Exceptions;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class NotificationJob : INotificationJob
+    public sealed class NotificationJob : INotificationJob
     {
         private readonly IMyLogger Logger;
-        private readonly IEmailJob Notificator;
+        private readonly IEmailJob EmailJob;
         private readonly IUserRepository UserProvider;
         private readonly IDataQueries DataQueries;
-        private readonly IEmailBuilder NotificationBuilder;
+        private readonly IEmailBuilder EmailBuilder;
         private readonly IPushJob PushJob;
         private readonly IUserRepository UserRepository;
         private readonly GlobalTask GlobalTask;
@@ -40,10 +40,10 @@ namespace VpServiceAPI.Jobs.Notification
             IUserRepository userRepository)
         {
             Logger = logger;
-            Notificator = notificator;
+            EmailJob = notificator;
             UserProvider = userProvider;
             DataQueries = dataQueries;
-            NotificationBuilder = notificationBuilder;
+            EmailBuilder = notificationBuilder;
             PushJob = pushJob;
             UserRepository = userRepository;
             GlobalTask = new(logger, dataQueries, artworkRepository);
@@ -157,8 +157,8 @@ namespace VpServiceAPI.Jobs.Notification
                 var notifBody = new NotificationBody();
                 notifBody.Set(GlobalBody).Set(gradeBody).Set(userBody);
                 notifBody.GlobalExtra = gradeBody.GradeExtra ?? notifBody.GlobalExtra;
-                var notification = NotificationBuilder.Build(notifBody, user.Address);
-                Notificator.Send(notification);
+                var notification = EmailBuilder.Build(notifBody, user.Address);
+                EmailJob.Send(notification);
             }
         }
         private async Task CacheGlobalModel(IGlobalNotificationBody model)

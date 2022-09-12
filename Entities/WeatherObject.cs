@@ -1,14 +1,31 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace VpServiceAPI.Entities
 {
-    public class WeatherDay
+    public sealed class WeatherDay
     {
+        private int tempMin { get; set; }
+        private int tempMax { get; set; }
         [JsonPropertyName("stationId")]         public string? StationID { get; set; }
         [JsonPropertyName("dayDate")]           public string DayDate { get; set; } = "";
-        [JsonPropertyName("temperatureMin")]    public int TemperatureMin { get; set; }
-        [JsonPropertyName("temperatureMax")]    public int TemperatureMax { get; set; }
+        [JsonPropertyName("temperatureMin")]    public int TemperatureMin
+        {
+            get
+            {
+                return tempMin;
+            }
+            set => tempMin = (int)Math.Round((decimal)value / 10);
+        }
+        [JsonPropertyName("temperatureMax")]    public int TemperatureMax
+        {
+            get
+            {
+                return tempMax;
+            }
+            set => tempMax = (int)Math.Round((decimal)value / 10);
+        }
         [JsonPropertyName("icon")]              public int Icon { get; set; } = 100;
         [JsonPropertyName("icon1")]             public int? Icon1 { get; set; }
         [JsonPropertyName("icon2")]             public int? Icon2 { get; set; }

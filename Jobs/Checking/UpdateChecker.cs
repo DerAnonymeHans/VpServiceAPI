@@ -5,7 +5,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Checking
 {
-    public class UpdateChecker : IUpdateChecker
+    public sealed class UpdateChecker : IUpdateChecker
     {
         private readonly IPlanHTMLProvider PlanHTMLProvider;
         private readonly IPlanConverter PlanConverter;

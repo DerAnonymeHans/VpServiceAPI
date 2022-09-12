@@ -3,7 +3,7 @@ using VpServiceAPI.Enums;
 
 namespace VpServiceAPI.Exceptions
 {
-    public class NameNotFoundException : AppException
+    public sealed class NameNotFoundException : AppException
     {
         public NameNotFoundException(string name) : base($"Der Name '{name}' wurde nicht gefunden.")
         {

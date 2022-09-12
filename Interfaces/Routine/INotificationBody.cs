@@ -18,6 +18,7 @@ namespace VpServiceAPI.Interfaces
         public string AffectedWeekday2 { get; set; }
 
         public ArtworkMeta? Artwork { get; set; }
+        public NotificationWeather? Weather { get; set; }
         public List<string> MissingTeachers { get; set; }
     }
 

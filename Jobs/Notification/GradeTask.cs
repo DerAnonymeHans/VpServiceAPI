@@ -8,7 +8,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class GradeTask
+    public sealed class GradeTask
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;

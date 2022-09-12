@@ -11,7 +11,7 @@ using VpServiceAPI.Exceptions;
 
 namespace VpServiceAPI.Tools
 {
-    public class DBAccess : IDBAccess
+    public sealed class DBAccess : IDBAccess
     {
         private string DBConString { get; set; } = "";
         public int CurrentDB { get; private set; }

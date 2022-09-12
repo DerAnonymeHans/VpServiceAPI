@@ -12,7 +12,7 @@ using VpServiceAPI.Tools;
 
 namespace VpServiceAPI
 {
-    public class DependencyInjector
+    public sealed class DependencyInjector
     {
         private IServiceCollection Services { get; init; }
         private UTestDependencyInjector? UTestInjector { get; init; }
@@ -178,7 +178,7 @@ namespace VpServiceAPI
 
 
 
-    public class UTestDependencyInjector
+    public sealed class UTestDependencyInjector
     {
         private IServiceCollection Services { get; init; }
 

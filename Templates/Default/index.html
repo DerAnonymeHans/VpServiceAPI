@@ -23,6 +23,12 @@
 <body>
     <img src="[ArtWorkSrc]" alt="Hallo [UserName]; [ArtWorkSrc]" style="width: 100vw; max-width: 500px;" />
 
+    [[if TempMax]]
+    <h6 style="text-align: center">
+        [TempMin]/[TempMax]°C
+    </h6>
+    [[endif TempMax]]
+
     <h2 style="color: [Color]; text-align: center">[GlobalExtra]</h2>
 
     [[if PersonalInformation]]

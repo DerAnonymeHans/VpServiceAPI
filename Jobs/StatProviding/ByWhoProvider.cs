@@ -7,7 +7,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.StatProviding
 {
-    public class ByWhoProvider : IByWhoProvider
+    public sealed class ByWhoProvider : IByWhoProvider
     {
         private readonly IDataQueries DataQueries;
         private readonly IMyLogger Logger;

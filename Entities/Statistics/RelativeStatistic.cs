@@ -2,7 +2,7 @@
 
 namespace VpServiceAPI.Entities.Statistics
 {
-    public class RelativeStatistic : BaseStatistic
+    public sealed class RelativeStatistic : BaseStatistic
     {
         public decimal Missed { get; set; }
         public decimal Substituted { get; set; }

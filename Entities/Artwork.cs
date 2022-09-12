@@ -37,7 +37,7 @@ namespace VpServiceAPI.Entities
             Color = color;
         }
     }
-    public class Artwork : ArtworkMeta
+    public sealed class Artwork : ArtworkMeta
     {
         public byte[] Image { get; set; }
 

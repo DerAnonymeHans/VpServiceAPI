@@ -6,7 +6,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class TestEmailJob : IEmailJob
+    public sealed class TestEmailJob : IEmailJob
     {
         private readonly IMyLogger Logger;
 
@@ -21,7 +21,7 @@ namespace VpServiceAPI.Jobs.Notification
         }
     }
 
-    public class ProdEmailJob : IEmailJob
+    public sealed class ProdEmailJob : IEmailJob
     {
         private readonly IMyLogger Logger;
         static private readonly string SmtpAddress = "smtp.gmail.com";

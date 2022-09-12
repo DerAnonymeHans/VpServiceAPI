@@ -1,6 +1,6 @@
 ﻿namespace VpServiceAPI.Entities
 {
-    public class LogRow
+    public sealed class LogRow
     {
         public string Time { get; set; }
         public string Type { get; set; }

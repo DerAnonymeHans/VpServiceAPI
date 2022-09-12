@@ -15,42 +15,42 @@
     <hr>
     <h1>Routine</h1>
     <main>
-        <div class="container">
+        <div sealed class="container">
             <h3>Start/Stop</h3>
-            <div class="flex">
+            <div sealed class="flex">
                 <button id="startInterval" onclick="post('startInterval')" data-post="/Routine/Begin">Start</button>
                 <button id="stopInterval" onclick="post('stopInterval')" data-post="/Routine/Stop">Stop</button>
                 läuft:
-                <div class="value-container" data-get="/Routine/IsRunning"></div>
+                <div sealed class="value-container" data-get="/Routine/IsRunning"></div>
             </div>
 
         </div>
-        <div class="container">
+        <div sealed class="container">
             <h3>Starte einmal</h3>
-            <div class="flex">
+            <div sealed class="flex">
                 <button id="beginOnce" onclick="post('beginOnce')" data-post="/Routine/BeginOnce">Los</button>
             </div>
 
         </div>
-        <div class="container">
+        <div sealed class="container">
             <h3>Change Interval</h3>
-            <div class="flex">
+            <div sealed class="flex">
                 <input type="number" id="changeInterval" min="0" max="3600000" step="60000" data-post="/Routine/ChangeInterval/{}">
                 <span>(entspricht: </span>
                 <span id="intervalInMinutes"></span>
                 <span>Minuten)</span>
-                <div class="value-container" data-get="/Routine/Interval"></div>
+                <div sealed class="value-container" data-get="/Routine/Interval"></div>
                 <button onclick="post('changeInterval')">Ändern</button>
             </div>
         </div>
-        <div class="container">
+        <div sealed class="container">
             <h3>Change Force Modes</h3>
             <p>on_info_change - notify when information (hitzefrei, sportfest, gedöns halt) changes</p>
             <div id="force-modes-container">
 
             </div>
         </div>
-        <div class="container">
+        <div sealed class="container">
             <h3>Change Grade Modes</h3>
             <p>NORMAL - standard notification (only when changes in plan or email is forced); STOP - never notify grade; FORCE - notify even when no changes; SPECIAL - notify as standard but use special extra; SPECIAL_FORCE- notify as force but use special extra</p>
             <div id="grade-modes-container">
@@ -72,11 +72,11 @@
         const modes = await request("/Admin/ForceModes");
         for (const mode of modes) {
             const divEl = document.createElement("div");
-            divEl.classList.add("flex");
+            divEl.sealed classList.add("flex");
             divEl.textContent = mode;
 
             const valueEl = document.createElement("div");
-            valueEl.classList.add("value-container");
+            valueEl.sealed classList.add("value-container");
             valueEl.dataset.get = `/Admin/ForceMode/${mode}`
 
             const toggleBtnEl = document.createElement("button");
@@ -103,11 +103,11 @@
         const buttons = ["normal", "stop", "force", "special", "special_force"]
         for (let i = 5; i <= 12; i++) {
             const divEl = document.createElement("div");
-            divEl.classList.add("flex");
+            divEl.sealed classList.add("flex");
             divEl.textContent = `Stufe: ${i}`;
 
             const valueEl = document.createElement("div");
-            valueEl.classList.add("value-container");
+            valueEl.sealed classList.add("value-container");
             valueEl.dataset.get = `/Admin/GradeMode/${i}`
 
             divEl.append(valueEl)

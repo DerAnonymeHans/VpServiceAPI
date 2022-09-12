@@ -10,7 +10,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class GlobalTask
+    public sealed class GlobalTask
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
@@ -30,8 +30,19 @@ namespace VpServiceAPI.Jobs.Notification
         {
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
             PlanModel = planModel;
-            var affectedWeekDay2 = PlanModel.MetaData2?.AffectedDate._dateTime.ToString("dddd");
-            affectedWeekDay2 = affectedWeekDay2 is null ? "" : affectedWeekDay2;
+            var affectedWeekDay2 = PlanModel.MetaData2?.AffectedDate._dateTime.ToString("dddd") ?? "";
+            var weather = await GetWeather();
+            var weatherImgName = GetWeatherImageName(weather?.Icon ?? 69);
+            NotificationWeather? notifWeather = null;
+            if(weather?.TemperatureMax is not null && weather?.TemperatureMin is not null)
+            {
+                notifWeather = new()
+                {
+                    TempMin = weather.TemperatureMin,
+                    TempMax = weather.TemperatureMax
+                };
+            }
+
             return new GlobalNotificationBody
             {
                 AffectedDate = PlanModel.MetaData.AffectedDate.Date,
@@ -42,8 +53,9 @@ namespace VpServiceAPI.Jobs.Notification
                 Subject = PlanModel.MetaData.Title,
                 MissingTeachers = PlanModel.MissingTeacher is not null ?  PlanModel.MissingTeacher : await GetMissingTeachers(),
                 GlobalExtra = await GetGlobalExtra(),
-                Artwork = await GetArtwork(),
-                Information = PlanModel.Information
+                Artwork = await GetArtwork(weatherImgName),
+                Information = PlanModel.Information,
+                Weather = notifWeather
             };
         }
         private async Task<List<string>> GetMissingTeachers()
@@ -70,41 +82,17 @@ namespace VpServiceAPI.Jobs.Notification
                 return "";
             }
         }
-        private async Task<ArtworkMeta> GetArtwork()
-        {
-            string forcedArtworkName = (await DataQueries.GetRoutineData("EXTRA", "forced_artwork_name"))[0];
-            if (!string.IsNullOrEmpty(forcedArtworkName))
-            {
-                if (await ArtworkRepository.IncludesArtwork(forcedArtworkName))
-                {
-                    return await ArtworkRepository.GetArtworkMeta(forcedArtworkName);
-                }
-            }
-
-            ArtworkMeta? specialArtwork = await ArtworkRepository.GetSpecialArtworkForDate(DateTime.Now);
-            if(specialArtwork is not null)
-            {
-                return specialArtwork;
-            }
-
-            string weather = await GetWeather();
-            ArtworkMeta? weatherArtwork = await ArtworkRepository.GetArtworkMeta(weather);
-            if (weatherArtwork is not null)
-            { 
-                
-                return weatherArtwork;
-            }
-
-            return await ArtworkRepository.DefaultMeta();
-        }
-        private async Task<string> GetWeather()
+        
+        private async Task<WeatherDay?> GetWeather()
         {
             var response = await FetchWeatherData();
-            if (string.IsNullOrEmpty(response)) return "no-weather-found";
+            if (string.IsNullOrEmpty(response))
+            {
+                Logger.Warn(LogArea.Notification, "Fetch weather data is null.", response);
+                return null;
+            }
             string json = response;
-            var obj = ParseWeatherData(json);
-            if (obj is null) return "no-weather-found";
-            return GetWeatherImageScr(obj);
+            return ParseAndGetWeatherDay(json);
         }
         private async Task<string?> FetchWeatherData()
         {
@@ -117,7 +105,7 @@ namespace VpServiceAPI.Jobs.Notification
                 return null;
             }
         }
-        private List<WeatherDay>? ParseWeatherData(string json)
+        private WeatherDay? ParseAndGetWeatherDay(string json)
         {
             try
             {
@@ -125,31 +113,33 @@ namespace VpServiceAPI.Jobs.Notification
                 int endIdx = json.IndexOf("],", startIdx);
                 json = json.Substring(startIdx + 7, (endIdx + 1) - (startIdx + 7));
                 var days = JsonSerializer.Deserialize<List<WeatherDay>>(json);
-                return days;
-            }catch(Exception ex)
+
+                if(days is null) throw new Exception("Weatherdays is null");
+
+                foreach (var day in days)
+                {
+                    var date = new DateTime(
+                        int.Parse(day.DayDate.Substring(0, 4)),
+                        int.Parse(day.DayDate.Substring(5, 2)),
+                        int.Parse(day.DayDate.Substring(8, 2))
+                        );
+                    if (date.ToString("dd.MM.yyyy") == PlanModel.MetaData.AffectedDate._dateTime.ToString("dd.MM.yyyy"))
+                    {
+                        return day;
+                    }
+                }
+                Logger.Warn(LogArea.Notification, "Weather day is null, didnt found matching date", json);
+                return null;
+            }
+            catch(Exception ex)
             {
                 Logger.Error(LogArea.Notification, ex, "Tried to parse weather data", json);
                 return null;
             }
         }
-        private string GetWeatherImageScr(List<WeatherDay> days)
-        {
-            WeatherDay importantDay = new();
-            foreach(var day in days)
-            {
-                var date = new DateTime(
-                    int.Parse(day.DayDate.Substring(0, 4)), 
-                    int.Parse(day.DayDate.Substring(5, 2)), 
-                    int.Parse(day.DayDate.Substring(8, 2))
-                    );
-                if (date.ToString("dd.MM.yyyy") == PlanModel.MetaData.AffectedDate._dateTime.ToString("dd.MM.yyyy"))
-                {
-                    importantDay = day;
-                    break;
-                }
-            }
-
-            return importantDay.Icon switch
+        private string GetWeatherImageName(int icon)
+        {           
+            return icon switch
             {
                 1 => "sunny",           // Sonne
                 2 => "sunny_bit_cloudy",// Sonne, leicht bewölkt
@@ -186,6 +176,32 @@ namespace VpServiceAPI.Jobs.Notification
             };
         }
 
-        
+        private async Task<ArtworkMeta> GetArtwork(string weather)
+        {
+            string forcedArtworkName = (await DataQueries.GetRoutineData("EXTRA", "forced_artwork_name"))[0];
+            if (!string.IsNullOrEmpty(forcedArtworkName))
+            {
+                if (await ArtworkRepository.IncludesArtwork(forcedArtworkName))
+                {
+                    return await ArtworkRepository.GetArtworkMeta(forcedArtworkName);
+                }
+            }
+
+            ArtworkMeta? specialArtwork = await ArtworkRepository.GetSpecialArtworkForDate(DateTime.Now);
+            if (specialArtwork is not null)
+            {
+                return specialArtwork;
+            }
+
+            ArtworkMeta? weatherArtwork = await ArtworkRepository.GetArtworkMeta(weather);
+            if (weatherArtwork is not null)
+            {
+                return weatherArtwork;
+            }
+
+            return await ArtworkRepository.DefaultMeta();
+        }
+
+
     }
 }

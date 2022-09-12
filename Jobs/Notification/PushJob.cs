@@ -16,7 +16,7 @@ using System.Threading;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class TestPushJob : IPushJob
+    public sealed class TestPushJob : IPushJob
     {
         private readonly IMyLogger Logger;
         private readonly string PUSH_KEY;
@@ -57,7 +57,7 @@ namespace VpServiceAPI.Jobs.Notification
         }
     }
 
-    public class ProdPushJob : IPushJob
+    public sealed class ProdPushJob : IPushJob
     {
         private readonly IMyLogger Logger;
         private readonly string PUSH_KEY;
@@ -105,7 +105,7 @@ namespace VpServiceAPI.Jobs.Notification
 
 
 
-    class PushOptions
+    sealed class PushOptions
     {
         
         private string title = "";        
@@ -149,7 +149,7 @@ namespace VpServiceAPI.Jobs.Notification
         [JsonPropertyName("action_buttons")]
         public List<ActionButton>? ActionButtons { get; set; } 
     }
-    class ActionButton
+    sealed class ActionButton
     {
         public ActionButton(string title, string url)
         {

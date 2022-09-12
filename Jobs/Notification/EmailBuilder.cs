@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class EmailBuilder : IEmailBuilder
+    public sealed class EmailBuilder : IEmailBuilder
     {
         private readonly IMyLogger Logger;
         private NotificationBody NotificationBody { get; set; }
@@ -73,7 +73,9 @@ namespace VpServiceAPI.Jobs.Notification
                 { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/Notification/Qrcode" },
                 { "Information",  GenerateInformation() },
                 { "StatLoginParams", $"stat-user={Environment.GetEnvironmentVariable("SITE_STATS_NAME")}&stat-pw={Environment.GetEnvironmentVariable("SITE_STATS_PW")}" },
-                { "PersonalInformation", string.Join("<br>", NotificationBody.PersonalInformation) }
+                { "PersonalInformation", string.Join("<br>", NotificationBody.PersonalInformation) },
+                { "TempMax", NotificationBody.Weather?.TempMax.ToString() ?? ""},
+                { "TempMin", NotificationBody.Weather?.TempMin.ToString() ?? ""},
 
             };
         }
@@ -91,7 +93,7 @@ namespace VpServiceAPI.Jobs.Notification
                     cells.Add($"<td>{s}</td>");
                 }
 
-                rows.Add($"<tr class=\"{(row.HasChange ? "row-has-change" : "")}\">{string.Join("", cells)}</tr>");
+                rows.Add($"<tr sealed class=\"{(row.HasChange ? "row-has-change" : "")}\">{string.Join("", cells)}</tr>");
             }
 
 

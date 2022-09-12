@@ -25,7 +25,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace VpServiceAPI
 {
-    public class Startup
+    public sealed class Startup
     {
         private IWebHostEnvironment Env { get; }
         public IConfiguration Configuration { get; }

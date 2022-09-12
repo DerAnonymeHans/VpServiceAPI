@@ -4,7 +4,7 @@ using VpServiceAPI.Enums;
 
 namespace VpServiceAPI.Entities.Statistics
 {
-    public class WhoStatistic : BaseStatistic
+    public sealed class WhoStatistic : BaseStatistic
     {
         public string OtherName { get; set; }
         public string? OtherType { get; set; }

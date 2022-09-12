@@ -7,7 +7,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Tools
 {
-    public class WebScraper : IWebScraper
+    public sealed class WebScraper : IWebScraper
     {
         private readonly IMyLogger Logger;
         private readonly HttpClient ClientKepler;

@@ -28,7 +28,7 @@ namespace VpServiceAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class NotificationController : ControllerBase
+    public sealed class NotificationController : ControllerBase
     {
         private readonly IMyLogger Logger;
         private readonly IRoutine Routine;

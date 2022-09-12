@@ -12,7 +12,7 @@ using VpServiceAPI.Jobs.StatProviding;
 
 namespace VpServiceAPI.Jobs.StatExtraction
 {
-    public class RelationTriangle
+    public sealed class RelationTriangle
     {
         public StatEntity Teacher { get; } = new StatEntity { Type = EntityType.TEACHER };
         public StatEntity Subject { get; } = new StatEntity { Type = EntityType.SUBJECT };

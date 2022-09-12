@@ -7,7 +7,7 @@ using VpServiceAPI.Jobs.StatProviding;
 
 namespace VpServiceAPI.Jobs.Analysing
 {
-    public class AnalysedPlanSaver : IAnalysedPlanSaver
+    public sealed class AnalysedPlanSaver : IAnalysedPlanSaver
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
@@ -35,7 +35,7 @@ namespace VpServiceAPI.Jobs.Analysing
             }
             catch(Exception ex)
             {
-                Logger.Error(LogArea.PlanAnalysing, ex, "Tried to save analysed row.", row);
+                Logger.Error(LogArea.PlanAnalysing, ex, "Tried to save analysed row.", row.ToParameters());
             }
         }
 

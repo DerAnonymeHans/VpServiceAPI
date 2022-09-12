@@ -18,6 +18,7 @@ namespace VpServiceAPI.Entities
 
         public ArtworkMeta? Artwork { get; set; }
         public List<string> MissingTeachers { get; set; } = new();
+        public NotificationWeather? Weather { get; set; } = new();
 
         public GlobalNotificationBody()
         {
@@ -54,6 +55,7 @@ namespace VpServiceAPI.Entities
         public string AffectedWeekday2 { get; set; } = "";
 
         public ArtworkMeta? Artwork { get; set; }
+        public NotificationWeather? Weather { get; set; } = new();
         public List<string> MissingTeachers { get; set; } = new();
         public List<string> Information { get; set; } = new();
 

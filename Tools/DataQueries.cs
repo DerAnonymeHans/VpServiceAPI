@@ -9,7 +9,7 @@ using VpServiceAPI.Jobs.StatProviding;
 
 namespace VpServiceAPI.Tools
 {
-    public class DataQueries : IDataQueries
+    public sealed class DataQueries : IDataQueries
     {
         private readonly IDBAccess DataAccess;
         public DataQueries(IDBAccess dataAccess)
@@ -90,7 +90,7 @@ namespace VpServiceAPI.Tools
     }
 
 
-    public class UTestingDataQueries : IDataQueries
+    public sealed class UTestingDataQueries : IDataQueries
     {
         private readonly IDBAccess DataAccess;
         public UTestingDataQueries(IDBAccess dataAccess)

@@ -379,7 +379,7 @@ namespace VpServiceAPI.Controllers
         //}
     }
 
-    public class Helper
+    public sealed class Helper
     {
         private readonly string[] Lessons = new[] { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
         private readonly char[] Letters = new[] { 'a', 'b', 'c', 'd', 'e', 'f' };

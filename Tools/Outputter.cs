@@ -5,7 +5,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Tools
 {
-    public class ConsoleOutputter : IOutputter
+    public sealed class ConsoleOutputter : IOutputter
     {
         private static ConsoleColor ToConsoleColor(OutputColor color)
         {
@@ -47,7 +47,7 @@ namespace VpServiceAPI.Tools
     }
 
 
-    public class DBOutputter : IOutputter
+    public sealed class DBOutputter : IOutputter
     {
         private readonly IDataQueries DataQueries;
 
@@ -89,7 +89,7 @@ namespace VpServiceAPI.Tools
     }
 
 
-    public class ProdOutputter : IOutputter
+    public sealed class ProdOutputter : IOutputter
     {
         private readonly ConsoleOutputter ConsoleOutputter;
         private readonly DBOutputter DBOutputter;

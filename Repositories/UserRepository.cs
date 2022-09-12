@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace VpServiceAPI.Repositories
 {
-    public class TestUserRepository : IUserRepository
+    public sealed class TestUserRepository : IUserRepository
     {
         private List<User> Users { get; init; }
 
@@ -139,7 +139,7 @@ namespace VpServiceAPI.Repositories
         }
     }
 
-    public class ProdUserRepository : IUserRepository
+    public sealed class ProdUserRepository : IUserRepository
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
@@ -321,7 +321,7 @@ namespace VpServiceAPI.Repositories
 
     }
 
-    public class KeyMailHelper
+    public sealed class KeyMailHelper
     {
         public string ResetKey { get; init; }
         public string Mail { get; init; }
@@ -332,7 +332,7 @@ namespace VpServiceAPI.Repositories
         }
     }
 
-    public class MailHashPair
+    public sealed class MailHashPair
     {
         public MailHashPair(string mail, string hash)
         {

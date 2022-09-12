@@ -3,7 +3,7 @@ using VpServiceAPI.Enums;
 
 namespace VpServiceAPI.Tools
 {
-    public class Converter
+    public sealed class Converter
     {
         public static readonly string[] Months = new[] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
         public static readonly string[] Days = new[] { "monday", "tuesday", "wednesday", "thursday", "friday" };

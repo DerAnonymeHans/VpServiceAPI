@@ -10,7 +10,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.StatExtraction
 {
-    public class StatExtractor : IStatExtractor
+    public sealed class StatExtractor : IStatExtractor
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;

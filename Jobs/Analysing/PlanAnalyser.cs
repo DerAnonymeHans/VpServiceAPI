@@ -9,7 +9,7 @@ using VpServiceAPI.Jobs.StatProviding;
 
 namespace VpServiceAPI.Jobs.Analysing
 {
-    public class PlanAnalyser : IPlanAnalyser
+    public sealed class PlanAnalyser : IPlanAnalyser
     {
         private PlanModel PlanModel { get; set; } = new();
         private readonly IMyLogger Logger;

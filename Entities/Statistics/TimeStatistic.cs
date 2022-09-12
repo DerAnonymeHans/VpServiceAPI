@@ -1,6 +1,6 @@
 ﻿namespace VpServiceAPI.Entities.Statistics
 {
-    public class TimeStatistic : BaseStatistic
+    public sealed class TimeStatistic : BaseStatistic
     {
         public int[] Substituted { get; set; }
         public int[] Missed { get; set; }

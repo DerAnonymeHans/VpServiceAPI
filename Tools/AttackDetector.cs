@@ -3,7 +3,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Tools
 {
-    public class AttackDetector
+    public sealed class AttackDetector
     {
         private static readonly string[] XSSTags = new[] { "script", "iframe" };
         private static readonly string[] SqlInjectKeywords = new[] { "SELECT", "DELETE", "UPDATE", "CREATE", "INSERT" };

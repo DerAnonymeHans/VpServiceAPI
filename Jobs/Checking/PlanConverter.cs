@@ -11,7 +11,7 @@ using VpServiceAPI.Tools;
 #nullable enable
 namespace VpServiceAPI.Jobs.Checking
 {
-    public class PlanConverterKEPLER : IPlanConverter
+    public sealed class PlanConverterKEPLER : IPlanConverter
     {
         private readonly IMyLogger Logger;
         private string PlanHTML { get; set; } = "";
@@ -50,15 +50,15 @@ namespace VpServiceAPI.Jobs.Checking
         }
         private bool IsPlan()
         {
-            return PlanHTML.IndexOf("<span class=\"ueberschrift\">Geänderte Unterrichtsstunden:</span>") != -1;
+            return PlanHTML.IndexOf("<span sealed class=\"ueberschrift\">Geänderte Unterrichtsstunden:</span>") != -1;
         }
         private MetaData? GetMetaData()
         {
             try
             {
-                string title = new Regex("(?<=<span class=\"vpfuerdatum\">).*(?=</span>)")
+                string title = new Regex("(?<=<span sealed class=\"vpfuerdatum\">).*(?=</span>)")
                 .Match(PlanHTML).Value;
-                string originDateString = new Regex("(?<=<span class=\"vpdatum\">).*(?=</span>)")
+                string originDateString = new Regex("(?<=<span sealed class=\"vpdatum\">).*(?=</span>)")
                     .Match(PlanHTML).Value;
 
                 var affectedDate = GetAffectedDate(title);
@@ -112,7 +112,7 @@ namespace VpServiceAPI.Jobs.Checking
         }
         private List<PlanRow> HTMLIntoRows()
         {
-            string tableHTML = PlanHTML[PlanHTML.IndexOf("<table class=\"tablekopf\"")..];
+            string tableHTML = PlanHTML[PlanHTML.IndexOf("<table sealed class=\"tablekopf\"")..];
             tableHTML = tableHTML[..tableHTML.IndexOf("</table>")];
 
             var table = new List<PlanRow>();
@@ -147,7 +147,7 @@ namespace VpServiceAPI.Jobs.Checking
         }
     }
 
-    public class PlanConverterVP24 : IPlanConverter
+    public sealed class PlanConverterVP24 : IPlanConverter
     {
         private readonly IMyLogger Logger;
         private string PlanHTML { get; set; } = "";

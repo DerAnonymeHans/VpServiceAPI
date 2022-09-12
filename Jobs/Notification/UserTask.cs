@@ -5,7 +5,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Notification
 {
-    public class UserTask
+    public sealed class UserTask
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;

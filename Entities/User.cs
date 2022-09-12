@@ -3,7 +3,7 @@ using VpServiceAPI.Enums;
 
 namespace VpServiceAPI.Entities
 {
-    public class User
+    public sealed class User
     {
         public string Name { get; init; }
         public string Address { get; init; }

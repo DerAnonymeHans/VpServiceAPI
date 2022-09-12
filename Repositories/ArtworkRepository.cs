@@ -9,7 +9,7 @@ using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Repositories
 {
-    public class ArtworkRepository : IArtworkRepository
+    public sealed class ArtworkRepository : IArtworkRepository
     {
         private readonly IDataQueries DataQueries;
         private readonly IMyLogger Logger;

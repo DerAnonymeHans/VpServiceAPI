@@ -4,7 +4,7 @@ using VpServiceAPI.Enums;
 
 namespace VpServiceAPI.Entities.Statistics
 {
-    public class CountStatistic : BaseStatistic
+    public sealed class CountStatistic : BaseStatistic
     {
         public decimal Missed { get; set; }
         public decimal Substituted { get; set; }

@@ -9,7 +9,7 @@ using VpServiceAPI.Tools;
 
 namespace VpServiceAPI.Jobs.StatProviding
 {
-    public class ByTimeProvider : IByTimeProvider
+    public sealed class ByTimeProvider : IByTimeProvider
     {
         private readonly IDataQueries DataQueries;
         private readonly IMyLogger Logger;
@@ -107,7 +107,7 @@ namespace VpServiceAPI.Jobs.StatProviding
     }
 
 
-    public class Times
+    public sealed class Times
     {
         public string Name { get; set; } = "";
         public string Type { get; set; } = "";

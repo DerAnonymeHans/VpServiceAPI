@@ -10,25 +10,25 @@
 <body>
     <a href="/View/Admin">Startseite</a>
     <hr>
-    <div class="container">
+    <div sealed class="container">
         <h3>Global Extra</h3>
-        <div class="flex">
+        <div sealed class="flex">
             <textarea type="text" id="globalExtra" data-post="/Notification/GlobalExtra/{}"></textarea>
-            <div class="value-container" data-get="/Notification/GlobalExtra"></div>
+            <div sealed class="value-container" data-get="/Notification/GlobalExtra"></div>
             <button id="stopInterval" onclick="post('globalExtra')">Setzen</button>
         </div>
     </div>
-    <div class="container">
+    <div sealed class="container">
         <h3>Special Extra</h3>
-        <div class="flex">
+        <div sealed class="flex">
             <textarea type="text" id="specialExtra" data-post="/Notification/SpecialExtra/{}"></textarea>
-            <div class="value-container" data-get="/Notification/SpecialExtra"></div>
+            <div sealed class="value-container" data-get="/Notification/SpecialExtra"></div>
             <button id="stopInterval" onclick="post('specialExtra')">Setzen</button>
         </div>
     </div>
-    <div class="container">
+    <div sealed class="container">
         <h3>Add Artwork</h3>
-        <div class="flex">
+        <div sealed class="flex">
             <iframe name="dummy" id="dummyFrame" style="display: none"></iframe>
             <form action="/Notification/AddArtwork" method="POST" id="addArtwork" target="dummy" enctype="multipart/form-data">
                 <input type="file" name="artworkFile" id="artworkFileInput">
@@ -46,10 +46,10 @@
             </form>
         </div>
     </div>
-    <div class="container">
+    <div sealed class="container">
         <h3>Force Artwork</h3>
         <div>
-            <div class="flex">
+            <div sealed class="flex">
                 Forced:
                 <div data-get="/Notification/CurrentForcedArtwork"></div>
             </div>
