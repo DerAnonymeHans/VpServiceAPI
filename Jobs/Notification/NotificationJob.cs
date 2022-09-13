@@ -118,11 +118,16 @@ namespace VpServiceAPI.Jobs.Notification
         {
             var prevUser = new User("$%&", "", "0", "", "", "", "");
             IGradeNotificationBody gradeBody = new GradeNotificationBody();
-            foreach(User user in Users)
+
+            var notifBody = new NotificationBody();
+            notifBody.Set(GlobalBody);
+
+            foreach (User user in Users)
             {
                 if(user.Grade != prevUser.Grade)
                 {
                     gradeBody = await GradeTask.Begin(PlanModel, user.Grade);
+                    notifBody.Set(gradeBody);
                     await CacheGradeModel(gradeBody);
                     prevUser = user;
                 }
@@ -151,11 +156,8 @@ namespace VpServiceAPI.Jobs.Notification
                     string key = await UserRepository.StartHashResetAndGetKey(user.Address);
                     userBody.PersonalInformation.Add(@$"ACHTUNG: Es wurde versucht dir eine Push Nachticht zu senden, wobei ein Fehler aufkam. Meist liegt die Ursache an fehlenden Benachtichtigungsrechten. Drücke den Link und erlaube sie: <a href=""{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung?code={key}"">Link drücken</a>");
                 }
-
                 
-
-                var notifBody = new NotificationBody();
-                notifBody.Set(GlobalBody).Set(gradeBody).Set(userBody);
+                notifBody.Set(userBody);
                 notifBody.GlobalExtra = gradeBody.GradeExtra ?? notifBody.GlobalExtra;
                 var notification = EmailBuilder.Build(notifBody, user.Address);
                 EmailJob.Send(notification);

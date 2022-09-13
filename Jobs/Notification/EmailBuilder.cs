@@ -93,7 +93,7 @@ namespace VpServiceAPI.Jobs.Notification
                     cells.Add($"<td>{s}</td>");
                 }
 
-                rows.Add($"<tr sealed class=\"{(row.HasChange ? "row-has-change" : "")}\">{string.Join("", cells)}</tr>");
+                rows.Add($"<tr class=\"{(row.HasChange ? "row-has-change" : "")}\">{string.Join("", cells)}</tr>");
             }
 
 

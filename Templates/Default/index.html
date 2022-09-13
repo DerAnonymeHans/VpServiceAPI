@@ -9,7 +9,14 @@
             color: [Color];
         }
         hr{
-            margin: 2em 0;
+            margin: 2em auto;
+            border: none;
+            border-bottom: 1px solid #888;
+            width: 70%;
+        }
+        hr.big{
+            width: 95%;
+            border-bottom-width: 2px;
         }
         .link-container {
             margin: 2em auto;
@@ -17,6 +24,10 @@
         }
         .container{
             margin: 1em 0;
+        }
+        .plan-weekday{
+            color: [Color];
+            text-align: center;
         }
     </style>
 </head>
@@ -43,19 +54,19 @@
         <div>Es fehlen: [MissingTeachers]</div>
     </div>
 
-    <hr />
-
     [[if Information]]
+    <hr />
     <div class="information-container container">
         [Information]
     </div>
-    <hr />
     [[endif Information]]
 
 
+    <hr class="big" />
+
 
     <div class="plan-container container">
-        <b>[AffectedWeekday]:</b>
+        <h3 class="plan-weekday">[AffectedWeekday]:</h3>
         [[if PlanRows]]
         <table>
             <colgroup>
@@ -78,14 +89,15 @@
         </table>
         [[endif PlanRows]]
         [[ifnot PlanRows]]
-        Keine Änderungen...Wahnsinn!
+        Keine Änderungen...
         [[endifnot PlanRows]]
     </div>
 
-    <hr />
     [[if AffectedWeekday2]]
+    <hr />
     <div class="plan-container container">
-        <b>[AffectedWeekday2]:</b>
+        <h3 class="plan-weekday">[AffectedWeekday2]:</h3>
+        [[if SecondPlanRows]]
         <table>
             <colgroup>
                 <col style="background-color:#eee">
@@ -105,26 +117,33 @@
             </tr>
             [SecondPlanRows]
         </table>
+        [[endif SecondPlanRows]]
+        [[ifnot SecondPlanRows]]
+        Keine Änderungen...
+        [[endifnot SecondPlanRows]]
     </div>
-    <hr />
     [[endif AffectedWeekday2]]
+
+    <hr class="big"/>
 
 
     <div class="link-container">
         <a href="https://jkg-leipzig.de/vertretungsplan/"><button>Weitere Info</button></a>
-        <a href="https://kepleraner.herokuapp.com?name=[UserName]&[StatLoginParams]"><button href="#" style="color: [Color]">Webseite</button></a>
+        <a href="https://kepleraner.herokuapp.com?name=[UserName]&[StatLoginParams]"><button>Kepleraner</button></a>
     </div>
 
     <hr />
 
     <div class="small-extra-container container">
-        <div><b>Das heutige kleine aber feine Extra:</b></div>
+        <div style="text-decoration: underline; text-decoration-color: [Color]"><b>Das heutige kleine aber feine Extra:</b></div>
         <blockquote>
             <i>
                 [SmallExtra]
             </i>
         </blockquote>
+        [[if SmallExtraAuthor]]
         <p style="text-align: right; margin-right: 15vw">~[SmallExtraAuthor]</p>
+        [[endif SmallExtraAuthor]]
     </div>
 
     <hr />

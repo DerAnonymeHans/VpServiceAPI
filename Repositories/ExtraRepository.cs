@@ -14,10 +14,12 @@ namespace VpServiceAPI.Repositories
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
+        private List<SmallExtra> SmallExtras { get; set; }
         public ExtraRepository(IMyLogger logger, IDataQueries dataQueries)
         {
             Logger = logger;
             DataQueries = dataQueries;
+            SmallExtras = new();
         }
 
         public async Task AcceptProposal(string text)
@@ -28,7 +30,6 @@ namespace VpServiceAPI.Repositories
         {
             await DataQueries.Delete("DELETE FROM small_extras WHERE text=@text AND status='PROPOSAL'", new { text });
         }
-
         public async Task AddSmallExtraProposal(SmallExtra extra)
         {
             if (string.IsNullOrWhiteSpace(extra.Text)) throw new AppException("Der Text darf nicht leer sein");
@@ -54,7 +55,6 @@ namespace VpServiceAPI.Repositories
             
             await DataQueries.Save("INSERT INTO small_extras(text, author, status) VALUES (@text, @author, 'PROPOSAL')", new { text = extra.Text, author = extra.Author });
         }
-
         public async Task<List<SmallExtra>> GetProposals()
         {
             return await DataQueries.Load<SmallExtra, dynamic>("SELECT text, author FROM small_extras WHERE status='PROPOSAL'", new { });
@@ -62,18 +62,32 @@ namespace VpServiceAPI.Repositories
 
         public async Task<SmallExtra> GetRandSmallExtra()
         {
-            try
+            if(SmallExtras.Count == 0)
             {
-                return (await DataQueries.Load<SmallExtra, dynamic>("SELECT text, author FROM small_extras WHERE status='NORMAL' ORDER BY RAND() LIMIT 1", new { }))[0];
+                await Preload();
             }
-            catch (Exception ex)
+
+            if(SmallExtras.Count == 0)
             {
-                Logger.Error(LogArea.Notification, ex, "Es wurde das Platzhalter kleine extra genutzt.");
+                Logger.Warn(LogArea.SmallExtraRepo, "Es wurde das Platzhalte Kleine Extra genutzt.", "");
                 return new SmallExtra
                 {
                     Text = "Einen wunderschönen Guten Tag! Eigentlich solltest du diesen Text nicht sehen, da er nur ein Platzhalter für das eigentliche kleine aber feine Extra ist...doof.",
                     Author = "Pascal"
                 };
+            }
+            return SmallExtras[new Random().Next(SmallExtras.Count)];
+        }
+        private async Task Preload()
+        {
+            int MAX_COUNT = 100;
+            try
+            {
+                SmallExtras = await DataQueries.Load<SmallExtra, dynamic>("SELECT text, author FROM small_extras WHERE status='NORMAL' ORDER BY RAND() LIMIT @limit", new { limit = MAX_COUNT });
+            }catch(Exception ex)
+            {
+                SmallExtras = new();
+                Logger.Error(LogArea.SmallExtraRepo, ex, "Tried to preload small extras.");
             }
         }
 

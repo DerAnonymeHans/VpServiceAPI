@@ -24,10 +24,10 @@ namespace VpServiceAPI.Repositories
         {
             Users = new()
             {
-                new User("Pascal", "pascal.setzer@gmail.com", "11", UserStatus.NORMAL.ToString(), NotifyMode.EMAIL.ToString(), "", "27221354")
+                new User("Pascal", "pascal.setzer@gmail.com", "12", UserStatus.NORMAL.ToString(), NotifyMode.EMAIL.ToString(), "", "27221354")
             };
         }
-
+        
         public async Task AddUserRequest(User user)
         {
             Users.Add(user);

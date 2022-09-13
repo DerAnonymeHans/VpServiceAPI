@@ -21,19 +21,26 @@ namespace VpServiceAPI.Interfaces
 
     public enum LogArea
     {
+        Routine,
+
         PlanProviding,
         PlanConverting,
         PlanChecking,
-        Notification,
-        Routine,
         PlanAnalysing,
-        DataAccess,
+
+        Notification,
         StatExtraction,
+
         StatAPI,
         UserAPI,
         NotificationAPI,
+
         Admin,
+        DataAccess,
         Attack,
-        Artwork
+
+        ArtworkRepo,
+        SmallExtraRepo,
+        UserRepo
     }
 }
