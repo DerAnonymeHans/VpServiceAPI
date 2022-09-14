@@ -47,7 +47,7 @@ namespace VpServiceAPI.Jobs.Notification
         private string BuildBody()
         {
             HTMLNotificationData = GetHTMLNotificationData();
-            string HTML = MergeTemplateAndDate();
+            string HTML = MergeTemplateAndData();
             return HTML;
         }
         private Dictionary<string, string> GetHTMLNotificationData()
@@ -109,58 +109,64 @@ namespace VpServiceAPI.Jobs.Notification
             return string.Join("", divs);
         }
 
-        private string MergeTemplateAndDate()
+        private string MergeTemplateAndData()
         {
-            string HTML = File.ReadAllText(@$"{TemplatePath}/{TemplateName}/index.html");
+            string html = File.ReadAllText(@$"{TemplatePath}/{TemplateName}/index.html");
 
-            foreach(Match match in new Regex(@"\[\[.+\]\]").Matches(HTML))
+            foreach(Match match in new Regex(@"\[\[.+\]\]").Matches(html))
             {
                 string action = new Regex(@"(?<=\[\[)\w+").Match(match.Value).Value;
                 string parameter = new Regex(@"\w+(?=\]\])").Match(match.Value).Value;
-                string cutout;
                 switch (action)
                 {
                     case "if":
-                        string _if = $"[[if {parameter}]]";
-                        string _endIf = $"[[endif {parameter}]]";
-                        // if key and value is present in notif data and not empty
-                        if (!string.IsNullOrEmpty(HTMLNotificationData[parameter]))
-                        {
-                            // cut [[if ...]] and endif out
-                            HTML = HTML.Replace(_if, "").Replace(_endIf, "");                            
-                            continue;
-                        };
-                        int idxIf = HTML.IndexOf(_if);
-                        int idxEndIf = HTML.IndexOf(_endIf);
-                        cutout = HTML.Substring(idxIf, idxEndIf + _endIf.Length - idxIf);
-                        HTML = HTML.Replace(cutout, "");
+                        IfAction(ref html, parameter);
                         break;
                     case "ifnot":
-                        string _ifNot = $"[[ifnot {parameter}]]";
-                        string _endIfNot = $"[[endifnot {parameter}]]";
-                        // if key and value is not present in notif data and not empty
-                        if (string.IsNullOrEmpty(HTMLNotificationData[parameter]))
-                        {
-                            // cut [[if ...]] and endif out
-                            HTML = HTML.Replace(_ifNot, "").Replace(_endIfNot, "");
-                            continue;
-                        };
-                        int idxIfNot = HTML.IndexOf(_ifNot);
-                        int idxEndIfNot = HTML.IndexOf(_endIfNot);
-                        cutout = HTML.Substring(idxIfNot, idxEndIfNot + _endIfNot.Length - idxIfNot);
-                        HTML = HTML.Replace(cutout, "");
+                        IfNotAction(ref html, parameter);
                         break;
 
                 }
             }
-            foreach(Match match in new Regex(@"\[\w+\]").Matches(HTML))
+            foreach(Match match in new Regex(@"\[\w+\]").Matches(html))
             {
                 string key = match.Value[1..^1];
-                HTML = HTML.Replace(match.Value, HTMLNotificationData[key]);
+                html = html.Replace(match.Value, HTMLNotificationData[key]);
             }
 
-
-            return HTML;
+            return html;
+        }
+        private void IfAction(ref string html, string parameter)
+        {
+            string _if = $"[[if {parameter}]]";
+            string _endIf = $"[[endif {parameter}]]";
+            // if key and value is present in notif data and not empty
+            if (!string.IsNullOrEmpty(HTMLNotificationData[parameter]))
+            {
+                // cut [[if ...]] and endif out
+                html = html.Replace(_if, "").Replace(_endIf, "");
+                return;
+            };
+            int idxIf = html.IndexOf(_if);
+            int idxEndIf = html.IndexOf(_endIf);
+            string cutout = html.Substring(idxIf, idxEndIf + _endIf.Length - idxIf);
+            html = html.Replace(cutout, "");
+        }
+        private void IfNotAction(ref string html, string parameter)
+        {
+            string _ifNot = $"[[ifnot {parameter}]]";
+            string _endIfNot = $"[[endifnot {parameter}]]";
+            // if key and value is not present in notif data and not empty
+            if (string.IsNullOrEmpty(HTMLNotificationData[parameter]))
+            {
+                // cut [[if ...]] and endif out
+                html = html.Replace(_ifNot, "").Replace(_endIfNot, "");
+                return;
+            };
+            int idxIfNot = html.IndexOf(_ifNot);
+            int idxEndIfNot = html.IndexOf(_endIfNot);
+            string cutout = html.Substring(idxIfNot, idxEndIfNot + _endIfNot.Length - idxIfNot);
+            html = html.Replace(cutout, "");
         }
     }
 
