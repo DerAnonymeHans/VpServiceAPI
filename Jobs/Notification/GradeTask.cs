@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;
 
@@ -12,33 +13,34 @@ namespace VpServiceAPI.Jobs.Notification
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
-        private PlanModel PlanModel { get; set; } = new();
+        private PlanCollection? PlanCollection { get; set; }
         public GradeTask(IMyLogger logger, IDataQueries dataQueries)
         {
             Logger = logger;
             DataQueries = dataQueries;
         }
 
-        public async Task<IGradeNotificationBody> Begin(PlanModel planModel, string grade)
+        public async Task<IGradeNotificationBody> Begin(PlanCollection planCollection, string grade)
         {
-            PlanModel = planModel;
-            string[] cachedRows = await GetCachedRows(grade);
-            List<NotificationRow> rows = GetNotificationRows(cachedRows, grade, out bool isAffected);
-            if (isAffected && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC") await SetCachedRows(grade, rows);
+            PlanCollection = planCollection;
 
-            List<NotificationRow> rows2 = new();
-            if(PlanModel.Table2 is not null)
+            string[]? cachedRows = await GetCachedRows(grade);
+
+            var listOfTables = new List<List<NotificationRow>>();
+            foreach(var plan in planCollection.Plans)
             {
-                rows2 = GetNotificationRows(new string[0], grade, out bool _, true);
-            }            
+                listOfTables.Add(ConvertToNotificationRows(grade, plan.Rows, cachedRows));
+                cachedRows = null;
+            }
+            bool isAffected = listOfTables.First().Any(row => row.HasChange);
+            if (isAffected && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC") await SetCachedRows(grade, listOfTables.First());
 
             return new GradeNotificationBody
             {
                 Grade = grade,
                 IsNotify = await IsSendMail(grade, isAffected),
                 GradeExtra = await GetGradeExtra(grade),
-                Rows = rows,
-                Rows2 = rows2,
+                ListOfTables = listOfTables
             };
         }
         private async Task<bool> IsSendMail(string grade, bool isAffected)
@@ -85,34 +87,35 @@ namespace VpServiceAPI.Jobs.Notification
                 _ => GradeMode.NORMAL
             };
         }
-        private List<NotificationRow> GetNotificationRows(string[] cachedRows, string grade, out bool hasChange, bool isSecondPlan=false)
+        private List<NotificationRow> ConvertToNotificationRows(string grade, List<PlanRow> rows, string[]? cachedRows)
         {
-            List<NotificationRow> rows = new();
-            hasChange = false;
-            var table = isSecondPlan ? PlanModel.Table2 : PlanModel.Table;
-            if (table is null) return rows;
+            List<NotificationRow> notifRows = new();
+
             grade = grade == "11" || grade == "12" ? $"JG{grade}" : grade; // because of Kurs Bezeichnung - Kurs JG11/de123 would also count for grade 12
-            foreach (var row in table)
+            foreach (var row in rows)
             {
                 if (!row.Klasse.Contains(grade)) continue;
 
-                if (Array.IndexOf(cachedRows, string.Join(';', row.GetArray())) == -1)
+                if(cachedRows is not null)
                 {
-                    hasChange = true;
-                    rows.Add(new NotificationRow
+                    if (Array.IndexOf(cachedRows, string.Join(';', row.GetArray())) == -1)
                     {
-                        HasChange = !isSecondPlan, // only if first plan
-                        Row = row
-                    });
-                    continue;
+                        notifRows.Add(new NotificationRow
+                        {
+                            HasChange = true,
+                            Row = row
+                        });
+                        continue;
+                    }
                 }
-                rows.Add(new NotificationRow
+                
+                notifRows.Add(new NotificationRow
                 {
                     HasChange = false,
                     Row = row
                 });
             }
-            return rows;
+            return notifRows;
         }                
         private async Task<string[]> GetCachedRows(string grade)
         {

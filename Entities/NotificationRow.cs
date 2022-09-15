@@ -1,4 +1,6 @@
-﻿namespace VpServiceAPI.Entities
+﻿using VpServiceAPI.Entities.Plan;
+
+namespace VpServiceAPI.Entities
 {
     public record NotificationRow
     {

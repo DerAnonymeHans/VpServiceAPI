@@ -6,12 +6,12 @@ using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Jobs.Checking;
 using VpServiceAPI.Jobs.StatProviding;
+using VpServiceAPI.Entities.Plan;
 
 namespace VpServiceAPI.Jobs.Analysing
 {
     public sealed class PlanAnalyser : IPlanAnalyser
     {
-        private PlanModel PlanModel { get; set; } = new();
         private readonly IMyLogger Logger;
         private readonly ITeacherRepository TeacherRepository;
         private readonly string[] Lessons = new[] { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
@@ -23,24 +23,21 @@ namespace VpServiceAPI.Jobs.Analysing
             TeacherRepository = teacherRepository;
         }
 
-        public List<AnalysedRow> Begin(PlanModel planModel)
+        public List<AnalysedRow> Analyse(PlanModel planModel)
         {
-            PlanModel = planModel;
-
-            return AnalyseTable();
-        }
-
-        private List<AnalysedRow> AnalyseTable()
-        {
-            var newTable = new List<AnalysedRow>();
-            foreach(var row in PlanModel.Table)
+            var analysedRows = new List<AnalysedRow>();
+            foreach (var row in planModel.Rows)
             {
                 var analysedRow = AnalyseRow(row);
                 if (analysedRow is null) continue;
+
+                analysedRow.Date = planModel.AffectedDate.Date;
+                analysedRow.Extra = row.Info;
                 analysedRow.Year = ProviderHelper.CurrentSchoolYear;
-                newTable.Add(analysedRow);
+
+                analysedRows.Add(analysedRow);
             }
-            return newTable;
+            return analysedRows;
         }
         private AnalysedRow? AnalyseRow(PlanRow row)
         {
@@ -73,10 +70,7 @@ namespace VpServiceAPI.Jobs.Analysing
             if (substTeacher is null) return ParenthesisCase(row);
             return new AnalysedRow
             {
-                Date = PlanModel.MetaData.AffectedDate.Date,
-                Extra = row.Info,
                 Type = "VER",
-
                 MissingTeacher = GetTeacher(Regex.Match(row.Lehrer, @"(?<=\().+(?=\))").Value),
                 MissingSubject = GetSubject(row.Fach),
                 SubstituteTeacher = substTeacher.ShortName,
@@ -90,10 +84,7 @@ namespace VpServiceAPI.Jobs.Analysing
         {
             return new AnalysedRow
             {
-                Date = PlanModel.MetaData.AffectedDate.Date,
-                Extra = row.Info,
                 Type = "AUS",
-
                 MissingTeacher = GetTeacher(Regex.Match(row.Lehrer, @"(?<=\().+(?=\))").Value),
                 MissingSubject = GetSubject(row.Fach),
                 Lesson = GetLessons(row.Stunde),
@@ -104,10 +95,7 @@ namespace VpServiceAPI.Jobs.Analysing
         {
             return new AnalysedRow
             {
-                Date = PlanModel.MetaData.AffectedDate.Date,
-                Extra = row.Info,
                 Type = "AUS",
-
                 MissingTeacher = GetTeacher(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\sfällt aus)").Match(row.Info).Value),
                 MissingSubject = GetSubject(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\s[a-zA-ZäÄöÖüÜß/]+\sfällt aus)").Match(row.Info).Value),
                 Lesson = GetLessons(row.Stunde),
@@ -118,10 +106,7 @@ namespace VpServiceAPI.Jobs.Analysing
         {
             return new AnalysedRow
             {
-                Date = PlanModel.MetaData.AffectedDate.Date,
-                Extra = row.Info,
                 Type = "VER",
-
                 MissingTeacher = GetTeacher(new Regex(@"(?<=für)\s[0-9a-zA-ZäÄöÖüÜß]+\s([0-9a-zA-ZäÄöÖüÜß]+)").Matches(row.Info)[0].Groups[1].Value),
                 SubstituteTeacher = GetTeacher(row.Lehrer),
                 MissingSubject = GetSubject(new Regex(@"(?<=für\s)[0-9a-zA-ZäÄöÖüÜß/]+").Match(row.Info).Value),

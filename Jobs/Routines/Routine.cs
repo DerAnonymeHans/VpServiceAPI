@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Jobs.Checking;
@@ -87,39 +90,38 @@ namespace VpServiceAPI.Jobs.Routines
             {
                 await TimedEvents();
 
-                var date = DateTime.Now;
-                int dayShift = 0;
-                PlanModel planModel = new();
-                for(;dayShift < 5; dayShift++)
+                PlanCollection planCollection = new();
+                var whatPlan = new WhatPlan(0);
+
+                for(int dayShift = 0; dayShift < 5; dayShift++)
                 {
-                    var wrapper = await UpdateChecker.Check(false, dayShift);
+                    var wrapper = await UpdateChecker.Check(whatPlan, dayShift);
                     if (wrapper.Status == Status.SUCCESS)
                     {
-                        planModel = wrapper.Body ?? throw new AppException("Status is success but body is null");
-                        break;
+                        planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body is null"));
+                        whatPlan.NextPlan();
+                        continue;
                     }
-                    if (dayShift == 4 || wrapper.Status == Status.FAIL) return;
+                    if (whatPlan.NotFirst)
+                    {
+                        if (wrapper.Status == Status.NULL) break;
+                    }
+                    if (wrapper.Status == Status.FAIL) return; // when first plan is not nofify-worthy
                     if (Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC") break;
+
                 }
+                if (planCollection.Plans.Count == 0) return;
+                                
+                Logger.Info($"{planCollection.Plans.Count} NEW PLAN{(planCollection.Plans.Count == 0 ? "" : "S")} : " + string.Join("<br>\n", planCollection.Plans.Select(plan => plan.Title)));
 
-                var wrapper2 = await UpdateChecker.Check(true, dayShift);
-
-                if (wrapper2.Status == Status.SUCCESS && wrapper2.Body is not null)
-                {
-                    planModel.MetaData2 = wrapper2.Body.MetaData;
-                    planModel.Table2 = wrapper2.Body.Table;
-                }
-
-                Logger.Info("New Plan: " + planModel.MetaData.Title);
-
-                var analysedRows = AnalysePlanJob.Begin(planModel);
+                var analysedRows = AnalysePlanJob.Analyse(planCollection.FirstPlan);
                 if(Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
                 {
-                    await AnalysedPlanSaver.DeleteOldRows(planModel.MetaData.AffectedDate.Date);
+                    await AnalysedPlanSaver.DeleteOldRows(planCollection.FirstPlan.AffectedDate.Date);
                     await AnalysedPlanSaver.SaveRows(analysedRows);
                 }
 
-                NotificationJob.Begin(planModel);
+                NotificationJob.Begin(planCollection);
 
             }
             catch (Exception ex)

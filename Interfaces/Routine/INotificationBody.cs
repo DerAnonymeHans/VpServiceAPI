@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Plan;
 
 namespace VpServiceAPI.Interfaces
 {
@@ -8,18 +9,10 @@ namespace VpServiceAPI.Interfaces
         public string Subject { get; set; }
         public string GlobalExtra { get; set; }
 
-        public string AffectedDate { get; set; }
-        public string AffectedWeekday { get; set; }
-        public string OriginDate { get; set; }
-        public string OriginTime { get; set; }
-
-        public List<string> Information { get; set; }
-
-        public string AffectedWeekday2 { get; set; }
+        public List<GlobalPlan> GlobalPlans { get; set; }
 
         public ArtworkMeta? Artwork { get; set; }
         public NotificationWeather? Weather { get; set; }
-        public List<string> MissingTeachers { get; set; }
     }
 
     public interface IGradeNotificationBody
@@ -27,8 +20,7 @@ namespace VpServiceAPI.Interfaces
         public string Grade { get; set; }
         public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
-        public List<NotificationRow> Rows { get; set; }
-        public List<NotificationRow> Rows2 { get; set; }
+        public List<List<NotificationRow>> ListOfTables { get; set; }
     }
 
     public interface IUserNotificationBody

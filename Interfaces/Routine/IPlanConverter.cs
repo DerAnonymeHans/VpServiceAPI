@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Plan;
 
 namespace VpServiceAPI.Interfaces
 {

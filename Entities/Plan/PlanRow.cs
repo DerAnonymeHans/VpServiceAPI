@@ -1,4 +1,4 @@
-﻿namespace VpServiceAPI.Entities
+﻿namespace VpServiceAPI.Entities.Plan
 {
     public sealed class PlanRow
     {

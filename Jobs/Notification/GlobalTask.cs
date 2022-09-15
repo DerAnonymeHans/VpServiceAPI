@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;
 
@@ -16,9 +17,9 @@ namespace VpServiceAPI.Jobs.Notification
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
         private readonly IArtworkRepository ArtworkRepository;
+        private PlanCollection? PlanCollection { get; set; }
 
         private readonly HttpClient Client;
-        private PlanModel PlanModel { get; set; } = new();
         public GlobalTask(IMyLogger logger, IDataQueries dataQueries, IArtworkRepository artworkRepository)
         {
             Logger = logger;
@@ -27,11 +28,11 @@ namespace VpServiceAPI.Jobs.Notification
             Client = new();
         }
 
-        public async Task<IGlobalNotificationBody> Begin(PlanModel planModel)
+        public async Task<IGlobalNotificationBody> Begin(PlanCollection planCollection)
         {
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
-            PlanModel = planModel;
-            var affectedWeekDay2 = PlanModel.MetaData2?.AffectedDate._dateTime.ToString("dddd") ?? "";
+            PlanCollection = planCollection;
+
             var weather = await GetWeather();
             var weatherImgName = GetWeatherImageName(weather?.Icon ?? 69);
             NotificationWeather? notifWeather = null;
@@ -46,30 +47,20 @@ namespace VpServiceAPI.Jobs.Notification
 
             return new GlobalNotificationBody
             {
-                AffectedDate = PlanModel.MetaData.AffectedDate.Date,
-                AffectedWeekday = PlanModel.MetaData.AffectedDate._dateTime.ToString("dddd"),
-                OriginDate = PlanModel.MetaData.OriginDate.Date,
-                OriginTime = PlanModel.MetaData.OriginDate.Time,
-                AffectedWeekday2 = affectedWeekDay2,
-                Subject = PlanModel.MetaData.Title,
-                MissingTeachers = PlanModel.MissingTeacher is not null ?  PlanModel.MissingTeacher : await GetMissingTeachers(),
+                Subject = planCollection.FirstPlan.Title,
                 GlobalExtra = await GetGlobalExtra(),
                 Artwork = await GetArtwork(weatherImgName),
-                Information = PlanModel.Information,
-                Weather = notifWeather
+                Weather = notifWeather,
+                GlobalPlans = planCollection.Plans.Select(plan => new GlobalPlan
+                {
+                    AffectedDate = plan.AffectedDate.Date,
+                    AffectedWeekday = plan.AffectedDate.Weekday,
+                    OriginDate = plan.OriginDate.Date,
+                    OriginTime = plan.OriginDate.Time,
+                    Announcements = plan.Announcements,
+                    MissingTeachers = plan.MissingTeachers
+                }).ToList()
             };
-        }
-        private async Task<List<string>> GetMissingTeachers()
-        {
-            try
-            {
-                return await DataQueries.Load<string, dynamic>("SELECT DISTINCT(`missing_teacher`) FROM `vp_data` WHERE `date`=@date", new { date = PlanModel.MetaData.AffectedDate.Date });
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(LogArea.Notification, ex, "Tried to select missing teacher.");
-                return new List<string>() { "Es ist ein Fehler aufgetreten :(" };
-            }
         }
         private async Task<string> GetGlobalExtra()
         {
@@ -124,7 +115,7 @@ namespace VpServiceAPI.Jobs.Notification
                         int.Parse(day.DayDate.Substring(5, 2)),
                         int.Parse(day.DayDate.Substring(8, 2))
                         );
-                    if (date.ToString("dd.MM.yyyy") == PlanModel.MetaData.AffectedDate._dateTime.ToString("dd.MM.yyyy"))
+                    if (date.ToString("dd.MM.yyyy") == PlanCollection?.FirstPlan.AffectedDate._dateTime.ToString("dd.MM.yyyy"))
                     {
                         return day;
                     }

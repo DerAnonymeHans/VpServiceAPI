@@ -7,6 +7,6 @@ namespace VpServiceAPI.Interfaces
 {
     public interface IPlanHTMLProvider
     {
-        public Task<string> GetPlanHTML(int daysFromToday);
+        public Task<string?> GetPlanHTML(int daysFromToday);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;
 
@@ -12,7 +13,7 @@ namespace VpServiceAPI.Jobs.Checking
         private readonly IPlanConverter PlanConverter;
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
-        private PlanModel PlanModel { get; set; } = new();
+        private PlanModel? MyPlan { get; set; }
 
         public UpdateChecker(IMyLogger logger, IPlanHTMLProvider planHTMLProvider, IDataQueries dataQueries, IPlanConverter planConverter)
         {
@@ -22,30 +23,30 @@ namespace VpServiceAPI.Jobs.Checking
             PlanConverter = planConverter;
         }
 
-        public async Task<StatusWrapper<PlanModel>> Check(bool isSecondPlan=false, int dayShift=0)
+        public async Task<StatusWrapper<PlanModel>> Check(WhatPlan whatPlan, int dayShift=0)
         {            
-            string html = await PlanHTMLProvider.GetPlanHTML(isSecondPlan ? 1 + dayShift : 0 + dayShift);
+            var html = await PlanHTMLProvider.GetPlanHTML(whatPlan.Number + dayShift);
             if (string.IsNullOrEmpty(html)) return new StatusWrapper<PlanModel>(Status.NULL, null);
+
             var planModel = PlanConverter.Convert(html);
             if(planModel is null) return new StatusWrapper<PlanModel>(Status.NULL, null);
-            PlanModel = planModel;
 
-            if (isSecondPlan) return new StatusWrapper<PlanModel>(Status.SUCCESS, PlanModel);
+            if (whatPlan.NotFirst) return new StatusWrapper<PlanModel>(Status.SUCCESS, planModel);
 
-            if(await IsForceMail())
+            MyPlan = planModel;
+            MyPlan.ForceNotifStatus.TrySet(await GetForceNotifStatus());
+
+            if (!planModel.ForceNotifStatus.IsForce)
             {
-                Logger.Debug("Force");
-                planModel._forceNotify = true;
-                return new StatusWrapper<PlanModel>(Status.SUCCESS, PlanModel);
+                if(!await IsPlanNew()) return new StatusWrapper<PlanModel>(Status.FAIL, null);
             }
-
-            if(!await IsPlanNew()) return new StatusWrapper<PlanModel>(Status.FAIL, null);
-            return new StatusWrapper<PlanModel>(Status.SUCCESS, PlanModel);
+            return new StatusWrapper<PlanModel>(Status.SUCCESS, MyPlan);
 
         }
-        private async Task<bool> IsForceMail()
+        private async Task<ForceNotifStatus> GetForceNotifStatus()
         {
             bool isForceOnInfoChange = false;
+            var forcePlanStatus = new ForceNotifStatus();
             try
             {
                 isForceOnInfoChange = (await DataQueries.GetRoutineData(RoutineDataSubject.FORCE_MODE, "on_info_change"))[0] == "true";
@@ -56,39 +57,40 @@ namespace VpServiceAPI.Jobs.Checking
 
             if (isForceOnInfoChange)
             {
-                if (await IsInfoChange()) return true;
+                if (await IsInfoChange()) return forcePlanStatus.TrySet(true, "announcement-change");
             }
-            return false;
+            return forcePlanStatus;
         }
         private async Task<bool> IsInfoChange()
         {
+            if (MyPlan is null) return false;
             try
             {
                 var cached = (await DataQueries.GetRoutineData(RoutineDataSubject.CACHE, "information"))[0];
-                if (cached != string.Join('|', PlanModel.Information))
+                if (cached != string.Join('|', MyPlan.Announcements))
                 {
-                    await DataQueries.SetRoutineData(RoutineDataSubject.CACHE, "information", string.Join('|', PlanModel.Information));
-                    Logger.Info(LogArea.Notification, "Forcing new Mail because of new information");
+                    await DataQueries.SetRoutineData(RoutineDataSubject.CACHE, "information", string.Join('|', MyPlan.Announcements));
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error(LogArea.Notification, ex, "Tried to compare cached 'information' with planmodel informaion.", PlanModel.Information);
+                Logger.Error(LogArea.Notification, ex, "Tried to compare cached 'information' with planmodel informaion.", MyPlan.Announcements);
             }
             return false;
         }
         private async Task<bool> IsPlanNew()
         {
+            if (MyPlan is null) return false; // wont happen
             if (Environment.GetEnvironmentVariable("MODE") == "Testing") return true;
             try
             {
                 var lastPlanTime = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_origin_datetime"))[0];
                 var lastAffectedDate = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_affected_date"))[0];
-                if((lastPlanTime != PlanModel.MetaData.OriginDate.DateTime || lastAffectedDate != PlanModel.MetaData.AffectedDate.Date) 
+                if((lastPlanTime != MyPlan.OriginDate.DateTime || lastAffectedDate != MyPlan.AffectedDate.Date) 
                     && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
                 {
-                    await DataQueries.SetRoutineData(RoutineDataSubject.DATETIME, "last_origin_datetime", PlanModel.MetaData.OriginDate.DateTime);
+                    await DataQueries.SetRoutineData(RoutineDataSubject.DATETIME, "last_origin_datetime", MyPlan.OriginDate.DateTime);
                     // last_affected_date get set at NotificationJob
                     return true;
                 }

@@ -1,11 +1,11 @@
 ﻿using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Plan;
 
 namespace VpServiceAPI.Interfaces
 {
     public interface INotificationJob
     {
-        public void Begin(PlanModel planModel);
+        public void Begin(PlanCollection plans);
         public Task DeleteCache();
     }
 }

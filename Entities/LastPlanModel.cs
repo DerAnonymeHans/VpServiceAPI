@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using VpServiceAPI.Entities.Plan;
 
 namespace VpServiceAPI.Entities
 {

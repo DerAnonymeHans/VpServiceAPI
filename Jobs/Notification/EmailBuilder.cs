@@ -8,6 +8,7 @@ using VpServiceAPI.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace VpServiceAPI.Jobs.Notification
 {
@@ -52,40 +53,44 @@ namespace VpServiceAPI.Jobs.Notification
         }
         private Dictionary<string, string> GetHTMLNotificationData()
         {
-
-            return new Dictionary<string, string>
+            var dic =  new Dictionary<string, string>
             {
                 { "ArtWorkSrc", @$"{GeneratedPicRoute}/{NotificationBody.Artwork?.Name}/{NotificationBody.UserName}" },
                 { "Color", NotificationBody.Artwork?.Color ?? "red" },
                 { "UserName", NotificationBody.UserName },
                 { "Grade", NotificationBody.Grade },
-                { "AffectedDate", NotificationBody.AffectedDate },
-                { "AffectedWeekday", NotificationBody.AffectedWeekday},
-                { "AffectedWeekday2", NotificationBody.AffectedWeekday2},
-                { "OriginDate", NotificationBody.OriginDate },
-                { "OriginTime", NotificationBody.OriginTime },
                 { "GlobalExtra", NotificationBody.GlobalExtra },
-                { "MissingTeachers", string.Join(", ", NotificationBody.MissingTeachers) },
-                { "PlanRows", GeneratePlanRows() },
-                { "SecondPlanRows", GeneratePlanRows(true) },
                 { "SmallExtra", NotificationBody.SmallExtra.Text },
                 { "SmallExtraAuthor", NotificationBody.SmallExtra.Author },
                 { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/Notification/Qrcode" },
-                { "Information",  GenerateInformation() },
                 { "StatLoginParams", $"stat-user={Environment.GetEnvironmentVariable("SITE_STATS_NAME")}&stat-pw={Environment.GetEnvironmentVariable("SITE_STATS_PW")}" },
                 { "PersonalInformation", string.Join("<br>", NotificationBody.PersonalInformation) },
                 { "TempMax", NotificationBody.Weather?.TempMax.ToString() ?? ""},
                 { "TempMin", NotificationBody.Weather?.TempMin.ToString() ?? ""},
-
+                { "PlansCount", NotificationBody.GlobalPlans.Count.ToString() },
             };
+
+            for(int i=0; i<NotificationBody.GlobalPlans.Count; i++)
+            {
+                var globalPlan = NotificationBody.GlobalPlans[i];
+                var table = NotificationBody.ListOfTables[i];
+
+                dic.Add($"AffectedDate{i}", globalPlan.AffectedDate);
+                dic.Add($"AffectedWeekday{i}", globalPlan.AffectedWeekday);
+                dic.Add($"OriginDate{i}", globalPlan.OriginDate);
+                dic.Add($"OriginTime{i}", globalPlan.OriginTime);
+                dic.Add($"MissingTeachers{i}", string.Join(", ", globalPlan.MissingTeachers));
+                dic.Add($"Announcements{i}", string.Join("<br>", globalPlan.Announcements));
+                dic.Add($"PlanRows{i}", GeneratePlanRows(table));
+            }
+
+            return dic;
         }
-        private string GeneratePlanRows(bool isSecondPlan=false)
+        private string GeneratePlanRows(List<NotificationRow> notifRows)
         {
             List<string> rows = new();
 
-            var table = isSecondPlan ? NotificationBody.Rows2 : NotificationBody.Rows;
-
-            foreach(NotificationRow row in table)
+            foreach(NotificationRow row in notifRows)
             {
                 List<string> cells = new();
                 foreach(string s in row.Row.GetArray())
@@ -99,35 +104,38 @@ namespace VpServiceAPI.Jobs.Notification
 
             return string.Join("", rows);
         }
-        private string GenerateInformation()
-        {
-            List<string> divs = new();
-            foreach(string info in NotificationBody.Information)
-            {
-                divs.Add($"<div>{info}</div>");
-            }
-            return string.Join("", divs);
-        }
 
         private string MergeTemplateAndData()
         {
             string html = File.ReadAllText(@$"{TemplatePath}/{TemplateName}/index.html");
 
-            foreach(Match match in new Regex(@"\[\[.+\]\]").Matches(html))
+            int i = 0;
+            while(i < 100)
             {
+                var match = new Regex(@"\[\[.+\]\]").Match(html);
+                if (!match.Success) break;
+
                 string action = new Regex(@"(?<=\[\[)\w+").Match(match.Value).Value;
-                string parameter = new Regex(@"\w+(?=\]\])").Match(match.Value).Value;
+                string[] parameters = new Regex(@"\w+").Matches(match.Value)
+                    .Cast<Match>()
+                    .Select(match => match.Value)
+                    .Skip(1)
+                    .ToArray();
 
                 switch (action)
                 {
                     case "if":
-                        IfAction(ref html, parameter);
+                        IfAction(ref html, parameters);
                         break;
                     case "ifnot":
-                        IfNotAction(ref html, parameter);
+                        IfNotAction(ref html, parameters);
+                        break;
+                    case "for":
+                        LoopAction(ref html, parameters);
                         break;
 
                 }
+                i++;
             }
             foreach(Match match in new Regex(@"\[\w+\]").Matches(html))
             {
@@ -137,12 +145,13 @@ namespace VpServiceAPI.Jobs.Notification
 
             return html;
         }
-        private void IfAction(ref string html, string parameter)
+        private void IfAction(ref string html, string[] parameters)
         {
-            string _if = $"[[if {parameter}]]";
-            string _endIf = $"[[endif {parameter}]]";
+            string param = parameters[0];
+            string _if = $"[[if {param}]]";
+            string _endIf = $"[[endif {param}]]";
             // if key and value is present in notif data and not empty
-            if (!string.IsNullOrEmpty(HTMLNotificationData[parameter]))
+            if (!string.IsNullOrEmpty(HTMLNotificationData[param]))
             {
                 // cut [[if ...]] and endif out
                 html = html.Replace(_if, "").Replace(_endIf, "");
@@ -154,12 +163,13 @@ namespace VpServiceAPI.Jobs.Notification
             string cutout = html.Substring(idxIf, idxEndIf + _endIf.Length - idxIf);
             html = html.Replace(cutout, "");
         }
-        private void IfNotAction(ref string html, string parameter)
+        private void IfNotAction(ref string html, string[] parameters)
         {
-            string _ifNot = $"[[ifnot {parameter}]]";
-            string _endIfNot = $"[[endifnot {parameter}]]";
+            string param = parameters[0];
+            string _ifNot = $"[[ifnot {param}]]";
+            string _endIfNot = $"[[endifnot {param}]]";
             // if key and value is not present in notif data and not empty
-            if (string.IsNullOrEmpty(HTMLNotificationData[parameter]))
+            if (string.IsNullOrEmpty(HTMLNotificationData[param]))
             {
                 // cut [[if ...]] and endif out
                 html = html.Replace(_ifNot, "").Replace(_endIfNot, "");
@@ -170,6 +180,27 @@ namespace VpServiceAPI.Jobs.Notification
             int idxEndIfNot = html.IndexOf(_endIfNot);
             string cutout = html.Substring(idxIfNot, idxEndIfNot + _endIfNot.Length - idxIfNot);
             html = html.Replace(cutout, "");
+        }
+        private void LoopAction(ref string html, string[] parameters)
+        {
+            string countVar = parameters[0];
+            int count = int.Parse(HTMLNotificationData[countVar]);
+            string loopVar = parameters[1];
+            string _for = $"[[for {countVar} {loopVar}]]";
+            string _endFor = $"[[endfor {loopVar}]]";
+
+            int idx_for = html.IndexOf(_for);
+            int idx_endFor = html.IndexOf(_endFor);
+
+            string loopBody = html.Substring(idx_for + _for.Length, idx_endFor - (idx_for + _for.Length));
+            html = html.Replace(loopBody, "");
+
+            for(int i=0; i<count; i++)
+            {
+                html = html.Insert(idx_for + _for.Length, loopBody.Replace(loopVar, i.ToString()));
+            }
+
+            html = html.Replace(_for, "").Replace(_endFor, "");
         }
     }
 

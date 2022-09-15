@@ -9,6 +9,7 @@ using System.Text.Json;
 using VpServiceAPI.Enums;
 using System.Net.Http;
 using VpServiceAPI.Exceptions;
+using VpServiceAPI.Entities.Plan;
 
 namespace VpServiceAPI.Jobs.Notification
 {
@@ -25,7 +26,7 @@ namespace VpServiceAPI.Jobs.Notification
         private readonly GradeTask GradeTask;
         private readonly UserTask UserTask;
         private List<User> Users { get; set; } = new();
-        private PlanModel PlanModel { get; set; } = new();
+        private PlanCollection PlanCollection { get; set; } = new();
         private IGlobalNotificationBody GlobalBody { get; set; } = new GlobalNotificationBody();
 
         public NotificationJob(
@@ -51,18 +52,20 @@ namespace VpServiceAPI.Jobs.Notification
             UserTask = new(logger, dataQueries, extraRepository);
         }
 
-        public async void Begin(PlanModel planModel)
+        public async void Begin(PlanCollection planCollection)
         {
-            PlanModel = planModel;
+            PlanCollection = planCollection;
             string lastAffectedDate = await GetLastAffectedDate();
-            if(lastAffectedDate != planModel.MetaData.AffectedDate.Date && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
+
+            if(lastAffectedDate != planCollection.FirstPlan.AffectedDate.Date && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
             {
-                await SetLastAffectedDate(planModel.MetaData.AffectedDate.Date);
+                await SetLastAffectedDate(planCollection.FirstPlan.AffectedDate.Date);
                 await DeleteCache();
-                planModel._forceNotify = true;
+                planCollection.ForceNotifStatus.TrySet(true, "new-affected-date");
             }
+
             Users = await UserProvider.GetUsers();
-            GlobalBody = await GlobalTask.Begin(PlanModel);
+            GlobalBody = await GlobalTask.Begin(planCollection);
             await CacheGlobalModel(GlobalBody);
             CycleUsers();
         }
@@ -126,13 +129,13 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 if(user.Grade != prevUser.Grade)
                 {
-                    gradeBody = await GradeTask.Begin(PlanModel, user.Grade);
+                    gradeBody = await GradeTask.Begin(PlanCollection, user.Grade);
                     notifBody.Set(gradeBody);
                     await CacheGradeModel(gradeBody);
                     prevUser = user;
                 }
 
-                if (!PlanModel._forceNotify)
+                if (!PlanCollection.ForceNotifStatus.IsForce)
                 {
                     if (!gradeBody.IsNotify) continue;
                 }

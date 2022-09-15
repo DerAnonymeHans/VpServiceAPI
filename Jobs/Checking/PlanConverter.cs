@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Tools;
@@ -11,6 +11,129 @@ using VpServiceAPI.Tools;
 #nullable enable
 namespace VpServiceAPI.Jobs.Checking
 {
+
+    public sealed class PlanConverterVP24 : IPlanConverter
+    {
+        private readonly IMyLogger Logger;
+        private string PlanHTML { get; set; } = "";
+
+        public PlanConverterVP24(IMyLogger logger)
+        {
+            Logger = logger;
+        }
+        public PlanModel? Convert(string planHTML)
+        {
+            PlanHTML = planHTML;
+            if (!IsPlan())
+            {
+                Logger.Info(LogArea.PlanConverting, "Quitted conversion of planHTML because no plan was found.");
+                return null;
+            }
+            try
+            {
+                var metaData = GetMetaData();
+
+                return new PlanModel(metaData.title, metaData.originDate, metaData.affectedDate)
+                {
+                    Rows = HTMLIntoRows(),
+                    Announcements = GetInformation(),
+                    MissingTeachers = GetMissingTeacher()
+                };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(LogArea.PlanConverting, ex, "Tried to convert plan.");
+            }
+
+            return null;
+
+        }
+        private bool IsPlan()
+        {
+            return PlanHTML.IndexOf("<schulname>Johannes-Kepler-Schule Leipzig</schulname>") != -1;
+        }
+        private (string title, OriginDate originDate, AffectedDate affectedDate) GetMetaData()
+        {
+            string? title = XMLParser.GetNodeContent(PlanHTML, "titel");
+            string? originDateString = XMLParser.GetNodeContent(PlanHTML, "datum");
+
+            if (title is null || originDateString is null) throw new AppException($"VP Title is: {title}. Origin String: {originDateString}");
+
+            var affectedDate = GetAffectedDate(title);
+            var originDate = GetOriginDate(originDateString);
+
+            return (title, originDate, affectedDate);
+
+        }
+        private AffectedDate GetAffectedDate(string title)
+        {
+            var dateTime = new DateTime(
+                    int.Parse(new Regex(@"[0-9]+(?= \()").Match(title).Value),
+                    Converter.MonthToNumber(new Regex(@"(?<=\d\. )\w+").Match(title).Value),
+                    int.Parse(new Regex(@"(?<=\w, )\d+").Match(title).Value)
+                );
+
+            return new AffectedDate(dateTime);
+        }
+        private OriginDate GetOriginDate(string originDate)
+        {
+            var dateTime = new DateTime(
+                    int.Parse(new Regex("[0-9]{4}(?=,)").Match(originDate).Value),
+                    int.Parse(new Regex(@"(?<=\.)[0-9]{2}(?=\.)").Match(originDate).Value),
+                    int.Parse(new Regex(@"^\d{2}").Match(originDate).Value),
+                    int.Parse(new Regex(@"\d{2}(?=:)").Match(originDate).Value),
+                    int.Parse(new Regex(@"(?<=:)\d{2}").Match(originDate).Value),
+                    0
+                );
+
+            return new OriginDate(dateTime);
+        }
+        private List<PlanRow> HTMLIntoRows()
+        {
+            var tableHTML = XMLParser.GetNodeContent(PlanHTML, "haupt");
+            if (tableHTML is null) return new List<PlanRow>();
+
+            var table = new List<PlanRow>();
+            for (int i = 0; i < 100; i++)
+            {
+                var rowStr = XMLParser.GetNodeContent(tableHTML, "aktion");
+                if (rowStr is null) break;
+
+                Func<string, string> GetVal = tag => XMLParser.GetNodeContent(rowStr, tag) ?? "";
+
+                var row = new PlanRow
+                {
+                    Klasse = GetVal("klasse"),
+                    Stunde = GetVal("stunde"),
+                    Fach = GetVal("fach"),
+                    Lehrer = GetVal("lehrer"),
+                    Raum = GetVal("raum"),
+                    Info = GetVal("info"),
+                };
+
+                tableHTML = tableHTML[rowStr.Length..];
+                table.Add(row);
+            }
+
+            return table;
+        }
+        private List<string> GetInformation()
+        {
+            var fussHTML = XMLParser.GetNodeContent(PlanHTML, "fuss");
+            if (fussHTML is null) return new List<string>();
+            return Regex.Matches(fussHTML, @"(?<=<fussinfo>).+(?=</fussinfo>)")
+                .Select(match => match.Value)
+                .ToList();
+        }
+        private List<string> GetMissingTeacher()
+        {
+            var missingTeacher = XMLParser.GetNodeContent(PlanHTML, "abwesendl");
+            if (missingTeacher is null) return new();
+            return missingTeacher.Split(',').ToList();
+        }
+    }
+
+
     public sealed class PlanConverterKEPLER : IPlanConverter
     {
         private readonly IMyLogger Logger;
@@ -28,54 +151,36 @@ namespace VpServiceAPI.Jobs.Checking
                 Logger.Info(LogArea.PlanConverting, "Quitted conversion of planHTML because no plan was found.");
                 return null;
             }
-
-            var metaData = GetMetaData();
-            if(metaData is null)
+            try
             {
-                Logger.Info(LogArea.PlanConverting, "Quitted conversion of planHTML because metadata coulnt be extracted.");
-                return null;
-            };
+                var metaData = GetMetaData();
 
-            var table = HTMLIntoRows();
-            if(table.Count == 0)
+                return new PlanModel(metaData.title, metaData.originDate, metaData.affectedDate)
+                {
+                    Rows = HTMLIntoRows()
+                };
+            }catch(Exception ex)
             {
-                Logger.Info(LogArea.PlanConverting, "Quitted conversion of planHTML because of lack of rows.");
+                Logger.Error(LogArea.PlanConverting, ex, "Tried to convert plan.");
             }
 
-            return new PlanModel
-            {
-                MetaData = metaData,
-                Table = table
-            };
+            return null;
         }
         private bool IsPlan()
         {
             return PlanHTML.IndexOf("<span sealed class=\"ueberschrift\">Geänderte Unterrichtsstunden:</span>") != -1;
         }
-        private MetaData? GetMetaData()
+        private (string title, OriginDate originDate, AffectedDate affectedDate) GetMetaData()
         {
-            try
-            {
-                string title = new Regex("(?<=<span sealed class=\"vpfuerdatum\">).*(?=</span>)")
+            string title = new Regex("(?<=<span sealed class=\"vpfuerdatum\">).*(?=</span>)")
+            .Match(PlanHTML).Value;
+            string originDateString = new Regex("(?<=<span sealed class=\"vpdatum\">).*(?=</span>)")
                 .Match(PlanHTML).Value;
-                string originDateString = new Regex("(?<=<span sealed class=\"vpdatum\">).*(?=</span>)")
-                    .Match(PlanHTML).Value;
 
-                var affectedDate = GetAffectedDate(title);
-                var originDate = GetOriginDate(originDateString);
+            var affectedDate = GetAffectedDate(title);
+            var originDate = GetOriginDate(originDateString);
 
-                return new MetaData 
-                { 
-                    Title = title,
-                    OriginDate = originDate,
-                    AffectedDate = affectedDate,
-                };
-            }catch (Exception ex)
-            {
-                Logger.Error(LogArea.PlanConverting, ex, "Tried to extract MetaData.");
-                return null;
-            }
-            
+            return (title, originDate, affectedDate);
         }
         private AffectedDate GetAffectedDate(string title)
         {
@@ -85,11 +190,7 @@ namespace VpServiceAPI.Jobs.Checking
                     int.Parse(new Regex(@"(?<=\w, )\d+").Match(title).Value)
                 );
 
-            return new AffectedDate
-            {
-                _dateTime = dateTime,
-                Date = dateTime.ToString("dd.MM.yyyy")
-            };
+            return new AffectedDate(dateTime);
         }
         private OriginDate GetOriginDate(string originDate)
         {
@@ -102,13 +203,7 @@ namespace VpServiceAPI.Jobs.Checking
                     0
                 );
 
-            return new OriginDate
-            {
-                _dateTime = dateTime,
-                DateTime = originDate,
-                Date = dateTime.ToString("dd.MM.yyyy"),
-                Time = dateTime.ToString("HH:mm")
-            };
+            return new OriginDate(dateTime);
         }
         private List<PlanRow> HTMLIntoRows()
         {
@@ -147,149 +242,5 @@ namespace VpServiceAPI.Jobs.Checking
         }
     }
 
-    public sealed class PlanConverterVP24 : IPlanConverter
-    {
-        private readonly IMyLogger Logger;
-        private string PlanHTML { get; set; } = "";
-
-        public PlanConverterVP24(IMyLogger logger)
-        {
-            Logger = logger;
-        }
-        public PlanModel? Convert(string planHTML)
-        {
-            PlanHTML = planHTML;
-            if (!IsPlan())
-            {
-                Logger.Info(LogArea.PlanConverting, "Quitted conversion of planHTML because no plan was found.");
-                return null;
-            }
-
-            var metaData = GetMetaData();
-            if (metaData is null)
-            {
-                Logger.Info(LogArea.PlanConverting, "Quitted conversion of planHTML because metadata coulnt be extracted.");
-                return null;
-            };
-            var table = HTMLIntoRows();
-
-            return new PlanModel
-            {
-                MetaData = metaData,
-                Table = table,
-                Information = GetInformation(),
-                MissingTeacher = GetMissingTeacher()
-            };
-        }
-        private bool IsPlan()
-        {
-            return PlanHTML.IndexOf("<schulname>Johannes-Kepler-Schule Leipzig</schulname>") != -1;
-        }
-        private MetaData? GetMetaData()
-        {
-            try
-            {
-                string? title = XMLParser.GetNodeContent(PlanHTML, "titel");
-                string? originDateString = XMLParser.GetNodeContent(PlanHTML, "datum");
-
-                if (title is null || originDateString is null) throw new AppException($"VP Title is: {title}. Origin String: {originDateString}");
-
-                var affectedDate = GetAffectedDate(title);
-                var originDate = GetOriginDate(originDateString);
-
-                return new MetaData
-                {
-                    Title = title,
-                    OriginDate = originDate,
-                    AffectedDate = affectedDate,
-                };
-            }
-            catch(AppException ex)
-            {
-                Logger.Error(LogArea.PlanProviding, ex, "Tried to extract MetaData.", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(LogArea.PlanConverting, ex, "Tried to extract MetaData.");
-            }
-            return null;
-
-        }
-        private AffectedDate GetAffectedDate(string title)
-        {
-            var dateTime = new DateTime(
-                    int.Parse(new Regex(@"[0-9]+(?= \()").Match(title).Value),
-                    Converter.MonthToNumber(new Regex(@"(?<=\d\. )\w+").Match(title).Value),
-                    int.Parse(new Regex(@"(?<=\w, )\d+").Match(title).Value)
-                );
-
-            return new AffectedDate
-            {
-                _dateTime = dateTime,
-                Date = dateTime.ToString("dd.MM.yyyy")
-            };
-        }
-        private OriginDate GetOriginDate(string originDate)
-        {
-            var dateTime = new DateTime(
-                    int.Parse(new Regex("[0-9]{4}(?=,)").Match(originDate).Value),
-                    int.Parse(new Regex(@"(?<=\.)[0-9]{2}(?=\.)").Match(originDate).Value),
-                    int.Parse(new Regex(@"^\d{2}").Match(originDate).Value),
-                    int.Parse(new Regex(@"\d{2}(?=:)").Match(originDate).Value),
-                    int.Parse(new Regex(@"(?<=:)\d{2}").Match(originDate).Value),
-                    0
-                );
-
-            return new OriginDate
-            {
-                _dateTime = dateTime,
-                DateTime = originDate,
-                Date = dateTime.ToString("dd.MM.yyyy"),
-                Time = dateTime.ToString("HH:mm")
-            };
-        }
-        private List<PlanRow> HTMLIntoRows()
-        {
-            var tableHTML = XMLParser.GetNodeContent(PlanHTML, "haupt");
-            if(tableHTML is null) return new List<PlanRow>();            
-
-            var table = new List<PlanRow>();
-            for (int i = 0; i < 100; i++)
-            {
-                var rowStr = XMLParser.GetNodeContent(tableHTML, "aktion");
-                if (rowStr is null) break;
-
-                Func<string, string> GetVal = tag => XMLParser.GetNodeContent(rowStr, tag) ?? "";
-
-                var row = new PlanRow
-                {
-                    Klasse = GetVal("klasse"),
-                    Stunde = GetVal("stunde"),
-                    Fach = GetVal("fach"),
-                    Lehrer = GetVal("lehrer"),
-                    Raum = GetVal("raum"),
-                    Info = GetVal("info"),
-                };
-
-                tableHTML = tableHTML[rowStr.Length..];
-                table.Add(row);
-            }
-
-            return table;
-        }
-        private List<string> GetInformation()
-        {
-            var fussHTML = XMLParser.GetNodeContent(PlanHTML, "fuss");
-            if(fussHTML is null) return new List<string>();
-            return Regex.Matches(fussHTML, @"(?<=<fussinfo>).+(?=</fussinfo>)")
-                .Select(match => match.Value)
-                .ToList();
-        }
-        private List<string>? GetMissingTeacher()
-        {
-            var missingTeacher = XMLParser.GetNodeContent(PlanHTML, "abwesendl");
-            if (missingTeacher is null) return null;
-            return missingTeacher.Split(',').ToList();
-        }
-    }
+    
 }

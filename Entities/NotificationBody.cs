@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Entities
@@ -7,18 +9,12 @@ namespace VpServiceAPI.Entities
     {
         public string Subject { get; set; } = "Neuer Vertretungsplan!";
         public string GlobalExtra { get; set; } = "";
-        public string AffectedDate { get; set; } = "";
-        public string AffectedWeekday { get; set; } = "";
-        public string OriginDate { get; set; } = "";
-        public string OriginTime { get; set; } = "";
 
-        public List<string> Information { get; set; } = new();
-
-        public string AffectedWeekday2 { get; set; } = "";
+        public List<GlobalPlan> GlobalPlans { get; set; } = new();
 
         public ArtworkMeta? Artwork { get; set; }
-        public List<string> MissingTeachers { get; set; } = new();
-        public NotificationWeather? Weather { get; set; } = new();
+        public NotificationWeather? Weather { get; set; }
+
 
         public GlobalNotificationBody()
         {
@@ -29,10 +25,10 @@ namespace VpServiceAPI.Entities
     public record GradeNotificationBody : IGradeNotificationBody
     {
         public string Grade { get; set; } = "";
-        public List<NotificationRow> Rows { get; set; } = new();
-        public List<NotificationRow> Rows2 { get; set; } = new();
+        public List<List<NotificationRow>> ListOfTables { get; set; } = new();
         public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
+
     }
 
     public record UserNotificationBody : IUserNotificationBody
@@ -47,22 +43,15 @@ namespace VpServiceAPI.Entities
     {
         public string Subject { get; set; } = "Neuer Vertretungsplan!";
         public string GlobalExtra { get; set; } = "";
-        public string AffectedDate { get; set; } = "";
-        public string AffectedWeekday { get; set; } = "";
-        public string OriginDate { get; set; } = "";
-        public string OriginTime { get; set; } = "";
 
-        public string AffectedWeekday2 { get; set; } = "";
+        public List<GlobalPlan> GlobalPlans { get; set; } = new();
 
         public ArtworkMeta? Artwork { get; set; }
-        public NotificationWeather? Weather { get; set; } = new();
-        public List<string> MissingTeachers { get; set; } = new();
-        public List<string> Information { get; set; } = new();
+        public NotificationWeather? Weather { get; set; }
 
 
         public string Grade { get; set; } = "";
-        public List<NotificationRow> Rows { get; set; } = new();
-        public List<NotificationRow> Rows2 { get; set; } = new();
+        public List<List<NotificationRow>> ListOfTables { get; set; } = new();
         public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
 
