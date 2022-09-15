@@ -47,7 +47,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
         {
             try
             {
-                string lastTime = (await DataQueries.GetRoutineData("DATETIME", "last_stats_date"))[0];
+                string lastTime = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_stats_date"))[0];
                 return lastTime == Date.ToString("dd.MM.");
             }catch(Exception ex)
             {
@@ -59,7 +59,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
         {
             try
             {
-                await DataQueries.SetRoutineData("DATETIME", "last_stats_date", Date.ToString("dd.MM."));
+                await DataQueries.SetRoutineData(RoutineDataSubject.DATETIME, "last_stats_date", Date.ToString("dd.MM."));
             }
             catch (Exception ex)
             {

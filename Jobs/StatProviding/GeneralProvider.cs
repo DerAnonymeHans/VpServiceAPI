@@ -27,7 +27,7 @@ namespace VpServiceAPI.Jobs.StatProviding
         public async Task CheckDataFreshness()
         {
             if (DBAccess.CurrentDB == 1) return;
-            string backupDate = (await DataQueries.GetRoutineData("BACKUP", "date"))[0];
+            string backupDate = (await DataQueries.GetRoutineData(RoutineDataSubject.BACKUP, "date"))[0];
             throw new AppException($"Wegen eines Datenbank Problem kann es sein, dass die angezeigten Daten nicht ganz aktuell sind. Bei den Daten handelt es sich um ein Backup vom {backupDate}. Bitte entschuldige die Unannehmlichkeiten.");
         }
 

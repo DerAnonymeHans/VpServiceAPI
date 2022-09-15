@@ -21,6 +21,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using System.Web;
 using System.Net.Mime;
+using VpServiceAPI.Enums;
 
 
 #nullable enable
@@ -104,7 +105,7 @@ namespace VpServiceAPI.Controllers
             return await WebResponder.RunWith(async () =>
             {
                 var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
-                string json = (await DataQueries.GetRoutineData("MODEL_CACHE", "global"))[0];
+                string json = (await DataQueries.GetRoutineData(RoutineDataSubject.MODEL_CACHE, "global"))[0];
                 var body = JsonSerializer.Deserialize<GlobalNotificationBody>(json);
                 if (body is null)
                 {
@@ -122,7 +123,7 @@ namespace VpServiceAPI.Controllers
             return await WebResponder.RunWith(async () =>
             {
                 var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
-                string json = (await DataQueries.GetRoutineData("MODEL_CACHE", user.Grade))[0];
+                string json = (await DataQueries.GetRoutineData(RoutineDataSubject.MODEL_CACHE, user.Grade))[0];
                 var body = JsonSerializer.Deserialize<GradeNotificationBody>(json);
                 if (body is null)
                 {
@@ -162,8 +163,8 @@ namespace VpServiceAPI.Controllers
                 var originDate = datesSplitted[0];
                 var affectedDate = datesSplitted[1];
 
-                var newOriginDate = (await DataQueries.GetRoutineData("DATETIME", "last_origin_datetime"))[0];
-                var newAffectedDate = (await DataQueries.GetRoutineData("DATETIME", "last_affected_date"))[0];
+                var newOriginDate = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_origin_datetime"))[0];
+                var newAffectedDate = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_affected_date"))[0];
 
                 return newOriginDate != originDate || affectedDate != newAffectedDate;
             }, Request.Path.Value);

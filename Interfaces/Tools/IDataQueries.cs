@@ -11,8 +11,8 @@ namespace VpServiceAPI.Interfaces
         public Task<int> Save<T>(string sql, T parameters);
         public Task<int> Delete<T>(string sql, T parameters);
         public Task<int> SaveAndGetId<T>(string sql, T parameters);
-        public Task<List<string>> GetRoutineData(string subject, string? name);
-        public Task SetRoutineData(string subject, string? name, string value);
+        public Task<List<string>> GetRoutineData(RoutineDataSubject subject, string? name);
+        public Task SetRoutineData(RoutineDataSubject subject, string? name, string value);
         public Task AddUserToBackupDB(User user);
         public Task<List<T>> Select<T, U>(string table, string condition, U parameters);
         public Task AddStatEntitiy(string type, string name);

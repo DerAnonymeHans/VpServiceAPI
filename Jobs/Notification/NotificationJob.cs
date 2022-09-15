@@ -71,7 +71,7 @@ namespace VpServiceAPI.Jobs.Notification
         {
             try
             {
-                return (await DataQueries.GetRoutineData("DATETIME", "last_affected_date"))[0];
+                return (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_affected_date"))[0];
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.Notification, ex, "Tried to get last_affected_date");
@@ -82,7 +82,7 @@ namespace VpServiceAPI.Jobs.Notification
         {
             try
             {
-                await DataQueries.SetRoutineData("DATETIME", "last_affected_date", date);
+                await DataQueries.SetRoutineData(RoutineDataSubject.DATETIME, "last_affected_date", date);
             }
             catch (Exception ex)
             {
@@ -93,10 +93,10 @@ namespace VpServiceAPI.Jobs.Notification
         {
             try
             {
-                var lastCacheDelete = (await DataQueries.GetRoutineData("DATETIME", "last_cache_delete"))[0];
+                var lastCacheDelete = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_cache_delete"))[0];
                 var today = DateTime.Now.ToString("dd.MM");
                 if (lastCacheDelete == today) return;
-                await DataQueries.SetRoutineData("DATETIME", "last_cache_delete", today);
+                await DataQueries.SetRoutineData(RoutineDataSubject.DATETIME, "last_cache_delete", today);
             }
             catch (Exception ex)
             {
@@ -105,7 +105,7 @@ namespace VpServiceAPI.Jobs.Notification
             try
             {
                 Logger.Info(LogArea.Notification, "Deleting Plan Cache");
-                await DataQueries.SetRoutineData("LAST_PLAN_CACHE", null, "");
+                await DataQueries.SetRoutineData(RoutineDataSubject.PLAN_CACHE, null, "");
                 //await DataQueries.Save("UPDATE `routine_data` SET `value`='' WHERE `subject`='LAST_PLAN_CACHE'", new { });
             }
             catch (Exception ex)
@@ -165,11 +165,11 @@ namespace VpServiceAPI.Jobs.Notification
         }
         private async Task CacheGlobalModel(IGlobalNotificationBody model)
         {
-            await DataQueries.SetRoutineData("MODEL_CACHE", "global", JsonSerializer.Serialize(model));
+            await DataQueries.SetRoutineData(RoutineDataSubject.MODEL_CACHE, "global", JsonSerializer.Serialize(model));
         }
         private async Task CacheGradeModel(IGradeNotificationBody model)
         {
-            await DataQueries.SetRoutineData("MODEL_CACHE", model.Grade, JsonSerializer.Serialize(model));
+            await DataQueries.SetRoutineData(RoutineDataSubject.MODEL_CACHE, model.Grade, JsonSerializer.Serialize(model));
         }
               
         

@@ -117,6 +117,7 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 string action = new Regex(@"(?<=\[\[)\w+").Match(match.Value).Value;
                 string parameter = new Regex(@"\w+(?=\]\])").Match(match.Value).Value;
+
                 switch (action)
                 {
                     case "if":
@@ -148,6 +149,7 @@ namespace VpServiceAPI.Jobs.Notification
                 return;
             };
             int idxIf = html.IndexOf(_if);
+            if (idxIf == -1) return;
             int idxEndIf = html.IndexOf(_endIf);
             string cutout = html.Substring(idxIf, idxEndIf + _endIf.Length - idxIf);
             html = html.Replace(cutout, "");
@@ -164,6 +166,7 @@ namespace VpServiceAPI.Jobs.Notification
                 return;
             };
             int idxIfNot = html.IndexOf(_ifNot);
+            if (idxIfNot == -1) return;
             int idxEndIfNot = html.IndexOf(_endIfNot);
             string cutout = html.Substring(idxIfNot, idxEndIfNot + _endIfNot.Length - idxIfNot);
             html = html.Replace(cutout, "");

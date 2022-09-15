@@ -59,7 +59,7 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 var gradeMode = await GetGradeMode(grade);
                 if (gradeMode != GradeMode.SPECIAL_EXTRA && gradeMode != GradeMode.SPECIAL_EXTRA_FORCE) return null;
-                return (await DataQueries.GetRoutineData("EXTRA", "special_extra"))[0];
+                return (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "special_extra"))[0];
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.Notification, ex, $"Tried to get grade extra for {grade}");
@@ -71,7 +71,7 @@ namespace VpServiceAPI.Jobs.Notification
             string gradeMode = "";
             try
             {
-                gradeMode = (await DataQueries.GetRoutineData("GRADE_MODE", grade))[0];
+                gradeMode = (await DataQueries.GetRoutineData(RoutineDataSubject.GRADE_MODE, grade))[0];
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.Notification, ex, $"Tried to get grade mode for {grade}");
@@ -119,7 +119,7 @@ namespace VpServiceAPI.Jobs.Notification
             // LAST_PLAN_CACHE provides the last rows of the grade separated like aaaa|bbbb|cccc
             try
             {
-                var cache = (await DataQueries.GetRoutineData("LAST_PLAN_CACHE", grade))[0];
+                var cache = (await DataQueries.GetRoutineData(RoutineDataSubject.PLAN_CACHE, grade))[0];
                 if (cache is null) return Array.Empty<string>();
                 return cache.Split('|');
             }
@@ -135,7 +135,7 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 string cache = string.Join('|', from notifRow in rows select string.Join(";", notifRow.Row.GetArray()));
 
-                await DataQueries.SetRoutineData("LAST_PLAN_CACHE", grade, cache);
+                await DataQueries.SetRoutineData(RoutineDataSubject.PLAN_CACHE, grade, cache);
             }
             catch (Exception ex)
             {

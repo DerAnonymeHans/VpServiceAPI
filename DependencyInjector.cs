@@ -206,7 +206,7 @@ namespace VpServiceAPI
                 .AddSingleton<IMyLogger, Logger>()
                 .AddSingleton<IRoutine, Routine>()
                 .AddSingleton<IDBAccess, DBAccess>()
-                .AddSingleton<IDataQueries, UTestingDataQueries>()
+                .AddSingleton<IDataQueries, DataQueries>()
                 .AddSingleton<IWebScraper, WebScraper>()
                 .AddSingleton<IOutputter, ConsoleOutputter>();
         }

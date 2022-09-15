@@ -103,7 +103,6 @@ namespace VpServiceAPI.Jobs.Routines
                 }
 
                 var wrapper2 = await UpdateChecker.Check(true, dayShift);
-                if(wrapper2.Body is null) Logger.Warn(LogArea.Routine, "Status on second plan is success but body is null", "");
 
                 if (wrapper2.Status == Status.SUCCESS && wrapper2.Body is not null)
                 {

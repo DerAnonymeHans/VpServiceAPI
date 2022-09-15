@@ -95,26 +95,26 @@ namespace VpServiceAPI.Controllers
         [Route("/Notification/GlobalExtra")]
         public async Task<WebResponse<string>> GetGlobalExtra()
         {
-            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData("EXTRA", "global_extra"))[0], Request.Path.Value);
+            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "global_extra"))[0], Request.Path.Value);
         }
         [HttpPost]
         [Route("/Notification/GlobalExtra/{value}")]
         public async Task<WebMessage> SetGlobalExtra(string value)
         {
-            return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData("EXTRA", "global_extra", value), Request.Path.Value, $"Set global extra to {value}");
+            return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData(RoutineDataSubject.EXTRA, "global_extra", value), Request.Path.Value, $"Set global extra to {value}");
         }
 
         [HttpGet]
         [Route("/Notification/SpecialExtra")]
         public async Task<WebResponse<string>> GetSpecialExtra()
         {
-            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData("EXTRA", "special_extra"))[0], Request.Path.Value);
+            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "special_extra"))[0], Request.Path.Value);
         }
         [HttpPost]
         [Route("/Notification/SpecialExtra/{value}")]
         public async Task<WebMessage> SetSpecialExtra(string value)
         {
-            return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData("EXTRA", "special_extra", value), Request.Path.Value, $"Set special extra to {value}");
+            return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData(RoutineDataSubject.EXTRA, "special_extra", value), Request.Path.Value, $"Set special extra to {value}");
         }
 
         [HttpPost]
@@ -131,13 +131,13 @@ namespace VpServiceAPI.Controllers
         [Route("/Notification/CurrentForcedArtwork")]
         public async Task<WebResponse<string>> GetCurrentForcedArtwork()
         {
-            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData("EXTRA", "forced_artwork_name"))[0], Request.Path.Value);            
+            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "forced_artwork_name"))[0], Request.Path.Value);            
         }
         [HttpPost]
         [Route("/Notification/ForceArtwork/{name}")]
         public async Task<WebMessage> SetForcedArtwork(string name)
         {
-            return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData("EXTRA", "forced_artwork_name", name), $"Set current forced artwork to {name}");
+            return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData(RoutineDataSubject.EXTRA, "forced_artwork_name", name), $"Set current forced artwork to {name}");
         }
         [HttpGet]
         [Route("/Notification/AllArtworks")]
@@ -239,7 +239,7 @@ namespace VpServiceAPI.Controllers
         [Route("ForceMode/{name}")]
         public async Task<WebResponse<string>> GetForceMode(string name)
         {
-            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData("FORCE_MODE", name))[0], Request.Path.Value);
+            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData(RoutineDataSubject.FORCE_MODE, name))[0], Request.Path.Value);
         }
         [HttpPost]
         [Route("ToggleForceMode/{name}")]
@@ -268,7 +268,7 @@ namespace VpServiceAPI.Controllers
         [Route("GradeMode/{grade}")]
         public async Task<WebResponse<string>> GetGradeMode(string grade)
         {
-            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData("GRADE_MODE", grade))[0], Request.Path.Value);
+            return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData(RoutineDataSubject.GRADE_MODE, grade))[0], Request.Path.Value);
         }
         [HttpPost]
         [Route("ChangeGradeMode/{grade}/{mode}")]
@@ -285,7 +285,7 @@ namespace VpServiceAPI.Controllers
                     "special_force" => GradeMode.SPECIAL_EXTRA_FORCE,
                     _ => throw new AppException($"Specified mode '{mode}' is not available")
                 };
-                await WebResponder.RunWith(async () => await DataQueries.SetRoutineData("GRADE_MODE", grade, _mode.ToString()), Request.Path.Value);
+                await WebResponder.RunWith(async () => await DataQueries.SetRoutineData(RoutineDataSubject.GRADE_MODE, grade, _mode.ToString()), Request.Path.Value);
                 return new WebMessage
                 {
                     Message = $"Der GRADE_MODE von {grade} wurde zu {_mode} geändert.",

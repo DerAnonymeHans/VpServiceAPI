@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
+using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Notification
@@ -74,7 +75,7 @@ namespace VpServiceAPI.Jobs.Notification
         {
             try
             {
-                return (await DataQueries.GetRoutineData("EXTRA", "global_extra"))[0];
+                return (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "global_extra"))[0];
             }
             catch (Exception ex)
             {
@@ -178,7 +179,7 @@ namespace VpServiceAPI.Jobs.Notification
 
         private async Task<ArtworkMeta> GetArtwork(string weather)
         {
-            string forcedArtworkName = (await DataQueries.GetRoutineData("EXTRA", "forced_artwork_name"))[0];
+            string forcedArtworkName = (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "forced_artwork_name"))[0];
             if (!string.IsNullOrEmpty(forcedArtworkName))
             {
                 if (await ArtworkRepository.IncludesArtwork(forcedArtworkName))
