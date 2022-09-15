@@ -74,7 +74,7 @@ namespace VpServiceAPI.Jobs.Checking
             }
             catch(Exception ex)
             {
-                Logger.Warn(LogArea.PlanProviding, "Failed to get PlanHtml for " + date, ex.Message);
+                Logger.Info(LogArea.PlanProviding, "Failed to get PlanHtml for " + date, ex.Message);
                 PlanHTML = "";
             }
             return PlanHTML;
