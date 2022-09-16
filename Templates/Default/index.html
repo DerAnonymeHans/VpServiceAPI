@@ -53,19 +53,7 @@
         <div>Es gibt einen neuen Vertretungsplan für deine Klassenstufe <b>[Grade]</b> für den <b>[AffectedDate0]</b>. <i>(vom: [OriginDate0] um [OriginTime0] Uhr.)</i></div>
     </div>
 
-    <!--<div class="missing-teacher-container container">
-        <div>Es fehlen: [MissingTeachers0]</div>
-    </div>-->
-
-    <!--[[if Announcements0]]
-    <hr />
-    <div class="information-container container">
-        [Announcements0]
-    </div>
-    [[endif Announcements0]]-->
-
-
-    <hr class="big" />
+    <hr/>
 
     [[for PlansCount _IDX]]
     <div class="plan-container container">
@@ -106,12 +94,12 @@
         [[endif PlanRows_IDX]]
         [[ifnot PlanRows_IDX]]
         Keine Änderungen...
-        [[endifnot PlanRows_IDX]]
+        [[endifnot PlanRows_IDX]]        
     </div>
+    <hr />
     [[endfor _IDX]]
 
-    <hr class="big" />
-
+    
 
     <div class="link-container">
         <a href="https://jkg-leipzig.de/vertretungsplan/"><button>Weitere Info</button></a>

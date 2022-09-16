@@ -125,12 +125,15 @@ namespace VpServiceAPI.Jobs.Notification
             var notifBody = new NotificationBody();
             notifBody.Set(GlobalBody);
 
+            string gradeMailHtml = "";
+
             foreach (User user in Users)
             {
                 if(user.Grade != prevUser.Grade)
                 {
                     gradeBody = await GradeTask.Begin(PlanCollection, user.Grade);
                     notifBody.Set(gradeBody);
+                    gradeMailHtml = EmailBuilder.Build(notifBody, "").Body;
                     await CacheGradeModel(gradeBody);
                     prevUser = user;
                 }
@@ -162,7 +165,7 @@ namespace VpServiceAPI.Jobs.Notification
                 
                 notifBody.Set(userBody);
                 notifBody.GlobalExtra = gradeBody.GradeExtra ?? notifBody.GlobalExtra;
-                var notification = EmailBuilder.Build(notifBody, user.Address);
+                var notification = EmailBuilder.Build(notifBody, user.Address, gradeMailHtml);
                 EmailJob.Send(notification);
             }
         }

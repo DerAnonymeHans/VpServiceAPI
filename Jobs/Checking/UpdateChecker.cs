@@ -82,7 +82,7 @@ namespace VpServiceAPI.Jobs.Checking
         private async Task<bool> IsPlanNew()
         {
             if (MyPlan is null) return false; // wont happen
-            if (Environment.GetEnvironmentVariable("MODE") == "Testing") return true;
+            if (Environment.GetEnvironmentVariable("MODE") == "Testing" || Environment.GetEnvironmentVariable("VP_SOURCE") == "STATIC") return true;
             try
             {
                 var lastPlanTime = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_origin_datetime"))[0];

@@ -34,7 +34,7 @@ namespace VpServiceAPI.Jobs.Notification
             TemplateName = name;
             Logger.Warn(LogArea.Notification, "Changed Notification Template to:", name);
         }
-        public Entities.Notification Build(NotificationBody notificationBody, string receiver)
+        public Entities.Notification Build(NotificationBody notificationBody, string receiver, string? template = null)
         {
             NotificationBody = notificationBody;
 
@@ -42,13 +42,13 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 Receiver = receiver,
                 Subject = NotificationBody.Subject,
-                Body = BuildBody()
+                Body = BuildBody(template)
             };
         }
-        private string BuildBody()
+        private string BuildBody(string? template = null)
         {
             HTMLNotificationData = GetHTMLNotificationData();
-            string HTML = MergeTemplateAndData();
+            string HTML = MergeTemplateAndData(template);
             return HTML;
         }
         private Dictionary<string, string> GetHTMLNotificationData()
@@ -70,10 +70,12 @@ namespace VpServiceAPI.Jobs.Notification
                 { "PlansCount", NotificationBody.GlobalPlans.Count.ToString() },
             };
 
-            for(int i=0; i<NotificationBody.GlobalPlans.Count; i++)
+
+            for(int i=0; i < NotificationBody.GlobalPlans.Count && i < NotificationBody.ListOfTables.Count; i++)
             {
-                var globalPlan = NotificationBody.GlobalPlans[i];
-                var table = NotificationBody.ListOfTables[i];
+                var anti_i = NotificationBody.GlobalPlans.Count - i - 1;
+                var globalPlan = NotificationBody.GlobalPlans[anti_i];
+                var table = NotificationBody.ListOfTables[anti_i];
 
                 dic.Add($"AffectedDate{i}", globalPlan.AffectedDate);
                 dic.Add($"AffectedWeekday{i}", globalPlan.AffectedWeekday);
@@ -105,9 +107,9 @@ namespace VpServiceAPI.Jobs.Notification
             return string.Join("", rows);
         }
 
-        private string MergeTemplateAndData()
+        private string MergeTemplateAndData(string? template = null)
         {
-            string html = File.ReadAllText(@$"{TemplatePath}/{TemplateName}/index.html");
+            string html = template ?? File.ReadAllText(@$"{TemplatePath}/{TemplateName}/index.html");
 
             int i = 0;
             while(i < 100)
@@ -140,6 +142,7 @@ namespace VpServiceAPI.Jobs.Notification
             foreach(Match match in new Regex(@"\[\w+\]").Matches(html))
             {
                 string key = match.Value[1..^1];
+                if (string.IsNullOrEmpty(HTMLNotificationData[key])) continue;
                 html = html.Replace(match.Value, HTMLNotificationData[key]);
             }
 

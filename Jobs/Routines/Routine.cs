@@ -92,6 +92,7 @@ namespace VpServiceAPI.Jobs.Routines
 
                 PlanCollection planCollection = new();
                 var whatPlan = new WhatPlan(0);
+                int MAX_PLAN_COUNT = 5;
 
                 for(int dayShift = 0; dayShift < 5; dayShift++)
                 {
@@ -100,19 +101,20 @@ namespace VpServiceAPI.Jobs.Routines
                     {
                         planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body is null"));
                         whatPlan.NextPlan();
-                        continue;
-                    }
-                    if (whatPlan.NotFirst)
-                    {
-                        if (wrapper.Status == Status.NULL) break;
+                        for (; whatPlan.Number < MAX_PLAN_COUNT; whatPlan.NextPlan())
+                        {
+                            wrapper = await UpdateChecker.Check(whatPlan, dayShift);
+                            if (wrapper.Status == Status.NULL) break;
+                            planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body of not first plan is null"));
+                        }
+                        break;
                     }
                     if (wrapper.Status == Status.FAIL) return; // when first plan is not nofify-worthy
-                    if (Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC") break;
-
                 }
+
                 if (planCollection.Plans.Count == 0) return;
                                 
-                Logger.Info($"{planCollection.Plans.Count} NEW PLAN{(planCollection.Plans.Count == 0 ? "" : "S")} : " + string.Join("<br>\n", planCollection.Plans.Select(plan => plan.Title)));
+                Logger.Info($"{planCollection.Plans.Count} NEW PLAN{(planCollection.Plans.Count == 1 ? "" : "S")} : <br>\n" + string.Join("<br>\n", planCollection.Plans.Select(plan => plan.Title)));
 
                 var analysedRows = AnalysePlanJob.Analyse(planCollection.FirstPlan);
                 if(Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
