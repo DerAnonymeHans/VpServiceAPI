@@ -38,20 +38,18 @@ namespace VpServiceAPI.Jobs.Notification
                 var mail = new MailMessage();
                 var smtp = new SmtpClient();
 
-
                 mail.From = new MailAddress(notification.Sender);
                 mail.To.Add(new MailAddress(notification.Receiver));
                 mail.Subject = notification.Subject;
                 mail.Body = notification.Body;
                 mail.IsBodyHtml = true;
 
-
                 smtp.Host = SmtpAddress;
                 smtp.EnableSsl = EnableSSL;
                 smtp.Port = SmtpPort;
                 smtp.Credentials = new NetworkCredential(notification.Sender, Environment.GetEnvironmentVariable("SMTP_PW"));
 
-                smtp.Send(mail);
+                smtp.SendAsync(mail, null);
                 Logger.Info(LogArea.Notification, "Send Email to: " + notification.Receiver);
 
             }

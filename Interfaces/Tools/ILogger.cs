@@ -16,6 +16,9 @@ namespace VpServiceAPI.Interfaces
         public void Warn<T>(LogArea area, Exception ex, string message, T arg);
         public void Error(LogArea area, Exception ex, string message);
         public void Error<T>(LogArea area, Exception ex, string message, T arg);
+
+        public void StartTimer(string label);
+        public void EndTimer(string label);
         
     }
 

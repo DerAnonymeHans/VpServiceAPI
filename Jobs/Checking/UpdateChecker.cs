@@ -24,12 +24,12 @@ namespace VpServiceAPI.Jobs.Checking
         }
 
         public async Task<StatusWrapper<PlanModel>> Check(WhatPlan whatPlan, int dayShift=0)
-        {            
+        {
             var html = await PlanHTMLProvider.GetPlanHTML(whatPlan.Number + dayShift);
             if (string.IsNullOrEmpty(html)) return new StatusWrapper<PlanModel>(Status.NULL, null);
 
             var planModel = PlanConverter.Convert(html);
-            if(planModel is null) return new StatusWrapper<PlanModel>(Status.NULL, null);
+            if (planModel is null) return new StatusWrapper<PlanModel>(Status.NULL, null);
 
             if (whatPlan.NotFirst) return new StatusWrapper<PlanModel>(Status.SUCCESS, planModel);
 

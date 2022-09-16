@@ -117,7 +117,7 @@ namespace VpServiceAPI.Jobs.Routines
                 Logger.Info($"{planCollection.Plans.Count} NEW PLAN{(planCollection.Plans.Count == 1 ? "" : "S")} : <br>\n" + string.Join("<br>\n", planCollection.Plans.Select(plan => plan.Title)));
 
                 var analysedRows = AnalysePlanJob.Analyse(planCollection.FirstPlan);
-                if(Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
+                if (Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
                 {
                     await AnalysedPlanSaver.DeleteOldRows(planCollection.FirstPlan.AffectedDate.Date);
                     await AnalysedPlanSaver.SaveRows(analysedRows);

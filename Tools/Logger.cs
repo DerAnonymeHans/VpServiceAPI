@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using VpServiceAPI.Interfaces;
@@ -9,6 +10,7 @@ namespace VpServiceAPI.Tools
     public sealed class Logger : IMyLogger
     {
         private readonly IOutputter outputter;
+        private Dictionary<string, Stopwatch> StopWatches = new();
         public Logger(IOutputter outputter)
         {
             this.outputter = outputter;
@@ -120,6 +122,25 @@ namespace VpServiceAPI.Tools
             Console.Write("DEBUG: ");
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(SpliceText(JsonSerializer.Serialize(arg), MAX_CHARS));
+        }
+
+
+        public void StartTimer(string label)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            StopWatches.Add(label, sw);
+        }
+
+        public void EndTimer(string label)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.Write("TIMER: ");
+            Console.ForegroundColor = ConsoleColor.White;
+            var sw = StopWatches[label];
+            sw.Stop();
+            Console.WriteLine($"{label}: {sw.Elapsed.TotalMilliseconds}");
+            StopWatches.Remove(label);
         }
     }
 }
