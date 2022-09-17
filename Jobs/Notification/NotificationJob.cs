@@ -123,7 +123,6 @@ namespace VpServiceAPI.Jobs.Notification
             IGradeNotificationBody gradeBody = new GradeNotificationBody();
 
             var notifBody = new NotificationBody();
-            notifBody.Set(GlobalBody);
 
             string gradeMailHtml = "";
 
@@ -132,7 +131,9 @@ namespace VpServiceAPI.Jobs.Notification
                 if(user.Grade != prevUser.Grade)
                 {
                     gradeBody = await GradeTask.Begin(PlanCollection, user.Grade);
-                    notifBody.Set(gradeBody);
+                    notifBody = new();
+                    notifBody.Set(GlobalBody).Set(gradeBody);
+
                     gradeMailHtml = EmailBuilder.Build(notifBody, "").Body;
                     await CacheGradeModel(gradeBody);
                     prevUser = user;

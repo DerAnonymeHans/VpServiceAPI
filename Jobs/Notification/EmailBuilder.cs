@@ -55,7 +55,7 @@ namespace VpServiceAPI.Jobs.Notification
         {
             var dic =  new Dictionary<string, string>
             {
-                { "ArtWorkSrc", @$"{GeneratedPicRoute}/{NotificationBody.Artwork?.Name}/{NotificationBody.UserName}" },
+                { "ArtWorkSrc", @$"{GeneratedPicRoute}/{NotificationBody.Artwork?.Name}" },
                 { "Color", NotificationBody.Artwork?.Color ?? "red" },
                 { "UserName", NotificationBody.UserName },
                 { "Grade", NotificationBody.Grade },
