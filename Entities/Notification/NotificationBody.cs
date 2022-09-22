@@ -3,7 +3,7 @@ using System.Linq;
 using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Interfaces;
 
-namespace VpServiceAPI.Entities
+namespace VpServiceAPI.Entities.Notification
 {
     public record GlobalNotificationBody : IGlobalNotificationBody
     {
@@ -65,7 +65,7 @@ namespace VpServiceAPI.Entities
             if (body is null) return this;
             var properties = body.GetType().GetProperties();
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
             {
                 GetType().GetProperty(prop.Name)?.SetValue(this, prop.GetValue(body));
             }
@@ -73,5 +73,5 @@ namespace VpServiceAPI.Entities
         }
     }
 
-    
+
 }

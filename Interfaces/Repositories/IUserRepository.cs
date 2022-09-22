@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Persons;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Repositories;
 
@@ -9,7 +9,7 @@ namespace VpServiceAPI.Interfaces
 {
     public interface IUserRepository
     {
-        public Task<bool> UserExists(string mail, UserStatus status = UserStatus.NORMAL);
+        public Task<bool> UserExists(string mail, UserStatus? status = UserStatus.NORMAL);
         public Task<User?> GetUser(string mail);
         public Task<List<User>> GetUsers(UserStatus status= UserStatus.NORMAL);
         public Task<User> ValidateUser(string name, string mail, string grade, string mode);

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Notification;
 using VpServiceAPI.Entities.Plan;
 
 namespace VpServiceAPI.Interfaces

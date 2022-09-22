@@ -6,6 +6,6 @@ namespace VpServiceAPI.Interfaces
     {
         public Task<string> GetFromKepler(string path);
         public Task<string> GetFromVP24(string path);
-
+        public Task PingKepleraner();
     }
 }

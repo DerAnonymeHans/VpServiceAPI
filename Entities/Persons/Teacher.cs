@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace VpServiceAPI.Entities
+namespace VpServiceAPI.Entities.Persons
 {
     public sealed class Teacher
     {

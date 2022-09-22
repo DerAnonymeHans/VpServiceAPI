@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
 using VpServiceAPI.Entities.Plan;
+using VpServiceAPI.Entities.Tools;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;
 

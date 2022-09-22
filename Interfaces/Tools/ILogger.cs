@@ -31,6 +31,8 @@ namespace VpServiceAPI.Interfaces
         PlanChecking,
         PlanAnalysing,
 
+        ModelCaching,
+
         Notification,
         StatExtraction,
 

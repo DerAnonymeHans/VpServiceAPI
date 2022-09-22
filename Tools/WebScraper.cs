@@ -12,14 +12,14 @@ namespace VpServiceAPI.Tools
         private readonly IMyLogger Logger;
         private readonly HttpClient ClientKepler;
         private readonly HttpClient ClientVP24;
-        private readonly HttpClient ClientTextUploader;
+        private readonly HttpClient ClientKepleraner;
 
         public WebScraper(IMyLogger logger)
         {
             Logger = logger;
             ClientKepler = new();
             ClientVP24 = new();
-            ClientTextUploader = new();
+            ClientKepleraner = new();
         }
 
         public async Task<string> GetFromKepler(string path)
@@ -48,6 +48,11 @@ namespace VpServiceAPI.Tools
             string origin = "https://www.stundenplan24.de/10073128";
             ClientVP24.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", "c2NodWVsZXI6MjBKS0dMZWlwemlHMjI=");
             return await ClientVP24.GetStringAsync(origin + path);
+        }
+
+        public async Task PingKepleraner()
+        {
+            await ClientKepleraner.GetAsync(Environment.GetEnvironmentVariable("CLIENT_URL"));
         }
     }
 }

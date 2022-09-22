@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Jobs.Checking;
 using VpServiceAPI.Tools;
@@ -22,6 +21,7 @@ using Microsoft.AspNetCore.Http;
 using System.Web;
 using System.Net.Mime;
 using VpServiceAPI.Enums;
+using VpServiceAPI.Entities.Notification;
 
 
 #nullable enable
@@ -98,6 +98,14 @@ namespace VpServiceAPI.Controllers
         {
             return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/logo.png"), "image/png");
         }
+
+        [HttpGet]
+        [Route("Badge.png")]
+        public IActionResult GetBadge()
+        {
+            return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/badge.png"), "image/png");
+        }
+
         [HttpGet]
         [Route("GlobalModel")]
         public async Task<WebResponse<GlobalNotificationBody>> GetGlobalModel()

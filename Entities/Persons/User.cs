@@ -1,7 +1,7 @@
 ﻿using System;
 using VpServiceAPI.Enums;
 
-namespace VpServiceAPI.Entities
+namespace VpServiceAPI.Entities.Persons
 {
     public sealed class User
     {
@@ -12,7 +12,8 @@ namespace VpServiceAPI.Entities
         public NotifyMode NotifyMode { get; init; }
         public string SubDay { get; init; }
         public long? PushId { get; init; }
-        public User(string name, string address, string grade, string status, string mode, string sub_day, string? push_id)
+        public string? PushSubscribtion { get; init; }
+        public User(string name, string address, string grade, string status, string mode, string sub_day, string? push_id, string? push_subscribtion)
         {
             Name = name;
             Address = address;
@@ -32,6 +33,7 @@ namespace VpServiceAPI.Entities
             };
             SubDay = sub_day;
             PushId = string.IsNullOrEmpty(push_id) ? null : long.Parse(push_id);
+            PushSubscribtion = push_subscribtion;
         }
     }
 }

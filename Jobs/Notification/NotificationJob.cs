@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using System.Linq;
-using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
 using System.Text.Json;
 using VpServiceAPI.Enums;
 using System.Net.Http;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Entities.Plan;
+using VpServiceAPI.Entities.Persons;
+using VpServiceAPI.Entities.Notification;
 
 namespace VpServiceAPI.Jobs.Notification
 {
@@ -22,6 +23,7 @@ namespace VpServiceAPI.Jobs.Notification
         private readonly IEmailBuilder EmailBuilder;
         private readonly IPushJob PushJob;
         private readonly IUserRepository UserRepository;
+        private readonly IWebScraper WebScraper;
         private readonly GlobalTask GlobalTask;
         private readonly GradeTask GradeTask;
         private readonly UserTask UserTask;
@@ -38,7 +40,8 @@ namespace VpServiceAPI.Jobs.Notification
             IArtworkRepository artworkRepository,
             IExtraRepository extraRepository,
             IPushJob pushJob,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IWebScraper webScraper)
         {
             Logger = logger;
             EmailJob = notificator;
@@ -47,6 +50,8 @@ namespace VpServiceAPI.Jobs.Notification
             EmailBuilder = notificationBuilder;
             PushJob = pushJob;
             UserRepository = userRepository;
+            WebScraper = webScraper;
+
             GlobalTask = new(logger, dataQueries, artworkRepository);
             GradeTask = new(logger, dataQueries);
             UserTask = new(logger, dataQueries, extraRepository);
@@ -119,7 +124,7 @@ namespace VpServiceAPI.Jobs.Notification
 
         private async void CycleUsers()
         {
-            var prevUser = new User("$%&", "", "0", "", "", "", "");
+            var prevUser = new User("$%&", "", "0", "", "", "", null, null);
             IGradeNotificationBody gradeBody = new GradeNotificationBody();
 
             var notifBody = new NotificationBody();
@@ -134,7 +139,7 @@ namespace VpServiceAPI.Jobs.Notification
                     notifBody = new();
                     notifBody.Set(GlobalBody).Set(gradeBody);
 
-                    gradeMailHtml = EmailBuilder.Build(notifBody, "").Body;
+                    gradeMailHtml = EmailBuilder.BuildGradeBody(notifBody);
                     await CacheGradeModel(gradeBody);
                     prevUser = user;
                 }
@@ -179,7 +184,10 @@ namespace VpServiceAPI.Jobs.Notification
             await DataQueries.SetRoutineData(RoutineDataSubject.MODEL_CACHE, model.Grade, JsonSerializer.Serialize(model));
         }
               
-        
+        private async Task AwakeClientServer()
+        {
+            await WebScraper.PingKepleraner();
+        }
 
     }
         

@@ -19,6 +19,7 @@ using VpServiceAPI.Exceptions;
 using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Http;
 using VpServiceAPI.Enums;
+using VpServiceAPI.Entities.Notification;
 
 
 #nullable enable
@@ -195,6 +196,38 @@ namespace VpServiceAPI.Controllers
                 var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
                 await DataQueries.Save("UPDATE users SET push_id=@id WHERE address=@mail", new { id, mail = user.Address });
             }, Request.Path.Value, "Push_id wurde gesetzt.");
+        }
+
+        [HttpPost]
+        [Route("SetPushSubscribtion")]
+        public async Task<WebMessage> SetPushSubscribtion()
+        {
+            return await WebResponder.RunWith(async () =>
+            {
+                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                Logger.Debug("Set subscribtion");
+                string subscribtion = Request.Form["subscribtion"];
+                await DataQueries.Save("UPDATE users SET push_subscribtion=@subscribtion WHERE address=@mail", new { subscribtion, mail = user.Address });
+
+            }, Request.Path.Value, "Push_subscribtion wurde gesetzt.");
+        }
+
+        [HttpGet]
+        [Route("GetPushSubscribtion")]
+        public async Task<WebResponse<string>> GetPushSubscribtion()
+        {
+            return await WebResponder.RunWith(async () =>
+            {
+                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                return (await DataQueries.Load<string, dynamic>("SELECT push_subscribtion FROM users WHERE address=@mail", new { mail = user.Address }))[0];
+            }, Request.Path.Value, "Push_subscribtion wurde gesetzt.");
+        }
+
+        [HttpPost]
+        [Route("ConfirmPush")]
+        public async void ConfirmPush()
+        {
+            Logger.Info(LogArea.UserAPI, "Confirming Push to: " + await new StreamReader(Request.Body).ReadToEndAsync());
         }
     }
 }

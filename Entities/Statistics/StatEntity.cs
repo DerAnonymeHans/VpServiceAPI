@@ -1,6 +1,6 @@
 ﻿using VpServiceAPI.Enums;
 
-namespace VpServiceAPI.Entities
+namespace VpServiceAPI.Entities.Statistics
 {
     public record StatEntity
     {

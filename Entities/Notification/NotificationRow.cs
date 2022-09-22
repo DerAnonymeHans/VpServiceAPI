@@ -1,6 +1,6 @@
 ﻿using VpServiceAPI.Entities.Plan;
 
-namespace VpServiceAPI.Entities
+namespace VpServiceAPI.Entities.Notification
 {
     public record NotificationRow
     {

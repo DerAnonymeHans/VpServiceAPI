@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Notification;
 
 namespace VpServiceAPI.Interfaces
 {

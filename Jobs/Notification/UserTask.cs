@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Notification;
+using VpServiceAPI.Entities.Persons;
 using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Notification

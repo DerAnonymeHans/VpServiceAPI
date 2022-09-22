@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
-using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Jobs.Checking;
 using VpServiceAPI.Jobs.StatProviding;

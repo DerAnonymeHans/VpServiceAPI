@@ -1,4 +1,4 @@
-﻿namespace VpServiceAPI.Entities
+﻿namespace VpServiceAPI.Entities.Notification
 {
     public sealed class NotificationWeather
     {

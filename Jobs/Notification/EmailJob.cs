@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Net.Mail;
-using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Jobs.Notification
@@ -14,7 +13,7 @@ namespace VpServiceAPI.Jobs.Notification
         {
             Logger = logger;
         }
-        public void Send(Entities.Notification Notification)
+        public void Send(Entities.Notification.Notification Notification)
         {
             Logger.Info(LogArea.Notification, $"Would have sended Email to {Notification.Receiver}.");
             //if(Environment.GetEnvironmentVariable("MODE") == "Testing") Logger.Debug(Notification.Body);
@@ -31,7 +30,7 @@ namespace VpServiceAPI.Jobs.Notification
         {
             Logger = logger;
         }
-        public void Send(Entities.Notification notification)
+        public void Send(Entities.Notification.Notification notification)
         {
             try
             {

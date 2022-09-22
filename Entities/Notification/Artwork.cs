@@ -2,8 +2,9 @@
 using System.Drawing;
 using System.IO;
 using System.Text.Json.Serialization;
+using VpServiceAPI.Entities.Tools;
 
-namespace VpServiceAPI.Entities
+namespace VpServiceAPI.Entities.Notification
 {
     public class ArtworkMeta
     {
@@ -57,5 +58,5 @@ namespace VpServiceAPI.Entities
         }
     }
 
-    
+
 }

@@ -1,4 +1,4 @@
-﻿namespace VpServiceAPI.Entities
+﻿namespace VpServiceAPI.Entities.Tools
 {
     public sealed class LogRow
     {

@@ -1,4 +1,4 @@
-﻿using VpServiceAPI.Entities;
+﻿using VpServiceAPI.Entities.Notification;
 
 namespace VpServiceAPI.Interfaces
 {

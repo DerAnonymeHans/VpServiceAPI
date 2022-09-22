@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Notification;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Tools;

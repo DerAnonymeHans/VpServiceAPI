@@ -2,7 +2,7 @@
 using System.Dynamic;
 using System.Linq;
 
-namespace VpServiceAPI.Entities
+namespace VpServiceAPI.Entities.Tools
 {
     public class DBEntityBase
     {
@@ -10,7 +10,7 @@ namespace VpServiceAPI.Entities
         {
             var obj = new Dictionary<string, dynamic>();
 
-            foreach(var prop in this.GetType().GetProperties())
+            foreach (var prop in GetType().GetProperties())
             {
 #pragma warning disable CS8604 // Possible null reference argument.
                 obj.Add(ToDBName(prop.Name), prop.GetValue(this));

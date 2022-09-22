@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using VpServiceAPI.Entities;
 using VpServiceAPI.Interfaces;
 using System;
 using System.Text;
@@ -13,6 +12,7 @@ using System.Diagnostics;
 using RestSharp;
 using VpServiceAPI.Exceptions;
 using System.Threading;
+using VpServiceAPI.Entities.Persons;
 
 namespace VpServiceAPI.Jobs.Notification
 {
@@ -37,9 +37,7 @@ namespace VpServiceAPI.Jobs.Notification
         {
             var options = new PushOptions(
                 "Neuer Vertretungsplan",
-                globalBody.Subject,
-                $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung",
-                user.PushId ?? throw new AppException($"Tried to send push to {user.Address} but user has no pushId.")
+                globalBody.Subject
             )
             {
                 Icon = $"https://vp-service-api.herokuapp.com/Notification/Logo.png"
@@ -60,94 +58,77 @@ namespace VpServiceAPI.Jobs.Notification
     public sealed class ProdPushJob : IPushJob
     {
         private readonly IMyLogger Logger;
-        private readonly string PUSH_KEY;
-        private readonly string PUSH_AUTH_TOKEN;
+        private readonly HttpClient HttpClient;
         public ProdPushJob(IMyLogger logger)
         {
             Logger = logger;
-
-            var pushKey = Environment.GetEnvironmentVariable("PUSH_KEY");
-            var pushAuthToken = Environment.GetEnvironmentVariable("PUSH_AUTH");
-
-            if (pushKey is null || pushAuthToken is null) Logger.Warn(LogArea.Notification, "Missing PUSH_KEY OR PUSH_AUTH_TOKEN", new { pushKey, pushAuthToken });
-
-            PUSH_KEY = pushKey ?? "";
-            PUSH_AUTH_TOKEN = pushAuthToken ?? "";
+            HttpClient = new();
         }
         public async Task Push(User user, IGlobalNotificationBody globalBody, IGradeNotificationBody gradeBody)
         {
             var options = new PushOptions(
                 "Neuer Vertretungsplan",
-                globalBody.Subject,
-                $"{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung",
-                user.PushId ?? throw new AppException($"Tried to send push to {user.Address} but user has no pushId.")
+                globalBody.Subject
             )
             {
-                Icon = $"https://vp-service-api.herokuapp.com/Notification/Logo.png"
+                Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Logo.png",
+                Badge = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Badge.png",
+                Data = user.Name,
             };
 
-            var client = new RestClient("https://api.webpushr.com");
-            var request = new RestRequest("v1/notification/send/sid", Method.Post);
-            request.AddBody(JsonSerializer.Serialize(options));
-            request.AddHeader("webpushrKey", PUSH_KEY)
-                .AddHeader("webpushrAuthToken", PUSH_AUTH_TOKEN)
-                .AddHeader("Content-Type", "application/json");
+            var client = new RestClient(Environment.GetEnvironmentVariable("CLIENT_URL"));
+            var request = new RestRequest("SendPush", Method.Post);
+            string json = JsonSerializer.Serialize(new PushBody(user.PushSubscribtion, options));
+            request.AddStringBody(json, DataFormat.Json);
 
             var response = await client.ExecuteAsync(request);
             if (!response.IsSuccessful)
             {
                 throw new AppException($"Status: {response.StatusCode}; Message: {response.Content}");
             }
+
+
             Logger.Info(LogArea.Notification, "Send push Notification to: " + user.Address);
-            Thread.Sleep(1000); // webpushr only allows push once per second
         }
     }
 
+    sealed class PushBody
+    {
+        [JsonPropertyName("subscription")]
+        public string Subscribtion { get; set; }
 
+        [JsonPropertyName("options")]
+        public PushOptions Options { get; set; }
+        public PushBody(string subscribtion, PushOptions options)
+        {
+            Subscribtion = subscribtion;
+            Options = options;
+        }
+
+    }
 
     sealed class PushOptions
     {
-        
-        private string title = "";        
-        private string message = "";
-        [JsonPropertyName("target_url")]
-        public string TargetUrl { get; set; }
-        [JsonPropertyName("sid")]
-        public long SID { get; init; }
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
 
-        public PushOptions(string title, string message, string tagetUrl, long sid)
+        [JsonPropertyName("body")]
+        public string Message { get; set; }
+
+        [JsonPropertyName("badge")] // small icon when notification is not expanded (in left upper corner)
+        public string? Badge { get; set; }
+
+        [JsonPropertyName("icon")]
+        public string? Icon { get; set; }
+
+        [JsonPropertyName("data")]
+        public string? Data { get; set; }
+
+        public PushOptions(string title, string message)
         {
             Title = title;
             Message = message;
-            TargetUrl = tagetUrl;
-            SID = sid;
         }
-        [JsonPropertyName("title")]
-        public string Title {
-            get { return title; } 
-            set
-            {
-                title = value.Length > 95 ? value[..95] : value;
-            } 
-        }
-        [JsonPropertyName("message")]
-        public string Message {
-            get { return message; } 
-            set
-            {
-                message = value.Length > 250 ? value[..250] : value;
-            }
-        }
-        [JsonPropertyName("icon")]
-        public string? Icon { get; set; }
-        [JsonPropertyName("expire_push")]
-        public string? ExpirePush { get; set; }
-        [JsonPropertyName("auto_hide")]
-        public int? AutoHide { get; set; }
-        [JsonPropertyName("send_at")]
-        public string? SendAt { get; set; } // 2020-03-04 13:30 -08:00 UTC
-        [JsonPropertyName("action_buttons")]
-        public List<ActionButton>? ActionButtons { get; set; } 
     }
     sealed class ActionButton
     {

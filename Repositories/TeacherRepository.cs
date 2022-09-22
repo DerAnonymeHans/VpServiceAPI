@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Persons;
 using VpServiceAPI.Interfaces;
 
 namespace VpServiceAPI.Repositories

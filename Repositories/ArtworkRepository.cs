@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Notification;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 

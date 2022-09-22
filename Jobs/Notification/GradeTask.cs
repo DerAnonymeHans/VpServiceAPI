@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using VpServiceAPI.Entities;
+using VpServiceAPI.Entities.Notification;
 using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;

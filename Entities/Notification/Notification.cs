@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VpServiceAPI.Entities
+namespace VpServiceAPI.Entities.Notification
 {
     public record Notification
     {
