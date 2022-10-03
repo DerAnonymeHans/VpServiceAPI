@@ -13,210 +13,26 @@ using System.Net;
 using VpServiceAPI.Enums;
 using Microsoft.AspNetCore.Http;
 using VpServiceAPI.Entities.Persons;
+using VpServiceAPI.Entities.Lernsax;
+using System.Text.Json;
+using VpServiceAPI.Interfaces.Lernsax;
 
 namespace VpServiceAPI.Repositories
 {
-    public sealed class TestUserRepository : IUserRepository
-    {
-        private readonly IMyLogger Logger;
-        private readonly IDataQueries DataQueries;
-        private readonly IEmailJob EmailJob;
-        private string[] TestUserMails = new[] { "pascal.setzer@gmail.com"/*, "deltass@web.de", "pia.setzer@gmail.com"*/ };
-
-        public TestUserRepository(IMyLogger logger, IDataQueries dataQueries, IEmailJob emailJob)
-        {
-            Logger = logger;
-            DataQueries = dataQueries;
-            EmailJob = emailJob;
-        }
-
-        public async Task<bool> UserExists(string mail, UserStatus? status = UserStatus.NORMAL)
-        {
-            string whereStatus = status is null ? "" : "AND status=@status";
-            var existsInDB = (await DataQueries.Load<string, dynamic>($"SELECT id FROM `users` WHERE address=@mail {whereStatus}", new { mail, status = status.ToString() })).Count == 1;
-            return existsInDB && TestUserMails.Contains(mail);
-        }
-        public async Task<User?> GetUser(string mail)
-        {
-            if (!TestUserMails.Contains(mail)) return null;
-
-            var res = await DataQueries.Load<User, dynamic>("SELECT name, address, grade, status, mode, sub_day, push_id, push_subscribtion FROM `users` WHERE address=@mail", new { mail });
-            if (res.Count == 0) return null;
-            return res[0];
-        }
-        public async Task<List<User>> GetUsers(UserStatus status = UserStatus.NORMAL)
-        {
-            var users = await DataQueries.Load<User, dynamic>("SELECT name, address, grade, status, mode, sub_day, push_id, push_subscribtion FROM `users` WHERE status=@status ORDER BY `grade`, `mode`", new { status = status.ToString() });
-            users = users.FindAll(user => TestUserMails.Contains(user.Address));
-            return users;
-        }
-        public async Task<User> ValidateUser(string name, string mail, string grade, string mode)
-        {
-            if (string.IsNullOrWhiteSpace(name)) throw new AppException("Der Name darf nicht leer sein.");
-            if (string.IsNullOrWhiteSpace(mail)) throw new AppException("Die Email darf nicht leer sein.");
-            if (string.IsNullOrWhiteSpace(grade)) throw new AppException("Die Klassenstufe darf nicht leer sein.");
-
-            try
-            {
-                AttackDetector.Detect(name, mail, grade);
-            }
-            catch (AppException ex)
-            {
-                Logger.Warn(LogArea.Attack, ex, "Somebody tried to attack on user validation");
-                throw new AppException(ex.Message);
-            }
-
-            if (name.Length < 2) throw new AppException("Der Name muss mindestens 2 Zeichen lang sein.");
-            if (name.Length > 20) throw new AppException("Der Name darf nicht länger als 20 Zeichen lang sein.");
-            var matches = new Regex(@"[^a-zA-ZäöüÄÖÜß\s]").Matches(name);
-            if (matches.Count > 0) throw new AppException($"Der Name beinhaltet folgende nicht erlaubte Zeichen: '{string.Join(", ", matches.Cast<Match>().Select(m => m.Value))}'");
-
-            try
-            {
-                new MailAddress(mail);
-            }
-            catch (FormatException)
-            {
-                throw new AppException("Bitte gib eine valide Email Addresse an");
-            }
-
-            string[] grades = new[] { "5", "6", "7", "8", "9", "10", "11", "12" };
-            if (Array.IndexOf(grades, grade) == -1) throw new AppException("Bitte gib eine valide Klassenstufe an (5-12)");
-
-            if (await UserExists(mail, null)) throw new AppException("Die Email Addresse ist bereits in den Verteiler aufgenommen und kann nicht nochmals hinzugefügt werden.");
-
-            var _mode = mode switch
-            {
-                "pwa" => NotifyMode.PWA,
-                "mail" => NotifyMode.EMAIL,
-                _ => throw new AppException("Bitte gib einen validen Benachrichtigungsweg an.")
-            };
-
-            return new User(name, mail, grade, UserStatus.REQUEST.ToString(), _mode.ToString(), "", null, null);
-        }
-        public async Task AddUserRequest(User user)
-        {
-            await DataQueries.Save("INSERT INTO users(name, address, grade, status, mode, sub_day) VALUES (@name, @address, @grade, @status, @mode, @date)", new { name = user.Name, address = user.Address, grade = user.Grade, date = DateTime.Now.ToString("dd.MM.yyyy"), status = UserStatus.REQUEST.ToString(), mode = user.NotifyMode.ToString() });
-        }
-        public async Task AcceptUser(string mail)
-        {
-            if (!TestUserMails.Contains(mail)) return;
-            await DataQueries.Save("UPDATE users SET status=@status WHERE address=@address", new { address = mail, status = UserStatus.NORMAL.ToString() });
-            var user = await GetUser(mail);
-            if (user is null) throw new AppException("Cannot accept user who is not existing");
-            await DataQueries.AddUserToBackupDB(user);
-            if (user.NotifyMode == NotifyMode.PWA)
-            {
-                await SendHashResetMail(mail);
-            }
-        }
-        public async Task RejectUser(string mail)
-        {
-            await DataQueries.Delete("DELETE FROM users WHERE address=@address AND status=@requestStatus", new { address = mail, requestStatus = UserStatus.REQUEST.ToString() }); ;
-        }
-
-
-
-        public async Task<User> TryGetAuthenticatedUserFromRequest(IRequestCookieCollection cookies)
-        {
-            bool isLoggedIn = cookies.TryGetValue("userAuthMail", out string? userAuthMail);
-            isLoggedIn = cookies.TryGetValue("userAuthHash", out string? userAuthHash) && isLoggedIn;
-            isLoggedIn = isLoggedIn && userAuthMail is not null && userAuthHash is not null;
-            if (isLoggedIn)
-            {
-                if (await IsAuthenticated(userAuthMail ?? "", userAuthHash ?? ""))
-                {
-#pragma warning disable CS8603 // Possible null reference return.
-                    return await GetUser(userAuthMail ?? "");
-#pragma warning restore CS8603 // Possible null reference return.
-                };
-            }
-            throw new AppException("Du musst angemeldet sein um diese Daten zu sehen.");
-        }
-        public async Task<bool> IsAuthenticated(string mail, string mailHash)
-        {
-            if (!await UserExists(mail))
-            {
-                return false;
-            };
-            var encoded = WebUtility.UrlDecode(mailHash).Replace(' ', '+');
-            return StringCipher.Decrypt(encoded) == Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
-        }
-
-        public string GetAuthenticationHash(string mail)
-        {
-            var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
-            var hash = StringCipher.Encrypt(base64);
-            return hash;
-        }
-
-        public async Task<string> StartHashResetAndGetKey(string mail)
-        {
-            if (!await UserExists(mail)) throw new AppException("Das Schlüssel kann nicht ausgestellt werden, da die Email Addresse nicht existiert.");
-            var randomBytes = new byte[8]; // 32 Bytes will give us 256 bits.
-            using (var rngCsp = new RNGCryptoServiceProvider())
-            {
-                rngCsp.GetBytes(randomBytes);
-            }
-            var stringBuilder = new StringBuilder();
-            foreach (var _byte in randomBytes)
-            {
-                stringBuilder.Append(_byte.ToString("X2"));
-            }
-            string key = stringBuilder.ToString();
-            await DataQueries.Save("UPDATE users SET reset_key=@resetKey WHERE address=@mail", new { mail, resetKey = key });
-            return key;
-        }
-        public async Task<MailHashPair> EndHashResetAndGetMailHashPair(string key)
-        {
-            if (string.IsNullOrWhiteSpace(key)) throw new AppException("Der Code ist ungültig. Er darf nicht leer sein.");
-
-            var rows = await DataQueries.Load<KeyMailHelper, dynamic>("SELECT reset_key, address FROM users WHERE reset_key = @key", new { key });
-            if (rows.Count == 0) throw new AppException("Der Code ist ungültig.");
-
-            await DataQueries.Save("UPDATE users SET reset_key='' WHERE address=@mail", new { mail = rows[0].Mail });
-            return new MailHashPair(rows[0].Mail, GetAuthenticationHash(rows[0].Mail));
-        }
-
-        public async Task SendHashResetMail(string mail)
-        {
-            string linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}" : "http://localhost:3000";
-
-            EmailJob.Send(new Entities.Notification.Notification
-            {
-                Body = await GenerateBody(mail, linkTo),
-                Receiver = mail,
-                Subject = "Anmeldung bei Kepleraner"
-            });
-        }
-
-        private async Task<string> GenerateBody(string mail, string linkTo)
-        {
-            string key = await StartHashResetAndGetKey(mail);
-            var user = await GetUser(mail);
-            if (user is null) throw new AppException("Cannot generateMail Body for not existing user");
-            return string.Join("<br>", new string[]
-            {
-                $"<h1>Hallo {user.Name}!</h1>",
-                "<p>Mit Hilfe dieser Mail wirst du bei Kepleraner angemeldet. Dafür musst du nur auf folgenden Link drücken:.</p>",
-                $@"<h2><a href=""{linkTo}/Benachrichtigung?code={key}"">Diesen Link drücken</a></h2>"
-            });
-        }
-
-    }
-
     public sealed class ProdUserRepository : IUserRepository
     {
         private readonly IMyLogger Logger;
         private readonly IDataQueries DataQueries;
         private readonly IEmailJob EmailJob;
+        public ILernsaxRepository Lernsax { get; init; }
 
         private const int MAX_RESET_DURA = 1000 * 60 * 10; // 10min
-        public ProdUserRepository(IMyLogger logger, IDataQueries dataQueries, IEmailJob emailJob)
+        public ProdUserRepository(IMyLogger logger, IDataQueries dataQueries, IEmailJob emailJob, ILernsaxRepository lernsax)
         {
             Logger = logger;
             DataQueries = dataQueries;
             EmailJob = emailJob;
+            Lernsax = lernsax;
         }
 
         public async Task<bool> UserExists(string mail, UserStatus? status = UserStatus.NORMAL)
@@ -226,19 +42,21 @@ namespace VpServiceAPI.Repositories
         }
         public async Task<User?> GetUser(string mail)        {
 
-            var res = await DataQueries.Load<User, dynamic>("SELECT name, address, grade, status, mode, sub_day, push_id, push_subscribtion FROM `users` WHERE address=@mail", new { mail });
+            var res = await DataQueries.Load<User, dynamic>("SELECT id, name, address, grade, status, mode, sub_day, push_id, push_subscribtion FROM `users` WHERE address=@mail", new { mail });
             if (res.Count == 0) return null;
             return res[0];
         }
         public async Task<List<User>> GetUsers(UserStatus status = UserStatus.NORMAL)
         {
-            return await DataQueries.Load<User, dynamic>("SELECT name, address, grade, status, mode, sub_day, push_id, push_subscribtion FROM `users` WHERE status=@status ORDER BY `grade`, `mode`", new { status = status.ToString() });
+            return await DataQueries.Load<User, dynamic>("SELECT id, name, address, grade, status, mode, sub_day, push_id, push_subscribtion FROM `users` WHERE status=@status ORDER BY `grade`, `mode`", new { status = status.ToString() });
         }
         public async Task<User> ValidateUser(string name, string mail, string grade, string mode)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new AppException("Der Name darf nicht leer sein.");
             if (string.IsNullOrWhiteSpace(mail)) throw new AppException("Die Email darf nicht leer sein.");
             if (string.IsNullOrWhiteSpace(grade)) throw new AppException("Die Klassenstufe darf nicht leer sein.");
+
+            mail = mail.Trim();
 
             try
             {
@@ -251,7 +69,7 @@ namespace VpServiceAPI.Repositories
 
             if (name.Length < 2) throw new AppException("Der Name muss mindestens 2 Zeichen lang sein.");
             if (name.Length > 20) throw new AppException("Der Name darf nicht länger als 20 Zeichen lang sein.");
-            var matches = new Regex(@"[^a-zA-ZäöüÄÖÜß\s]").Matches(name);
+            var matches = new Regex(@"[^\wäöüÄÖÜß\s]").Matches(name);
             if (matches.Count > 0) throw new AppException($"Der Name beinhaltet folgende nicht erlaubte Zeichen: '{string.Join(", ", matches.Cast<Match>().Select(m => m.Value))}'");
 
             try
@@ -264,7 +82,7 @@ namespace VpServiceAPI.Repositories
             }
 
             string[] grades = new[] { "5", "6", "7", "8", "9", "10", "11", "12" };
-            if (Array.IndexOf(grades, grade) == -1) throw new AppException("Bitte gib eine valide Klassenstufe an (5-12)");
+            if (!grades.Contains(grade)) throw new AppException("Bitte gib eine valide Klassenstufe an (5-12)");
 
             var res = (await DataQueries.Load<int, dynamic>("SELECT id FROM users WHERE address=@address", new { address = mail }));
             if(res.Count != 0) throw new AppException("Die Email Addresse ist bereits in den Verteiler aufgenommen und kann nicht nochmals hinzugefügt werden.");
@@ -276,7 +94,7 @@ namespace VpServiceAPI.Repositories
                 _ => throw new AppException("Bitte gib einen validen Benachrichtigungsweg an.")
             };
 
-            return new User(name, mail, grade, UserStatus.REQUEST.ToString(), _mode.ToString(), "", null, null);
+            return new User(0, name, mail, grade, UserStatus.REQUEST.ToString(), _mode.ToString(), "", null, null);
         }
         public async Task AddUserRequest(User user)
         {
@@ -284,10 +102,13 @@ namespace VpServiceAPI.Repositories
         }
         public async Task AcceptUser(string mail)
         {
-            await DataQueries.Save("UPDATE users SET status=@status WHERE address=@address", new { address = mail, status=UserStatus.NORMAL.ToString() });
             var user = await GetUser(mail);
             if (user is null) throw new AppException("Cannot accept user who is not existing");
+
+            await DataQueries.Save("UPDATE users SET status=@status WHERE address=@address", new { address = mail, status=UserStatus.NORMAL.ToString() });
+            await DataQueries.Save("INSERT INTO lernsax(userId) VALUES (@userId)", new { userId = user.Id });
             await DataQueries.AddUserToBackupDB(user);
+
             if(user.NotifyMode == NotifyMode.PWA)
             {
                 await SendHashResetMail(mail);
@@ -298,9 +119,7 @@ namespace VpServiceAPI.Repositories
             await DataQueries.Delete("DELETE FROM users WHERE address=@address AND status=@requestStatus", new { address = mail, requestStatus=UserStatus.REQUEST.ToString() }); ;
         }
 
-
-
-        public async Task<User> TryGetAuthenticatedUserFromRequest(IRequestCookieCollection cookies)
+        public async Task<User> GetAuthenticatedUserFromRequest(IRequestCookieCollection cookies)
         {
             bool isLoggedIn = cookies.TryGetValue("userAuthMail", out string? userAuthMail);
             isLoggedIn = cookies.TryGetValue("userAuthHash", out string? userAuthHash) && isLoggedIn;
@@ -309,9 +128,7 @@ namespace VpServiceAPI.Repositories
             {
                 if(await IsAuthenticated(userAuthMail ?? "", userAuthHash ?? ""))
                 {
-#pragma warning disable CS8603 // Possible null reference return.
-                    return await GetUser(userAuthMail ?? "");
-#pragma warning restore CS8603 // Possible null reference return.
+                    return await GetUser(userAuthMail ?? "") ?? throw new AppException("Du musst angemeldet sein um diese Daten zu sehen.");
                 };
             }
             throw new AppException("Du musst angemeldet sein um diese Daten zu sehen.");
@@ -323,14 +140,7 @@ namespace VpServiceAPI.Repositories
                 return false;
             };
             var encoded = WebUtility.UrlDecode(mailHash).Replace(' ', '+');
-            return StringCipher.Decrypt(encoded) == Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
-        }
-
-        public string GetAuthenticationHash(string mail)
-        {
-            var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(mail));
-            var hash = StringCipher.Encrypt(base64);
-            return hash;
+            return StringCipher.Decrypt(encoded, EncryptionKey.USER) == mail;
         }
 
         public async Task<string> StartHashResetAndGetKey(string mail)
@@ -358,19 +168,19 @@ namespace VpServiceAPI.Repositories
             if (rows.Count == 0) throw new AppException("Der Code ist ungültig.");
 
             await DataQueries.Save("UPDATE users SET reset_key='' WHERE address=@mail", new { mail = rows[0].Mail });
-            return new MailHashPair(rows[0].Mail, GetAuthenticationHash(rows[0].Mail));
+            return new MailHashPair(rows[0].Mail, StringCipher.Encrypt(rows[0].Mail, EncryptionKey.USER));
         }
 
         public async Task SendHashResetMail(string mail)
         {
             string linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}" : "http://localhost:3000";
             
-            EmailJob.Send(new Entities.Notification.Notification
+            EmailJob.Send(new Entities.Notification.Email
             {
                 Body = await GenerateBody(mail, linkTo),
                 Receiver = mail,
                 Subject = "Anmeldung bei Kepleraner"
-            });
+            }, "HASHRESET");
         }
 
         private async Task<string> GenerateBody(string mail, string linkTo)
@@ -386,6 +196,10 @@ namespace VpServiceAPI.Repositories
             });
         }
 
+        public async Task<UserWithLernsax> GetUserWithLernsax(User user)
+        {
+            return new UserWithLernsax(user, await Lernsax.GetLernsax(user));
+        }
     }
 
     public sealed class KeyMailHelper

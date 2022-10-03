@@ -43,6 +43,11 @@ namespace VpServiceAPI.Jobs.StatExtraction
 
         public async Task Save()
         {
+            if (Teacher.Name.Length == 0 || Subject.Name.Length == 0 || ClassName.Name.Length == 0)
+            {
+                Logger.Warn(LogArea.StatExtraction, "Not saving row because teacher, subject or classname lenth was 0", this);
+                return;
+            }
             await InsertMissingEntities();
             await GetIds();
             await SaveBys();            
@@ -58,7 +63,7 @@ namespace VpServiceAPI.Jobs.StatExtraction
         {
             try
             {
-                var entities = await DataQueries.Load<StatEntity, dynamic>("SELECT type, name FROM stat_entities WHERE BINARY (name=@teacher OR BINARY name=@subject OR BINARY name=@className) AND year=@year", new { teacher = Teacher.Name, subject = Subject.Name, className = ClassName.Name, year = ProviderHelper.CurrentSchoolYear });
+                var entities = await DataQueries.Load<StatEntity, dynamic>("SELECT type, name FROM stat_entities WHERE ( BINARY name=@teacher OR BINARY name=@subject OR BINARY name=@className) AND year=@year", new { teacher = Teacher.Name, subject = Subject.Name, className = ClassName.Name, year = ProviderHelper.CurrentSchoolYear });
 
                 var entityNames = (from entity in entities select entity.Name).ToList();
 

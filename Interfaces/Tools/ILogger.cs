@@ -39,6 +39,9 @@ namespace VpServiceAPI.Interfaces
         StatAPI,
         UserAPI,
         NotificationAPI,
+        LernsaxAPI,
+
+        LernsaxMail,
 
         Admin,
         DataAccess,

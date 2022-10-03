@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using VpServiceAPI.Entities.Lernsax;
 using VpServiceAPI.Entities.Persons;
 using VpServiceAPI.Enums;
+using VpServiceAPI.Interfaces.Lernsax;
 using VpServiceAPI.Repositories;
 
 namespace VpServiceAPI.Interfaces
@@ -17,11 +19,13 @@ namespace VpServiceAPI.Interfaces
         public Task AcceptUser(string mail);
         public Task RejectUser(string mail);
 
-        public Task<User> TryGetAuthenticatedUserFromRequest(IRequestCookieCollection cookies);
+        public Task<User> GetAuthenticatedUserFromRequest(IRequestCookieCollection cookies);
         public Task<bool> IsAuthenticated(string mail, string mailHash);
-        public string GetAuthenticationHash(string mail);
         public Task<string> StartHashResetAndGetKey(string mail);
         public Task<MailHashPair> EndHashResetAndGetMailHashPair(string key);
         public Task SendHashResetMail(string mail);
+
+        public ILernsaxRepository Lernsax { get; }
+        public Task<UserWithLernsax> GetUserWithLernsax(User user);
     }
 }

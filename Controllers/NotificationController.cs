@@ -99,11 +99,15 @@ namespace VpServiceAPI.Controllers
             return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/logo.png"), "image/png");
         }
 
-        [HttpGet]
-        [Route("Badge.png")]
-        public IActionResult GetBadge()
+        [HttpGet("Badge_VP.png")]
+        public IActionResult GetBadge_VP()
         {
-            return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/badge.png"), "image/png");
+            return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/badge_vp.png"), "image/png");
+        }
+        [HttpGet("Badge_LS.png")]
+        public IActionResult GetBadge_LS()
+        {
+            return File(System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Pictures/badge_ls.png"), "image/png");
         }
 
         [HttpGet]
@@ -112,7 +116,7 @@ namespace VpServiceAPI.Controllers
         {
             return await WebResponder.RunWith(async () =>
             {
-                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
                 string json = (await DataQueries.GetRoutineData(RoutineDataSubject.MODEL_CACHE, "global"))[0];
                 var body = JsonSerializer.Deserialize<GlobalNotificationBody>(json);
                 if (body is null)
@@ -130,7 +134,7 @@ namespace VpServiceAPI.Controllers
         {
             return await WebResponder.RunWith(async () =>
             {
-                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
                 string json = (await DataQueries.GetRoutineData(RoutineDataSubject.MODEL_CACHE, user.Grade))[0];
                 var body = JsonSerializer.Deserialize<GradeNotificationBody>(json);
                 if (body is null)
@@ -148,7 +152,7 @@ namespace VpServiceAPI.Controllers
         {
             return await WebResponder.RunWith(async () =>
             {
-                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
                 var body = (UserNotificationBody?)await UserTask.Begin(user);
                 if (body is null)
                 {
@@ -159,22 +163,12 @@ namespace VpServiceAPI.Controllers
             }, Request.Path.Value);
         }
 
-        [HttpGet]
-        [Route("IsNewPlan/{dates}")]
-        public async Task<WebResponse<bool>> IsNewPlan(string? dates)
+        [HttpGet("CurrentPlanId")]
+        public async Task<WebResponse<string>> GetCurrentPlanId()
         {
             return await WebResponder.RunWith(async () =>
             {
-                if (string.IsNullOrWhiteSpace(dates)) return true;
-                var datesSplitted = dates.Split("-");
-                if (datesSplitted.Length != 2) return true;
-                var originDate = datesSplitted[0];
-                var affectedDate = datesSplitted[1];
-
-                var newOriginDate = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_origin_datetime"))[0];
-                var newAffectedDate = (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "last_affected_date"))[0];
-
-                return newOriginDate != originDate || affectedDate != newAffectedDate;
+                return (await DataQueries.GetRoutineData(RoutineDataSubject.DATETIME, "plan_found_datetime"))[0];
             }, Request.Path.Value);
         }
         

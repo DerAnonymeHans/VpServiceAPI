@@ -69,6 +69,8 @@ namespace VpServiceAPI.Jobs.Notification
                 planCollection.ForceNotifStatus.TrySet(true, "new-affected-date");
             }
 
+            await DataQueries.SetRoutineData(RoutineDataSubject.DATETIME, "plan_found_datetime", DateTime.Now.Ticks.ToString());
+
             Users = await UserProvider.GetUsers();
             GlobalBody = await GlobalTask.Begin(planCollection);
             await CacheGlobalModel(GlobalBody);
@@ -124,12 +126,15 @@ namespace VpServiceAPI.Jobs.Notification
 
         private async void CycleUsers()
         {
-            var prevUser = new User("$%&", "", "0", "", "", "", null, null);
+            var prevUser = new User(0, "$%&", "", "0", "", "", "", null, null);
             IGradeNotificationBody gradeBody = new GradeNotificationBody();
-
             var notifBody = new NotificationBody();
-
             string gradeMailHtml = "";
+
+            if (PlanCollection.ForceNotifStatus.IsForce)
+            {
+                Logger.Info(LogArea.Notification, "Forcing mail because of: " + string.Join(", ", PlanCollection.ForceNotifStatus.Reasons));
+            }
 
             foreach (User user in Users)
             {
@@ -141,7 +146,7 @@ namespace VpServiceAPI.Jobs.Notification
 
                     gradeMailHtml = EmailBuilder.BuildGradeBody(notifBody);
                     await CacheGradeModel(gradeBody);
-                    prevUser = user;
+                    prevUser = user;                                        
                 }
 
                 if (!PlanCollection.ForceNotifStatus.IsForce)
@@ -149,22 +154,12 @@ namespace VpServiceAPI.Jobs.Notification
                     if (!gradeBody.IsNotify) continue;
                 }
 
+
                 var userBody = await UserTask.Begin(user);
 
                 if (user.NotifyMode == NotifyMode.PWA)
                 {
-                    try
-                    {
-                        await PushJob.Push(user, GlobalBody, gradeBody);
-                        continue;
-                    }
-                    catch (AppException ex)
-                    {
-                        Logger.Warn(LogArea.Notification, ex, "Could not send push notification. Sending Email instead", user);
-                    }catch(Exception ex)
-                    {
-                        Logger.Error(LogArea.Notification, ex, "Could not send push notification. Sending Email instead", user);
-                    }
+                    if (await TrySendPush(user)) continue;
                     string key = await UserRepository.StartHashResetAndGetKey(user.Address);
                     userBody.PersonalInformation.Add(@$"ACHTUNG: Es wurde versucht dir eine Push Nachticht zu senden, wobei ein Fehler aufkam. Meist liegt die Ursache an fehlenden Benachtichtigungsrechten. Drücke den Link und erlaube sie: <a href=""{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung?code={key}"">Link drücken</a>");
                 }
@@ -173,22 +168,43 @@ namespace VpServiceAPI.Jobs.Notification
                 notifBody.GlobalExtra = gradeBody.GradeExtra ?? notifBody.GlobalExtra;
                 var notification = EmailBuilder.Build(notifBody, user.Address, gradeMailHtml);
                 EmailJob.Send(notification);
+                await Task.Delay(300);
             }
+        }
+        private async Task<bool> TrySendPush(User user)
+        {
+            try
+            {
+                var pushOptions = new PushOptions("Neuer Vertretungsplan", GlobalBody.Subject)
+                {
+                    Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Logo.png",
+                    Badge = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Badge_VP.png",
+                    Data = new PushData(user.Name, "/Benachrichtigung?page=plan")
+                };
+
+                await PushJob.Push(user, pushOptions);
+                return true;
+            }
+            catch (AppException ex)
+            {
+                Logger.Warn(LogArea.Notification, ex, "Could not send push notification. Sending Email instead", user.Address);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(LogArea.Notification, ex, "Could not send push notification. Sending Email instead", user.Address);
+            }
+            return false;            
         }
         private async Task CacheGlobalModel(IGlobalNotificationBody model)
         {
             await DataQueries.SetRoutineData(RoutineDataSubject.MODEL_CACHE, "global", JsonSerializer.Serialize(model));
         }
         private async Task CacheGradeModel(IGradeNotificationBody model)
-        {
+        {            
+            if (!model.IsNotify && !PlanCollection.ForceNotifStatus.IsForce) return;
             await DataQueries.SetRoutineData(RoutineDataSubject.MODEL_CACHE, model.Grade, JsonSerializer.Serialize(model));
         }
-              
-        private async Task AwakeClientServer()
-        {
-            await WebScraper.PingKepleraner();
-        }
-
+        
     }
         
 }

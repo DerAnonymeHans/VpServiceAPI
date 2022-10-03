@@ -42,12 +42,18 @@ namespace VpServiceAPI.Tools
 
             return await ClientKepler.GetStringAsync(origin + path);            
         }
+              
 
         public async Task<string> GetFromVP24(string path)
         {
             string origin = "https://www.stundenplan24.de/10073128";
             ClientVP24.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", "c2NodWVsZXI6MjBKS0dMZWlwemlHMjI=");
             return await ClientVP24.GetStringAsync(origin + path);
+        }
+
+        public Task<string> GetFromLernsax(string path)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task PingKepleraner()

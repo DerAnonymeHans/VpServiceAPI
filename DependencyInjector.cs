@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using VpServiceAPI.Interfaces;
+using VpServiceAPI.Interfaces.Lernsax;
 using VpServiceAPI.Jobs.Analysing;
 using VpServiceAPI.Jobs.Checking;
+using VpServiceAPI.Jobs.Lernsax;
 using VpServiceAPI.Jobs.Notification;
 using VpServiceAPI.Jobs.Routines;
 using VpServiceAPI.Jobs.StatExtraction;
@@ -22,7 +24,7 @@ namespace VpServiceAPI
 
         private bool _allUsersWithTestNotificator = false; // or test users with prod notificator
         private bool _forceTestUsers = false;
-        private bool _forceTestNotificator = false;
+        private bool _forceTestNotificator = true;
 
         // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
         // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
@@ -55,6 +57,7 @@ namespace VpServiceAPI
             InjectStatisticCreation();
             InjectStatisticProviding();
             InjectAuthentication();
+            InjectLernsax();
 
 
         }
@@ -157,7 +160,12 @@ namespace VpServiceAPI
         {
 
         }
-
+        private void InjectLernsax()
+        {
+            Services
+                .AddSingleton<ILernsaxMailService, LernsaxMailService>()
+                .AddSingleton<ILernsaxRepository, LernsaxRepository>();
+        }
 
         private void InjectWithCondition<TInterface, TTrue, TFalse>(bool condition)
             where TInterface : class

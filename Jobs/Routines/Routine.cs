@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using System.Timers;
 using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Entities.Tools;
+using VpServiceAPI.Enums;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
+using VpServiceAPI.Interfaces.Lernsax;
 using VpServiceAPI.Jobs.Checking;
 using VpServiceAPI.Jobs.Notification;
 
@@ -15,12 +17,17 @@ namespace VpServiceAPI.Jobs.Routines
     public sealed class Routine : IRoutine
     {
         private readonly IMyLogger Logger;
+
         private readonly IUpdateChecker UpdateChecker;
         private readonly IPlanAnalyser AnalysePlanJob;
         private readonly IAnalysedPlanSaver AnalysedPlanSaver;
         private readonly INotificationJob NotificationJob;
         private readonly IStatExtractor StatExtractor;
+
         private readonly ITeacherRepository TeacherRepository;
+        private readonly IUserRepository UserRepository;
+
+        private readonly ILernsaxMailService LernsaxMailService;
 
         public bool IsRunning { get; private set; }
         public int Interval { get; private set; } = 600_000;
@@ -34,7 +41,9 @@ namespace VpServiceAPI.Jobs.Routines
             IAnalysedPlanSaver analysedPlanSaver,
             INotificationJob notificationJob,
             IStatExtractor statExtractor,
-            ITeacherRepository teacherRepository)
+            ITeacherRepository teacherRepository,
+            ILernsaxMailService lernsaxMailService,
+            IUserRepository userRepository)
         {
             Logger = logger;
             UpdateChecker = updateChecker;
@@ -43,6 +52,8 @@ namespace VpServiceAPI.Jobs.Routines
             NotificationJob = notificationJob;
             StatExtractor = statExtractor;
             TeacherRepository = teacherRepository;
+            LernsaxMailService = lernsaxMailService;
+            UserRepository = userRepository;
         }
         public void Begin()
         {
@@ -89,47 +100,51 @@ namespace VpServiceAPI.Jobs.Routines
             try
             {
                 await TimedEvents();
-
-                PlanCollection planCollection = new();
-                var whatPlan = new WhatPlan(0);
-                int MAX_PLAN_COUNT = 5;
-
-                for(int dayShift = 0; dayShift < 5; dayShift++)
-                {
-                    var wrapper = await UpdateChecker.Check(whatPlan, dayShift);
-                    if (wrapper.Status == Status.SUCCESS)
-                    {
-                        planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body is null"));
-                        whatPlan.NextPlan();
-                        for (; whatPlan.Number < MAX_PLAN_COUNT; whatPlan.NextPlan())
-                        {
-                            wrapper = await UpdateChecker.Check(whatPlan, dayShift);
-                            if (wrapper.Status == Status.NULL) break;
-                            planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body of not first plan is null"));
-                        }
-                        break;
-                    }
-                    if (wrapper.Status == Status.FAIL) return; // when first plan is not nofify-worthy
-                }
-
-                if (planCollection.Plans.Count == 0) return;
-                                
-                Logger.Info($"{planCollection.Plans.Count} NEW PLAN{(planCollection.Plans.Count == 1 ? "" : "S")} : <br>\n" + string.Join("<br>\n", planCollection.Plans.Select(plan => plan.Title)));
-
-                var analysedRows = AnalysePlanJob.Analyse(planCollection.FirstPlan);
-                if (Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
-                {
-                    await AnalysedPlanSaver.DeleteOldRows(planCollection.FirstPlan.AffectedDate.Date);
-                    await AnalysedPlanSaver.SaveRows(analysedRows);
-                }
-
-                NotificationJob.Begin(planCollection);
-
+                await VertretungsplanJob();
+                await LernsaxServicesJob();
             }
             catch (Exception ex)
             {
                 Logger.Error(LogArea.Routine, ex, "Failed on Routine.");
             }
+        }
+
+        private async Task VertretungsplanJob()
+        {
+            PlanCollection planCollection = new();
+            var whatPlan = new WhatPlan(0);
+            int MAX_PLAN_COUNT = 5;
+
+            for (int dayShift = 0; dayShift < 5; dayShift++)
+            {
+                var wrapper = await UpdateChecker.Check(whatPlan, dayShift);
+                if (wrapper.Status == Status.SUCCESS)
+                {
+                    planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body is null"));
+                    whatPlan.NextPlan();
+                    for (; whatPlan.Number < MAX_PLAN_COUNT; whatPlan.NextPlan())
+                    {
+                        wrapper = await UpdateChecker.Check(whatPlan, dayShift);
+                        if (wrapper.Status == Status.NULL) break;
+                        planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body of not first plan is null"));
+                    }
+                    break;
+                }
+                if (wrapper.Status == Status.FAIL) return; // when first plan is not nofify-worthy
+            }
+
+            if (planCollection.Plans.Count == 0) return;
+
+            Logger.Info($"{planCollection.Plans.Count} NEW PLAN{(planCollection.Plans.Count == 1 ? "" : "S")} : <br>\n" + string.Join("<br>\n", planCollection.Plans.Select(plan => plan.Title)));            
+
+            var analysedRows = AnalysePlanJob.Analyse(planCollection.FirstPlan);
+            if (Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC")
+            {
+                await AnalysedPlanSaver.DeleteOldRows(planCollection.FirstPlan.AffectedDate.Date);
+                await AnalysedPlanSaver.SaveRows(analysedRows);
+            }
+
+            NotificationJob.Begin(planCollection);
         }
 
         private async Task TimedEvents()
@@ -144,5 +159,16 @@ namespace VpServiceAPI.Jobs.Routines
                 if(Environment.GetEnvironmentVariable("GEN_STATS") != "false") await StatExtractor.Begin(DateTime.Now);
             }
         } 
+        private async Task LernsaxServicesJob()
+        {
+            var users = await UserRepository.Lernsax.GetUsersWithLernsaxServices();
+            foreach(var user in users)
+            {
+                if (user.Lernsax.Services.Contains(LernsaxService.MAIL))
+                {
+                    await LernsaxMailService.RunOnUser(user);
+                }
+            }
+        }
     }
 }

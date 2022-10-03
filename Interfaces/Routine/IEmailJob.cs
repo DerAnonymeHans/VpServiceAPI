@@ -4,6 +4,6 @@ namespace VpServiceAPI.Interfaces
 {
     public interface IEmailJob
     {
-        public void Send(Notification notification);
+        public void Send(Email notification, string reason = "NEWPLAN");
     }
 }

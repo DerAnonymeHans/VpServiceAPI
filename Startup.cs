@@ -54,7 +54,7 @@ namespace VpServiceAPI
                 options.AddPolicy(name: MyCorsPolicy, policy =>
                     {
                         policy.WithOrigins("https://kepleraner.herokuapp.com", "http://kepleraner.herokuapp.com", "https://kepleraner-test.herokuapp.com", "http://kepleraner-test.herokuapp.com", "http://localhost:3000", "http://localhost:8080");
-                        policy.AllowAnyHeader().AllowCredentials();
+                        policy.AllowAnyHeader().AllowCredentials().AllowAnyMethod();
                     });
             });
 

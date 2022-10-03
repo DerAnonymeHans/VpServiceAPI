@@ -170,7 +170,7 @@ namespace VpServiceAPI.Controllers
                     _ => throw new AppException("Bitte gib einen validen Benachrichtigungsweg an.")
                 };
 
-                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
 
                 await DataQueries.Save("UPDATE users SET mode=@mode WHERE address=@mail", new { mode = _mode.ToString(), mail = user.Address });
 
@@ -182,21 +182,11 @@ namespace VpServiceAPI.Controllers
         {
             return await WebResponder.RunWith(async () =>
             {
-                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
                 return user.NotifyMode.ToString();
             }, Request.Path.Value);
         }
 
-        [HttpPost]
-        [Route("SetPushId/{id}")]
-        public async Task<WebMessage> SetPushId(long id)
-        {
-            return await WebResponder.RunWith(async () =>
-            {
-                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
-                await DataQueries.Save("UPDATE users SET push_id=@id WHERE address=@mail", new { id, mail = user.Address });
-            }, Request.Path.Value, "Push_id wurde gesetzt.");
-        }
 
         [HttpPost]
         [Route("SetPushSubscribtion")]
@@ -204,7 +194,7 @@ namespace VpServiceAPI.Controllers
         {
             return await WebResponder.RunWith(async () =>
             {
-                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
                 Logger.Debug("Set subscribtion");
                 string subscribtion = Request.Form["subscribtion"];
                 await DataQueries.Save("UPDATE users SET push_subscribtion=@subscribtion WHERE address=@mail", new { subscribtion, mail = user.Address });
@@ -218,7 +208,7 @@ namespace VpServiceAPI.Controllers
         {
             return await WebResponder.RunWith(async () =>
             {
-                var user = await UserRepository.TryGetAuthenticatedUserFromRequest(Request.Cookies);
+                var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
                 return (await DataQueries.Load<string, dynamic>("SELECT push_subscribtion FROM users WHERE address=@mail", new { mail = user.Address }))[0];
             }, Request.Path.Value, "Push_subscribtion wurde gesetzt.");
         }
@@ -229,5 +219,6 @@ namespace VpServiceAPI.Controllers
         {
             Logger.Info(LogArea.UserAPI, "Confirming Push to: " + await new StreamReader(Request.Body).ReadToEndAsync());
         }
+
     }
 }

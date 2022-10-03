@@ -31,9 +31,9 @@ namespace VpServiceAPI.Entities.Plan
             Room = room;
             Extra = extra;
         }
-        public AnalysedRow()
+        public AnalysedRow(string type)
         {
-
+            Type = type;
         }
     }
 }

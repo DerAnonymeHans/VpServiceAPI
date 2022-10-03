@@ -13,9 +13,9 @@ namespace VpServiceAPI.Jobs.Notification
         {
             Logger = logger;
         }
-        public void Send(Entities.Notification.Notification Notification)
+        public void Send(Entities.Notification.Email Notification, string reason = "NEWPLAN")
         {
-            Logger.Info(LogArea.Notification, $"Would have sended Email to {Notification.Receiver}.");
+            Logger.Info(LogArea.Notification, $"{reason}: Would have sended Email to {Notification.Receiver}.");
             //if(Environment.GetEnvironmentVariable("MODE") == "Testing") Logger.Debug(Notification.Body);
         }
     }
@@ -30,7 +30,7 @@ namespace VpServiceAPI.Jobs.Notification
         {
             Logger = logger;
         }
-        public void Send(Entities.Notification.Notification notification)
+        public void Send(Entities.Notification.Email notification, string reason = "NEWPLAN")
         {
             try
             {
@@ -49,7 +49,7 @@ namespace VpServiceAPI.Jobs.Notification
                 smtp.Credentials = new NetworkCredential(notification.Sender, Environment.GetEnvironmentVariable("SMTP_PW"));
 
                 smtp.SendAsync(mail, null);
-                Logger.Info(LogArea.Notification, "Send Email to: " + notification.Receiver);
+                Logger.Info(LogArea.Notification, $"{reason}: Send Email to: " + notification.Receiver);
 
             }
             catch (Exception ex)

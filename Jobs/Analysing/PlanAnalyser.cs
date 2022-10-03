@@ -30,6 +30,16 @@ namespace VpServiceAPI.Jobs.Analysing
                 var analysedRow = AnalyseRow(row);
                 if (analysedRow is null) continue;
 
+                if (analysedRow.ClassName.Length == 0 
+                    || analysedRow.MissingSubject.Length == 0 
+                    || analysedRow.MissingTeacher.Length == 0
+                    || analysedRow.Lesson.Length == 0) continue;
+
+                if(analysedRow.Type == "VER")
+                {
+                    if(analysedRow.SubstituteSubject.Length == 0 || analysedRow.SubstituteTeacher.Length == 0) continue;
+                }
+
                 analysedRow.Date = planModel.AffectedDate.Date;
                 analysedRow.Extra = row.Info;
                 analysedRow.Year = ProviderHelper.CurrentSchoolYear;
@@ -43,7 +53,7 @@ namespace VpServiceAPI.Jobs.Analysing
             try
             {
                 bool isMatch = false;
-                isMatch = Regex.IsMatch(row.Info, @"gesamte|bei");
+                isMatch = Regex.IsMatch(row.Info, @"gesamte|bei|mit");
                 if (isMatch) return GesamteCase(row);
 
                 isMatch = Regex.IsMatch(row.Lehrer, @"(?<=\().+(?=\))");
@@ -58,7 +68,6 @@ namespace VpServiceAPI.Jobs.Analysing
             }catch (Exception ex)
             {
                 Logger.Error(LogArea.PlanAnalysing, ex, "Tried to analyse row.", row);
-                return null;
             }
             return null;
         }
@@ -67,9 +76,8 @@ namespace VpServiceAPI.Jobs.Analysing
         {
             var substTeacher = TeacherRepository.GetTeacher(row.Info.Split(' ').Last());
             if (substTeacher is null) return ParenthesisCase(row);
-            return new AnalysedRow
+            return new AnalysedRow("VER")
             {
-                Type = "VER",
                 MissingTeacher = GetTeacher(Regex.Match(row.Lehrer, @"(?<=\().+(?=\))").Value),
                 MissingSubject = GetSubject(row.Fach),
                 SubstituteTeacher = substTeacher.ShortName,
@@ -81,9 +89,8 @@ namespace VpServiceAPI.Jobs.Analysing
 
         private AnalysedRow ParenthesisCase(PlanRow row)
         {
-            return new AnalysedRow
+            return new AnalysedRow("AUS")
             {
-                Type = "AUS",
                 MissingTeacher = GetTeacher(Regex.Match(row.Lehrer, @"(?<=\().+(?=\))").Value),
                 MissingSubject = GetSubject(row.Fach),
                 Lesson = GetLessons(row.Stunde),
@@ -92,23 +99,21 @@ namespace VpServiceAPI.Jobs.Analysing
         }
         private AnalysedRow FälltAusCase(PlanRow row)
         {
-            return new AnalysedRow
+            return new AnalysedRow("AUS")
             {
-                Type = "AUS",
                 MissingTeacher = GetTeacher(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\sfällt aus)").Match(row.Info).Value),
-                MissingSubject = GetSubject(new Regex(@"[0-9a-zA-ZäÄöÖüÜß]+(?=\s[a-zA-ZäÄöÖüÜß/]+\sfällt aus)").Match(row.Info).Value),
+                MissingSubject = GetSubject(new Regex(@"[\wÄÖÜäöüß/]+(?=\s[a-zA-ZäÄöÖüÜß/]+\sfällt aus)").Match(row.Info).Value),
                 Lesson = GetLessons(row.Stunde),
                 ClassName = GetClasses(row.Klasse)
             };
         }
         private AnalysedRow FürCase(PlanRow row)
         {
-            return new AnalysedRow
+            return new AnalysedRow("VER")
             {
-                Type = "VER",
-                MissingTeacher = GetTeacher(new Regex(@"(?<=für)\s[0-9a-zA-ZäÄöÖüÜß]+\s([0-9a-zA-ZäÄöÖüÜß]+)").Matches(row.Info)[0].Groups[1].Value),
+                MissingTeacher = GetTeacher(new Regex(@"(?<=für)\s[\wÄÖÜäöüß/]+\s([0-9a-zA-ZäÄöÖüÜß]+)").Matches(row.Info)[0].Groups[1].Value),
                 SubstituteTeacher = GetTeacher(row.Lehrer),
-                MissingSubject = GetSubject(new Regex(@"(?<=für\s)[0-9a-zA-ZäÄöÖüÜß/]+").Match(row.Info).Value),
+                MissingSubject = GetSubject(new Regex(@"(?<=für\s)[\wÄÖÜäöüß/]+").Match(row.Info).Value),
                 SubstituteSubject = GetSubject(row.Fach),
                 Lesson = GetLessons(row.Stunde),
                 ClassName = GetClasses(row.Klasse)

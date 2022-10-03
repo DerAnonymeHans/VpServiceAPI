@@ -14,16 +14,20 @@ namespace VpServiceAPI.Tools
 
         // This constant determines the number of iterations for the password bytes generation function.
         private const int DerivationIterations = 1000;
-        private readonly static string PassPhrase = Environment.GetEnvironmentVariable("SITE_USER_AUTH_KEY") ?? "1234";
+        private readonly static string UserAuthKey = Environment.GetEnvironmentVariable("SITE_USER_AUTH_KEY") ?? "1234";
+        private readonly static string LernsaxAuthKey = Environment.GetEnvironmentVariable("LERNSAX_AUTH_KEY") ?? "1234";
 
-        public static string Encrypt(string plainText)
-        {            
+        public static string Encrypt(string plainText, EncryptionKey keyName)
+        {
+            string KEY = GetKey(keyName);
             // Salt and IV is randomly generated each time, but is preprended to encrypted cipher text
             // so that the same Salt and IV values can be used when decrypting.  
             var saltStringBytes = Generate128BitsOfRandomEntropy();
             var ivStringBytes = Generate128BitsOfRandomEntropy();
+
+            plainText = Convert.ToBase64String(Encoding.UTF8.GetBytes(plainText));
             var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-            using (var password = new Rfc2898DeriveBytes(PassPhrase, saltStringBytes, DerivationIterations))
+            using (var password = new Rfc2898DeriveBytes(KEY, saltStringBytes, DerivationIterations))
             {
                 var keyBytes = password.GetBytes(Keysize / 8);
                 using (var symmetricKey = new RijndaelManaged())
@@ -53,8 +57,9 @@ namespace VpServiceAPI.Tools
             }
         }
 
-        public static string Decrypt(string cipherText)
+        public static string Decrypt(string cipherText, EncryptionKey keyName)
         {
+            string KEY = GetKey(keyName);
             // Get the complete stream of bytes that represent:
             // [32 bytes of Salt] + [32 bytes of IV] + [n bytes of CipherText]
             var cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
@@ -65,7 +70,7 @@ namespace VpServiceAPI.Tools
             // Get the actual cipher text bytes by removing the first 64 bytes from the cipherText string.
             var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
 
-            using (var password = new Rfc2898DeriveBytes(PassPhrase, saltStringBytes, DerivationIterations))
+            using (var password = new Rfc2898DeriveBytes(KEY, saltStringBytes, DerivationIterations))
             {
                 var keyBytes = password.GetBytes(Keysize / 8);
                 using (var symmetricKey = new RijndaelManaged())
@@ -83,14 +88,14 @@ namespace VpServiceAPI.Tools
                                 var decryptedByteCount = cryptoStream.Read(plainTextBytes, 0, plainTextBytes.Length);
                                 memoryStream.Close();
                                 cryptoStream.Close();
-                                return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount);
+
+                                return Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount)));
                             }
                         }
                     }
                 }
             }
         }
-
         private static byte[] Generate128BitsOfRandomEntropy()
         {
             var randomBytes = new byte[16]; // 32 Bytes will give us 256 bits.
@@ -101,6 +106,21 @@ namespace VpServiceAPI.Tools
             }
             return randomBytes;
         }
+        private static string GetKey(EncryptionKey keyName)
+        {
+            return keyName switch
+            {
+                EncryptionKey.USER => UserAuthKey,
+                EncryptionKey.LERNSAX => LernsaxAuthKey,
+                _ => throw new InvalidDataException($"Encryption key {keyName} does not exist.")
+            };
+        }
+    }
+
+    public enum EncryptionKey
+    {
+        USER,
+        LERNSAX
     }
 
 }
