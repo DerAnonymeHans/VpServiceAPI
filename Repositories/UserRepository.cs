@@ -50,6 +50,20 @@ namespace VpServiceAPI.Repositories
         {
             return await DataQueries.Load<User, dynamic>("SELECT id, name, address, grade, status, mode, sub_day, push_id, push_subscribtion FROM `users` WHERE status=@status ORDER BY `grade`, `mode`", new { status = status.ToString() });
         }
+
+        public async Task<List<UserWithLernsax>> GetUsersWithLernsaxServices()
+        {
+            var users = await DataQueries.Load<User, dynamic>("SELECT users.id, users.name, users.address, users.grade, users.status, users.mode, users.sub_day, users.push_id, users.push_subscribtion FROM users INNER JOIN lernsax ON users.id = lernsax.userId WHERE lernsax.service != ''", new { });
+            var usersWithLernsax = new List<UserWithLernsax>();
+            foreach (var user in users)
+            {
+                usersWithLernsax.Add(new UserWithLernsax(user, new Lernsax(await Lernsax.GetServices(user))
+                {
+                    Credentials = await Lernsax.GetCredentials(user),
+                }));
+            }
+            return usersWithLernsax;
+        }
         public async Task<User> ValidateUser(string name, string mail, string grade, string mode)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new AppException("Der Name darf nicht leer sein.");

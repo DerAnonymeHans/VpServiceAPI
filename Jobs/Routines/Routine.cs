@@ -96,12 +96,14 @@ namespace VpServiceAPI.Jobs.Routines
         }
 
         private async void DoJob()
-        {            
+        {
+            string? GetEnv(string name) => Environment.GetEnvironmentVariable(name);
+            bool IsJob(string name) => GetEnv("ASPNETCORE_ENVIRONMENT") == "Production" || GetEnv("ONLY_JOB") == "all" || GetEnv("ONLY_JOB") == name;
             try
             {
                 await TimedEvents();
-                await VertretungsplanJob();
-                await LernsaxServicesJob();
+                if(IsJob("plan")) await VertretungsplanJob();
+                if(IsJob("push")) await LernsaxServicesJob();
             }
             catch (Exception ex)
             {
@@ -161,7 +163,7 @@ namespace VpServiceAPI.Jobs.Routines
         } 
         private async Task LernsaxServicesJob()
         {
-            var users = await UserRepository.Lernsax.GetUsersWithLernsaxServices();
+            var users = await UserRepository.GetUsersWithLernsaxServices();
             foreach(var user in users)
             {
                 if (user.Lernsax.Services.Contains(LernsaxService.MAIL))

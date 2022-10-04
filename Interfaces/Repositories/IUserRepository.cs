@@ -14,6 +14,7 @@ namespace VpServiceAPI.Interfaces
         public Task<bool> UserExists(string mail, UserStatus? status = UserStatus.NORMAL);
         public Task<User?> GetUser(string mail);
         public Task<List<User>> GetUsers(UserStatus status= UserStatus.NORMAL);
+        public Task<List<UserWithLernsax>> GetUsersWithLernsaxServices();
         public Task<User> ValidateUser(string name, string mail, string grade, string mode);
         public Task AddUserRequest(User user);
         public Task AcceptUser(string mail);

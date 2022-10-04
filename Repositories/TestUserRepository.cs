@@ -109,5 +109,11 @@ namespace VpServiceAPI.Repositories
             if (!TestUserMails.Contains(user.Address)) throw new Exception("User not part of test users");
             return prodRepository.GetUserWithLernsax(user);
         }
+
+        public async Task<List<UserWithLernsax>> GetUsersWithLernsaxServices()
+        {
+            var users = await prodRepository.GetUsersWithLernsaxServices();
+            return users.FindAll(user => TestUserMails.Contains(user.User.Address));
+        }
     }
 }

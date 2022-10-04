@@ -132,21 +132,7 @@ namespace VpServiceAPI.Repositories
                 mails = encryptedMails
             });
         }
-
-        public async Task<List<UserWithLernsax>> GetUsersWithLernsaxServices()
-        {
-            var users = await DataQueries.Load<User, dynamic>("SELECT users.id, users.name, users.address, users.grade, users.status, users.mode, users.sub_day, users.push_id, users.push_subscribtion FROM users INNER JOIN lernsax ON users.id = lernsax.userId WHERE lernsax.service != ''", new { });
-            var usersWithLernsax = new List<UserWithLernsax>();
-            foreach(var user in users)
-            {
-                usersWithLernsax.Add(new UserWithLernsax(user, new Lernsax(await GetServices(user))
-                {
-                    Credentials = await GetCredentials(user),
-                }));
-            }
-            return usersWithLernsax;
-        }
-
+               
         public async Task<string> Login(User user, HttpClient? client)
         {
             var creds = await GetCredentials(user);

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -39,6 +40,39 @@ namespace VpServiceAPI.Jobs.Lernsax
         {
             return await UserRepository.Lernsax.GetMails(user);
         }
+
+        public async Task<string> GetLinkToOpenMail(User user, string mailId)
+        {
+            var userWithLernsax = new UserWithLernsax(user, await UserRepository.Lernsax.GetLernsaxForEmailChecking(user));
+            var cookieContainer = new CookieContainer();
+
+            using var handler = new HttpClientHandler()
+            {
+                CookieContainer = cookieContainer
+            };
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://www.lernsax.de")
+            };
+
+            string html = await GetMailOverviewHtml(userWithLernsax.Lernsax.Credentials, client);
+            for(int i=0; i<20; i++)
+            {
+                var row = XMLParser.GetNode(html, "tr");
+                if (row is null) break;
+                (LernsaxMail mail, string bodyPath) = ExtractMailHead(row);
+                Logger.Debug(cookieContainer.GetCookies(client.BaseAddress));
+                if (mail.Id != mailId)
+                {
+                    html = html[row.Length..];
+                    continue;
+                };
+                bodyPath = bodyPath.Replace("amp;", "");
+                return $"{client.BaseAddress}wws/{bodyPath}";
+            }
+            throw new AppException("Die Email wurde nicht gefunden.");
+        }
+
         public async Task RunOnUser(User user)
         {
             await RunOnUser(new UserWithLernsax(user, await UserRepository.Lernsax.GetLernsaxForEmailChecking(user)));
@@ -75,70 +109,80 @@ namespace VpServiceAPI.Jobs.Lernsax
             return wrapper.Body;
            
         }
+        
+        
         private async Task<string> GetMailOverviewHtml(LernsaxCredentials credentials, HttpClient client)
         {
             string html = await UserRepository.Lernsax.Login(credentials, client);
             string sid = html.SubstringSurroundedBy(@"<a href=""105592.php?sid=", @""">") ?? throw new Exception("sid for mail page not found");
 
-            html = await client.GetStringAsync($"wws/105592.php?sid={sid}");
-            return html;
-        }             
-        // returns Status.FAIL if no update and SUCCESS for new mail
-        private async Task<StatusWrapper<List<LernsaxMail>?>> ExtractMailsAndCheckForUpdate(StrictDateTime lastMailDateTime, string html, HttpClient client)
-        {
+            html = await new StreamReader((await client.GetAsync($"wws/105592.php?sid={sid}")).Content.ReadAsStream(), Encoding.Latin1).ReadToEndAsync();
             html = html[html.IndexOf(@"<form action=""/wws/105592.php?")..];
             html = html[html.IndexOf(@"<div class=""content_outer"" id=""content"">")..];
             html = html[html.IndexOf(@"<div class=""jail_table"">")..];
             html = html[html.IndexOf(@"<tbody>")..html.IndexOf("</tbody>")];
-
+            return html;
+        }             
+       
+        
+        // returns Status.FAIL if no update and SUCCESS for new mail
+        private async Task<StatusWrapper<List<LernsaxMail>?>> ExtractMailsAndCheckForUpdate(StrictDateTime lastMailDateTime, string html, HttpClient client)
+        {
             var mails = new List<LernsaxMail>();
             for(int i=0; i<20; i++)
             {
                 var row = XMLParser.GetNode(html, "tr");
                 if (row is null) break;
 
-                var cell = row.SubstringSurroundedBy(@"c_subj"">", "</td>") ?? "";
-                var subject = XMLParser.GetNodeContent(cell, "a");
-                var path = cell.SubstringSurroundedBy(@"data-popup=""", @"""");
-
-                cell = row.SubstringSurroundedBy(@"c_from"">", "</td>") ?? "";
-                var sender = XMLParser.GetNodeContent(cell, "span");
-
-                cell = row.SubstringSurroundedBy(@"c_date""", "/td>") ?? "";
-                var date = cell.SubstringSurroundedBy(">", "<");
-
-                if(subject is null || path is null || sender is null || date is null)
-                {
-                    throw new AppException($"Cannnot extract mail. Subject: {subject}, Path: {path}, Sender: {sender}, Date: {date}");
-                }
-
-                DateTime dateTime = DateTime.ParseExact(date, "dd.MM.yyyy HH:mm", null);
+                (LernsaxMail mail, string bodyPath) = ExtractMailHead(row);
 
                 // no new mail
-                if(i == 0 && lastMailDateTime >= dateTime)
+                if(i == 0 && lastMailDateTime >= mail.DateTime && Environment.GetEnvironmentVariable("MODE") != "Testing")
                 {
                     return new(Status.FAIL, null);
                 }
 
-                var body = await GetMailBody(path, client);
-
-                mails.Add(new LernsaxMail
-                {
-                    Subject = subject,
-                    Sender = sender,
-                    DateTime = dateTime,
-                    Body = body
-                });
+                var body = await GetMailBody(bodyPath, client);
+                mail.Body = body;
+                mails.Add(mail);
 
                 html = html[row.Length..];
             }
 
             return new(Status.SUCCESS, mails);
-        }        
+        }  
+        private (LernsaxMail mailHead, string bodyPath) ExtractMailHead(string rowHtml)
+        {
+            var cell = rowHtml.SubstringSurroundedBy(@"c_subj"">", "</td>") ?? "";
+            var subject = XMLParser.GetNodeContent(cell, "a");
+            var path = cell.SubstringSurroundedBy(@"data-popup=""", @"""");
+
+            cell = rowHtml.SubstringSurroundedBy(@"c_from"">", "</td>") ?? "";
+            var sender = XMLParser.GetNodeContent(cell, "span");
+
+            cell = rowHtml.SubstringSurroundedBy(@"c_date""", "/td>") ?? "";
+            var date = cell.SubstringSurroundedBy(">", "<");
+
+            if (subject is null || path is null || sender is null || date is null)
+            {
+                throw new AppException($"Cannnot extract mail. Subject: {subject}, Path: {path}, Sender: {sender}, Date: {date}");
+            }
+
+            DateTime dateTime = DateTime.ParseExact(date, "dd.MM.yyyy HH:mm", null);
+
+            return (new LernsaxMail
+            {
+                Subject = subject,
+                Sender = sender,
+                DateTime = dateTime
+            }, path);
+        }
+
+
         private async Task<string> GetMailBody(string path, HttpClient httpClient)
         {
             path = path.Replace("amp;", "");
-            var html = await httpClient.GetStringAsync($"/wws/{path}");
+            var html = await new StreamReader((await httpClient.GetAsync($"/wws/{path}")).Content.ReadAsStream(), Encoding.Latin1).ReadToEndAsync();
             string startTag = @"<p class=""panel"">";
             int startIdx = html.IndexOf(startTag) + startTag.Length;
             html = html[startIdx..html.IndexOf("</p>", startIdx)];
@@ -159,5 +203,7 @@ namespace VpServiceAPI.Jobs.Lernsax
             };
             await PushJob.Push(user, pushOptions, "LSMAIL");
         }
+
+        
     }
 }

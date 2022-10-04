@@ -20,8 +20,7 @@ namespace VpServiceAPI.Interfaces.Lernsax
 
         public Task SetLernsax(User user, Entities.Lernsax.Lernsax lernsax, LernsaxData[] whatData);
         public Task SetLernsax(UserWithLernsax user, LernsaxData[] whatData);
-
-        public Task<List<UserWithLernsax>> GetUsersWithLernsaxServices();
+            
 
         public Task<string> Login(User user, HttpClient? client);
         public Task<string> Login(LernsaxCredentials credentials, HttpClient? client);
