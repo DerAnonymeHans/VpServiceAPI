@@ -68,7 +68,7 @@ namespace VpServiceAPI.Jobs.Routines
             IsRunning = true;
 
             Logger.Info(LogArea.Routine, "Starting Routine");
-
+            Logger.Routine("Update-Checker & Notificator");
             DoJob();
         }
         public void ChangeInterval(int interval)
@@ -101,7 +101,7 @@ namespace VpServiceAPI.Jobs.Routines
             bool IsJob(string name) => GetEnv("ASPNETCORE_ENVIRONMENT") == "Production" || GetEnv("ONLY_JOB") == "all" || GetEnv("ONLY_JOB") == name;
             try
             {
-                await TimedEvents();
+                await EventsJob();
                 if(IsJob("plan")) await VertretungsplanJob();
                 if(IsJob("push")) await LernsaxServicesJob();
             }
@@ -110,7 +110,18 @@ namespace VpServiceAPI.Jobs.Routines
                 Logger.Error(LogArea.Routine, ex, "Failed on Routine.");
             }
         }
-
+        private async Task EventsJob()
+        {
+            var now = DateTime.Now;
+            if (TeacherRepository.ShouldUpdateTeacherList)
+            {
+                await TeacherRepository.UpdateTeacherList();
+            }
+            if (now.Hour > 16)
+            {
+                if (Environment.GetEnvironmentVariable("GEN_STATS") != "false") await StatExtractor.Begin(DateTime.Now);
+            }
+        }
         private async Task VertretungsplanJob()
         {
             PlanCollection planCollection = new();
@@ -147,20 +158,7 @@ namespace VpServiceAPI.Jobs.Routines
             }
 
             NotificationJob.Begin(planCollection);
-        }
-
-        private async Task TimedEvents()
-        {
-            var now = DateTime.Now;
-            if(TeacherRepository.ShouldUpdateTeacherList)
-            {
-                await TeacherRepository.UpdateTeacherList();
-            }
-            if (now.Hour > 16)
-            {
-                if(Environment.GetEnvironmentVariable("GEN_STATS") != "false") await StatExtractor.Begin(DateTime.Now);
-            }
-        } 
+        }       
         private async Task LernsaxServicesJob()
         {
             var users = await UserRepository.GetUsersWithLernsaxServices();

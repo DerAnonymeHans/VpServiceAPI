@@ -22,7 +22,7 @@ namespace VpServiceAPI
         private static Func<string, string?> GetEnvVar = Environment.GetEnvironmentVariable;
         private static Func<bool> IsProduction = () => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
 
-        private bool _allUsersWithTestNotificator = false; // or test users with prod notificator
+        private bool _allUsersWithTestNotificator = true; // or test users with prod notificator
         private bool _forceTestUsers = false;
         private bool _forceTestNotificator = true;
 

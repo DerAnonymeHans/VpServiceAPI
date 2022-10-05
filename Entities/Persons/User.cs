@@ -13,10 +13,10 @@ namespace VpServiceAPI.Entities.Persons
         public UserStatus Status { get; init; }
         public NotifyMode NotifyMode { get; init; }
         public string SubDay { get; init; }
-        public long? PushId { get; init; }
+        public string? ResetKey { get; init; }
         public string? PushSubscribtion { get; init; }
         public LernsaxCredentials? LernsaxCredentials { get; set; }
-        public User(int id, string name, string address, string grade, string status, string mode, string sub_day, string? push_id, string? push_subscribtion)
+        public User(int id, string name, string address, string grade, string status, string mode, string sub_day, string? reset_key, string? push_subscribtion)
         {
             Id = id;
             Name = name;
@@ -36,7 +36,7 @@ namespace VpServiceAPI.Entities.Persons
                 _ => NotifyMode.EMAIL
             };
             SubDay = sub_day;
-            PushId = string.IsNullOrEmpty(push_id) ? null : long.Parse(push_id);
+            ResetKey = string.IsNullOrEmpty(reset_key) ? null : reset_key;
             PushSubscribtion = push_subscribtion;
         }
     }
