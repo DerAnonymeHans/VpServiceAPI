@@ -73,7 +73,7 @@ namespace VpServiceAPI.Repositories
             if (!await IncludesArtwork(name)) return await Default();
             try
             {
-                return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE name=@name", new { name = name }))[0];
+                return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE name=@name", new { name }))[0];
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.ArtworkRepo, ex, $"Tried to get artwork '{name}'. Now trying to read from disk...");
@@ -94,7 +94,7 @@ namespace VpServiceAPI.Repositories
             if (!await IncludesArtwork(name)) return await DefaultMeta();
             try
             {
-                return (await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE name=@name", new { name = name }))[0];
+                return (await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE name=@name", new { name }))[0];
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.ArtworkRepo, ex, $"Tried to get artwork meta '{name}'. Now falling back to default..");
@@ -128,7 +128,7 @@ namespace VpServiceAPI.Repositories
         {
             try
             {
-                return (await DataQueries.Load<string, dynamic>("SELECT name FROM artwork_data WHERE name=@name", new { name = name })).Count > 0;
+                return (await DataQueries.Load<string, dynamic>("SELECT name FROM artwork_data WHERE name=@name", new { name })).Count > 0;
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.ArtworkRepo, ex, "Tried to check if artwork is included");

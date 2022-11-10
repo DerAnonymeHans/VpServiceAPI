@@ -6,6 +6,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using VpServiceAPI.Entities.Tools;
+using VpServiceAPI.Enums;
 using VpServiceAPI.Interfaces;
 
 #nullable enable
@@ -23,19 +25,19 @@ namespace VpServiceAPI.Jobs.Checking
             WebScraper = webScraper;
         }
 
-        public async Task<string?> GetPlanHTML(int dayShift = 0)
+        public async Task<StatusWrapper<PlanProvideStatus, string>> GetPlanHTML(int dayShift = 0)
         {
             var date = GetDate(dayShift);
-            string? html = null;
             try
             {
-                html = await WebScraper.GetFromVP24($"/vplan/vdaten/VplanKl{date}.xml?_=1653914187991");
+                return new(PlanProvideStatus.PLAN_FOUND, await WebScraper.GetFromVP24($"/vplan/vdaten/VplanKl{date}.xml?_=1653914187991"));
             }
             catch (Exception ex)
             {
-                Logger.Info(LogArea.PlanProviding, "Failed to get PlanHtml for " + date, ex.Message);
+                Logger.Warn(LogArea.PlanProviding, "Failed to get PlanHtml for " + date, ex.Message);
+                if (ex.Message.Contains("404")) return new(PlanProvideStatus.PLAN_NOT_FOUND, null);
+                return new(PlanProvideStatus.ERROR, null);
             }
-            return html;
         }
 
         // plan for next day after 7 o clock
@@ -78,13 +80,13 @@ namespace VpServiceAPI.Jobs.Checking
             WebScraper = webScraper;
         }
 
-        public async Task<string?> GetPlanHTML(int daysFromToday)
+        public async Task<StatusWrapper<PlanProvideStatus, string>> GetPlanHTML(int daysFromToday)
         {
-            if (daysFromToday > 0) return null;
+            if (daysFromToday > 0) return new(PlanProvideStatus.PLAN_NOT_FOUND, null);
             //PlanHTML = await GetRawPlanHTML();
             PlanHTML = await WebScraper.GetFromKepler("/vertretungsplan");
             PlanHTML = MinimizePlan(PlanHTML);
-            return PlanHTML;
+            return new(PlanProvideStatus.PLAN_FOUND, PlanHTML);
         }
 
         private string MinimizePlan(string rawPlan)
@@ -110,10 +112,10 @@ namespace VpServiceAPI.Jobs.Checking
 
     public sealed class TestPlanProvider : IPlanHTMLProvider
     {
-        public async Task<string?> GetPlanHTML(int daysFromToday)
+        public async Task<StatusWrapper<PlanProvideStatus, string>> GetPlanHTML(int daysFromToday)
         {
             string html = File.ReadAllText(@"E:\Projekte\Webseiten\VpService\VpServiceAPI\Jobs\Checking\plan.html");            
-            return html;
+            return new(PlanProvideStatus.PLAN_FOUND, html);
         }
     }
 }

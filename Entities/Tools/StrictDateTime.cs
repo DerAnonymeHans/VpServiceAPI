@@ -24,9 +24,9 @@ namespace VpServiceAPI.Entities.Tools
             {
                 DateTime = DateTime.ParseExact(dateTime, Format, null);
             }
-            catch(Exception ex)
+            catch(Exception)
             {
-                if (Fallback is null) throw ex;
+                if (Fallback is null) throw;
                 DateTime = (DateTime)Fallback;
             }
         }
@@ -48,5 +48,25 @@ namespace VpServiceAPI.Entities.Tools
         public static bool operator <(StrictDateTime a, DateTime b) => a.DateTime < b;
         public static bool operator >=(StrictDateTime a, DateTime b) => a.DateTime >= b;
         public static bool operator <=(StrictDateTime a, DateTime b) => a.DateTime <= b;
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (ReferenceEquals(obj, null))
+            {
+                return false;
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public override int GetHashCode()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

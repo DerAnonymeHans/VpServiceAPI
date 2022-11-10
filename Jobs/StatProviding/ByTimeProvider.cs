@@ -28,7 +28,7 @@ namespace VpServiceAPI.Jobs.StatProviding
                 _ => throw new NotImplementedException($"Tried to get times array with not supported timetype {timeType}")
             };
         }
-        private int[] ToArray(Times times, TimeType timeType)
+        private static int[] ToArray(Times times, TimeType timeType)
         {
             return timeType switch
             {

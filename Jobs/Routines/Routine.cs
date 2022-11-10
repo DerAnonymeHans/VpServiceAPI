@@ -103,7 +103,7 @@ namespace VpServiceAPI.Jobs.Routines
             {
                 await EventsJob();
                 if(IsJob("plan")) await VertretungsplanJob();
-                if(IsJob("push")) await LernsaxServicesJob();
+                if(IsJob("lernsax")) await LernsaxServicesJob();
             }
             catch (Exception ex)
             {
@@ -131,19 +131,21 @@ namespace VpServiceAPI.Jobs.Routines
             for (int dayShift = 0; dayShift < 5; dayShift++)
             {
                 var wrapper = await UpdateChecker.Check(whatPlan, dayShift);
-                if (wrapper.Status == Status.SUCCESS)
+                if (wrapper.Status == UpdateCheckStatus.IS_NEW)
                 {
                     planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body is null"));
                     whatPlan.NextPlan();
                     for (; whatPlan.Number < MAX_PLAN_COUNT; whatPlan.NextPlan())
                     {
                         wrapper = await UpdateChecker.Check(whatPlan, dayShift);
-                        if (wrapper.Status == Status.NULL) break;
+                        if (wrapper.Status == UpdateCheckStatus.NOT_NEW) break;
+                        if (wrapper.Status is UpdateCheckStatus.UNCLEAR or UpdateCheckStatus.NULL) continue;
                         planCollection.Add(wrapper.Body ?? throw new AppException("Status is success but body of not first plan is null"));
                     }
                     break;
                 }
-                if (wrapper.Status == Status.FAIL) return; // when first plan is not nofify-worthy
+                if (wrapper.Status == UpdateCheckStatus.UNCLEAR) return; // when unexpected response status code for plan
+                if (wrapper.Status == UpdateCheckStatus.NOT_NEW) return; // when first plan is not nofify-worthy
             }
 
             if (planCollection.Plans.Count == 0) return;

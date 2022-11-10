@@ -338,11 +338,11 @@ namespace VpServiceAPI.Controllers
         public async void CreateStats()
         {
             //var date = new DateTime(2021, 11, 15);
-            var date = new DateTime(2022, 09, 23);
-            for (int i = 0; i < 1; i++)
+            var date = new DateTime(2022, 10, 5);
+            for (int i = 0; i < 100; i++)
             {
                 Logger.Debug(date.ToString("dd.MM.yyyy"));
-                //if (date.ToString("dd.MM.yyyy") == "23.09.2022") return;
+                if (date.ToString("dd.MM.yyyy") == "06.10.2022") return;
                 await StatExtractor.Begin(date);
                 date = date.AddDays(1);
             }

@@ -1,6 +1,6 @@
 ﻿namespace VpServiceAPI.Entities.Plan
 {
-    public sealed class PlanRow
+    public sealed record PlanRow
     {
         public string Klasse { get; set; } = "";
         public string Stunde { get; set; } = "";

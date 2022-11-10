@@ -40,39 +40,6 @@ namespace VpServiceAPI.Jobs.Lernsax
         {
             return await UserRepository.Lernsax.GetMails(user);
         }
-
-        public async Task<string> GetLinkToOpenMail(User user, string mailId)
-        {
-            var userWithLernsax = new UserWithLernsax(user, await UserRepository.Lernsax.GetLernsaxForEmailChecking(user));
-            var cookieContainer = new CookieContainer();
-
-            using var handler = new HttpClientHandler()
-            {
-                CookieContainer = cookieContainer
-            };
-            using var client = new HttpClient(handler)
-            {
-                BaseAddress = new Uri("https://www.lernsax.de")
-            };
-
-            string html = await GetMailOverviewHtml(userWithLernsax.Lernsax.Credentials, client);
-            for(int i=0; i<20; i++)
-            {
-                var row = XMLParser.GetNode(html, "tr");
-                if (row is null) break;
-                (LernsaxMail mail, string bodyPath) = ExtractMailHead(row);
-                Logger.Debug(cookieContainer.GetCookies(client.BaseAddress));
-                if (mail.Id != mailId)
-                {
-                    html = html[row.Length..];
-                    continue;
-                };
-                bodyPath = bodyPath.Replace("amp;", "");
-                return $"{client.BaseAddress}wws/{bodyPath}";
-            }
-            throw new AppException("Die Email wurde nicht gefunden.");
-        }
-
         public async Task RunOnUser(User user)
         {
             await RunOnUser(new UserWithLernsax(user, await UserRepository.Lernsax.GetLernsaxForEmailChecking(user)));
@@ -103,7 +70,7 @@ namespace VpServiceAPI.Jobs.Lernsax
 
             string mailOverviewHtml = await GetMailOverviewHtml(lernsax.Credentials, client);
             var wrapper = await ExtractMailsAndCheckForUpdate(lernsax.LastMailDateTime, mailOverviewHtml, client);
-            if (wrapper.Status == Status.FAIL) return null;
+            if (wrapper.Status == UpdateCheckStatus.NOT_NEW) return null;
             if (wrapper.Body is null) throw new AppException("Wrapper body is null even though status is null");
 
             return wrapper.Body;
@@ -111,7 +78,7 @@ namespace VpServiceAPI.Jobs.Lernsax
         }
         
         
-        private async Task<string> GetMailOverviewHtml(LernsaxCredentials credentials, HttpClient client)
+        private async Task<string> GetMailOverviewHtml(LernsaxCredentials? credentials, HttpClient client)
         {
             string html = await UserRepository.Lernsax.Login(credentials, client);
             string sid = html.SubstringSurroundedBy(@"<a href=""105592.php?sid=", @""">") ?? throw new Exception("sid for mail page not found");
@@ -126,7 +93,7 @@ namespace VpServiceAPI.Jobs.Lernsax
        
         
         // returns Status.FAIL if no update and SUCCESS for new mail
-        private async Task<StatusWrapper<List<LernsaxMail>?>> ExtractMailsAndCheckForUpdate(StrictDateTime lastMailDateTime, string html, HttpClient client)
+        private async Task<StatusWrapper<UpdateCheckStatus, List<LernsaxMail>?>> ExtractMailsAndCheckForUpdate(StrictDateTime lastMailDateTime, string html, HttpClient client)
         {
             var mails = new List<LernsaxMail>();
             for(int i=0; i<20; i++)
@@ -139,7 +106,7 @@ namespace VpServiceAPI.Jobs.Lernsax
                 // no new mail
                 if(i == 0 && lastMailDateTime >= mail.DateTime && Environment.GetEnvironmentVariable("MODE") != "Testing")
                 {
-                    return new(Status.FAIL, null);
+                    return new(UpdateCheckStatus.NOT_NEW, null);
                 }
 
                 var body = await GetMailBody(bodyPath, client);
@@ -149,7 +116,7 @@ namespace VpServiceAPI.Jobs.Lernsax
                 html = html[row.Length..];
             }
 
-            return new(Status.SUCCESS, mails);
+            return new(UpdateCheckStatus.IS_NEW, mails);
         }  
         private (LernsaxMail mailHead, string bodyPath) ExtractMailHead(string rowHtml)
         {

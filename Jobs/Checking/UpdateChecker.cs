@@ -23,24 +23,25 @@ namespace VpServiceAPI.Jobs.Checking
             PlanConverter = planConverter;
         }
 
-        public async Task<StatusWrapper<PlanModel>> Check(WhatPlan whatPlan, int dayShift=0)
+        public async Task<StatusWrapper<UpdateCheckStatus, PlanModel>> Check(WhatPlan whatPlan, int dayShift=0)
         {
-            var html = await PlanHTMLProvider.GetPlanHTML(whatPlan.Number + dayShift);
-            if (string.IsNullOrEmpty(html)) return new StatusWrapper<PlanModel>(Status.NULL, null);
+            var htmlWrapper = await PlanHTMLProvider.GetPlanHTML(whatPlan.Number + dayShift);
+            if (htmlWrapper.Status == PlanProvideStatus.PLAN_NOT_FOUND) return new(UpdateCheckStatus.NULL, null);
+            if(htmlWrapper.Status == PlanProvideStatus.ERROR) return new(UpdateCheckStatus.UNCLEAR, null);
 
-            var planModel = PlanConverter.Convert(html);
-            if (planModel is null) return new StatusWrapper<PlanModel>(Status.NULL, null);
+            var planModel = PlanConverter.Convert(htmlWrapper.Body ?? "");
+            if (planModel is null) return new(UpdateCheckStatus.UNCLEAR, null);
 
-            if (whatPlan.NotFirst) return new StatusWrapper<PlanModel>(Status.SUCCESS, planModel);
+            if (whatPlan.NotFirst) return new(UpdateCheckStatus.IS_NEW, planModel);
 
             MyPlan = planModel;
             MyPlan.ForceNotifStatus.TrySet(await GetForceNotifStatus());
 
             if (!planModel.ForceNotifStatus.IsForce)
             {
-                if(!await IsPlanNew()) return new StatusWrapper<PlanModel>(Status.FAIL, null);
+                if(!await IsPlanNew()) return new(UpdateCheckStatus.NOT_NEW, null);
             }
-            return new StatusWrapper<PlanModel>(Status.SUCCESS, MyPlan);
+            return new(UpdateCheckStatus.IS_NEW, MyPlan);
 
         }
         private async Task<ForceNotifStatus> GetForceNotifStatus()

@@ -26,6 +26,7 @@ namespace VpServiceAPI.Jobs.Notification
 
         public async Task Push(User user, PushOptions pushOptions, string reason = "NEWPLAN")
         {
+            if (user.PushSubscribtion is null) throw new AppException("User push subscribtion is null");
             var request = new RestRequest("SendPush", Method.Post);
             string json = JsonSerializer.Serialize(new PushBody(user.PushSubscribtion, pushOptions));
             request.AddStringBody(json, DataFormat.Json);

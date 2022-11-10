@@ -56,7 +56,9 @@ namespace VpServiceAPI.Repositories
             if(res is null) return Array.Empty<LernsaxService>();
             if (res[0] is null) return Array.Empty<LernsaxService>();
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
             var splitted = res[0].Split(",");
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
             var services = new List<LernsaxService>();
             foreach(var s in splitted)
             {
@@ -135,13 +137,13 @@ namespace VpServiceAPI.Repositories
                
         public async Task<string> Login(User user, HttpClient? client)
         {
-            var creds = await GetCredentials(user);
-            if (creds is null) throw new AppException("Der Login in Lernsax ist fehlgeschlagen, da keine Anmeldedaten angegeben wurden.");
+            var creds = await GetCredentials(user);            
             return await Login(creds, client);
         }
 
-        public async Task<string> Login(LernsaxCredentials credentials, HttpClient? client)
+        public async Task<string> Login(LernsaxCredentials? credentials, HttpClient? client)
         {
+            if(credentials is null) throw new AppException("Der Login in Lernsax ist fehlgeschlagen, da keine Anmeldedaten angegeben wurden.");
             client ??= new HttpClient();
             client.BaseAddress = new Uri("https://www.lernsax.de");
 

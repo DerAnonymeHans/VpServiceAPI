@@ -9,6 +9,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
 using VpServiceAPI.Entities.Notification;
+using System.Text;
 
 namespace VpServiceAPI.Jobs.Notification
 {
@@ -101,26 +102,23 @@ namespace VpServiceAPI.Jobs.Notification
         }
         private string GeneratePlanRows(List<NotificationRow> notifRows)
         {
-            List<string> rows = new();
-
+            var builder = new StringBuilder();
             foreach(NotificationRow row in notifRows)
             {
-                List<string> cells = new();
-                foreach(string s in row.Row.GetArray())
+                string className = row.HasChange ? row.IsDeleted ? "row-deleted" : "row-has-change" : "";
+                builder.Append($"<tr class=\"{className}\">");
+                foreach (string s in row.Row.GetArray())
                 {
-                    cells.Add($"<td>{s}</td>");
+                    builder.Append($"<td>{s}</td>");
                 }
-
-                rows.Add($"<tr class=\"{(row.HasChange ? "row-has-change" : "")}\">{string.Join("", cells)}</tr>");
+                builder.Append("</tr>");
             }
-
-
-            return string.Join("", rows);
+            return builder.ToString();
         }
 
         private string MergeTemplateAndData(string? template = null)
         {
-            string html = template ?? File.ReadAllText(@$"{TemplatePath}/{TemplateName}/index.html");
+            var html = template ?? File.ReadAllText(@$"{TemplatePath}/{TemplateName}/index.html");
 
             int i = 0;
             int startIdx = 0;

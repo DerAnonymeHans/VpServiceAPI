@@ -88,7 +88,7 @@ namespace VpServiceAPI.Repositories
 
             try
             {
-                new MailAddress(mail);                
+                _ = new MailAddress(mail);                
             }
             catch (FormatException)
             {

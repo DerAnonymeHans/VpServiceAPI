@@ -159,7 +159,11 @@ namespace VpServiceAPI.Jobs.Notification
 
                 if (user.NotifyMode == NotifyMode.PWA)
                 {
-                    if (await TrySendPush(user)) continue;
+                    if (await TrySendPush(user))
+                    {
+                        await Task.Delay(200);
+                        continue;
+                    };
                     string key = user.ResetKey ?? await UserRepository.StartHashResetAndGetKey(user.Address);
 
                     userBody.PersonalInformation.Add(@$"ACHTUNG: Es wurde versucht dir eine Push Nachticht zu senden, wobei ein Fehler aufkam. Meist liegt die Ursache an fehlenden Benachtichtigungsrechten. Drücke den Link und erlaube sie: <a href=""{Environment.GetEnvironmentVariable("CLIENT_URL")}/Benachrichtigung?code={key}"">Link drücken</a>");
@@ -169,7 +173,7 @@ namespace VpServiceAPI.Jobs.Notification
                 notifBody.GlobalExtra = gradeBody.GradeExtra ?? notifBody.GlobalExtra;
                 var notification = EmailBuilder.Build(notifBody, user.Address, gradeMailHtml);
                 EmailJob.Send(notification);
-                await Task.Delay(300);
+                await Task.Delay(250);
             }
         }
         private async Task<bool> TrySendPush(User user)

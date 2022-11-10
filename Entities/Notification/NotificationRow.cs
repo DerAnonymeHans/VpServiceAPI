@@ -5,6 +5,7 @@ namespace VpServiceAPI.Entities.Notification
     public record NotificationRow
     {
         public bool HasChange { get; init; }
+        public bool IsDeleted { get; init; } = false;
         public PlanRow Row { get; init; } = new();
 
         public NotificationRow()

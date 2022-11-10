@@ -180,7 +180,6 @@ namespace VpServiceAPI.Jobs.Notification
             }
 
             ArtworkMeta? specialArtwork = await ArtworkRepository.GetSpecialArtworkForDate(DateTime.Now);
-            Logger.Debug("Special", specialArtwork);
             if (specialArtwork is not null)
             {
                 return specialArtwork;

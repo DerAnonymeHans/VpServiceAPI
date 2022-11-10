@@ -24,7 +24,7 @@ namespace VpServiceAPI.Repositories
         private readonly IDataQueries DataQueries;
         private readonly IEmailJob EmailJob;
         private readonly ProdUserRepository prodRepository;
-        private string[] TestUserMails = new[] { "pascal.setzer@gmail.com"/*, "deltass@web.de", "pia.setzer@gmail.com"*/ };
+        private readonly string[] TestUserMails = new[] { "pascal.setzer@gmail.com"/*, "deltass@web.de", "pia.setzer@gmail.com"*/ };
 
         public ILernsaxRepository Lernsax { get; init; }
 

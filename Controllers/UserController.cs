@@ -68,7 +68,6 @@ namespace VpServiceAPI.Controllers
                 var user = await UserRepository.ValidateUser(form["name"], form["mail"], form["grade"], form["notify-mode"]);
                 await UserRepository.AddUserRequest(user);
             }, Request.Path.Value, $"Es hat geklappt! Jetzt muss deine Anfrage nur noch manuell geprüft werden, dies kann bis zu ein paar Tage dauern.");
-            Logger.Debug(res);
             return res;
         }
         [HttpPost]
@@ -195,7 +194,6 @@ namespace VpServiceAPI.Controllers
             return await WebResponder.RunWith(async () =>
             {
                 var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
-                Logger.Debug("Set subscribtion");
                 string subscribtion = Request.Form["subscribtion"];
                 await DataQueries.Save("UPDATE users SET push_subscribtion=@subscribtion WHERE address=@mail", new { subscribtion, mail = user.Address });
 

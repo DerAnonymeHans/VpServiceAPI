@@ -35,8 +35,10 @@ namespace VpServiceAPI.Jobs.StatProviding
 
             }
             int specialCasesCount = 9;
-            var extras = new List<KeyCountStatistic>();
-            extras.Add(standardCase);
+            var extras = new List<KeyCountStatistic>
+            {
+                standardCase
+            };
             extras.AddRange(specialCases.GetRange(0, specialCases.Count < specialCasesCount ? specialCases.Count : specialCasesCount));
 
             return extras.OrderByDescending(el => el.Count).ToList();

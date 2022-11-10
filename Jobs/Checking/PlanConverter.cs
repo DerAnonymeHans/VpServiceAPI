@@ -96,7 +96,7 @@ namespace VpServiceAPI.Jobs.Checking
             var table = new List<PlanRow>();
             for (int i = 0; i < 100; i++)
             {
-                var rowStr = XMLParser.GetNodeContent(tableHTML, "aktion");
+                var rowStr = XMLParser.GetNode(tableHTML, "aktion");
                 if (rowStr is null) break;
 
                 Func<string, string> GetVal = tag => XMLParser.GetNodeContent(rowStr, tag) ?? "";
@@ -114,7 +114,6 @@ namespace VpServiceAPI.Jobs.Checking
                 tableHTML = tableHTML[rowStr.Length..];
                 table.Add(row);
             }
-
             return table;
         }
         private List<string> GetInformation()

@@ -1,11 +1,6 @@
 ﻿namespace VpServiceAPI.Entities.Tools
 {
-    public record StatusWrapper<TBody>(Status Status, TBody? Body);
+    public record StatusWrapper<TEnum, TBody>(TEnum Status, TBody? Body);
 
-    public enum Status
-    {
-        SUCCESS,
-        FAIL,
-        NULL
-    }
+    
 }

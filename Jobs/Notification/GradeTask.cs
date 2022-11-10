@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities.Notification;
 using VpServiceAPI.Entities.Plan;
@@ -24,13 +25,14 @@ namespace VpServiceAPI.Jobs.Notification
         {
             PlanCollection = planCollection;
 
-            string[]? cachedRows = await GetCachedRows(grade);
+            PlanRow[] cachedRows = await GetCachedRows(grade);
 
             var listOfTables = new List<List<NotificationRow>>();
+            int planIdx = 0;
             foreach(var plan in planCollection.Plans)
             {
-                listOfTables.Add(ConvertToNotificationRows(grade, plan.Rows, cachedRows));
-                cachedRows = null;
+                listOfTables.Add(ConvertToNotificationRows(grade, plan.Rows, planIdx == 0 ? cachedRows.ToList() : new()));
+                planIdx++;
             }
             bool isAffected = listOfTables.First().Any(row => row.HasChange);
             if (isAffected && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC") await SetCachedRows(grade, listOfTables.First());
@@ -87,7 +89,7 @@ namespace VpServiceAPI.Jobs.Notification
                 _ => GradeMode.NORMAL
             };
         }
-        private List<NotificationRow> ConvertToNotificationRows(string grade, List<PlanRow> rows, string[]? cachedRows)
+        private List<NotificationRow> ConvertToNotificationRows(string grade, List<PlanRow> rows, List<PlanRow> cachedRows)
         {
             List<NotificationRow> notifRows = new();
 
@@ -96,49 +98,64 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 if (!row.Klasse.Contains(grade)) continue;
 
-                if(cachedRows is not null)
+                int cachedRowIdx = cachedRows.IndexOf(row);
+                // if row is new
+                if (cachedRowIdx == -1)
                 {
-                    if (Array.IndexOf(cachedRows, string.Join(';', row.GetArray())) == -1)
+                    notifRows.Add(new NotificationRow
                     {
-                        notifRows.Add(new NotificationRow
-                        {
-                            HasChange = true,
-                            Row = row
-                        });
-                        continue;
-                    }
+                        HasChange = true,
+                        Row = row
+                    });
+                    continue;
                 }
-                
+
+                // delete row from cached rows to later check for row deletions
+                cachedRows.RemoveAt(cachedRowIdx);
+
                 notifRows.Add(new NotificationRow
                 {
                     HasChange = false,
                     Row = row
                 });
             }
+            foreach(var row in cachedRows)
+            {
+                notifRows.Add(new NotificationRow
+                {
+                    HasChange = true,
+                    IsDeleted = true,
+                    Row = row with
+                    {
+                        Klasse = "GELÖSCHT:\n" + row.Klasse,
+                    }
+                });
+            }
             return notifRows;
         }                
-        private async Task<string[]> GetCachedRows(string grade)
+        private async Task<PlanRow[]> GetCachedRows(string grade)
         {
             // LAST_PLAN_CACHE provides the last rows of the grade separated like aaaa|bbbb|cccc
             try
             {
-                var cache = (await DataQueries.GetRoutineData(RoutineDataSubject.PLAN_CACHE, grade))[0];
-                if (cache is null) return Array.Empty<string>();
-                return cache.Split('|');
+                var json = (await DataQueries.GetRoutineData(RoutineDataSubject.PLAN_CACHE, grade))[0];
+                if (json is null) return Array.Empty<PlanRow>();
+                return JsonSerializer.Deserialize<PlanRow[]>(json) ?? Array.Empty<PlanRow>();
             }
             catch (Exception ex)
             {
                 Logger.Error(LogArea.Notification, ex, "Tried to get cached plan data for grade " + grade);
-                return Array.Empty<string>();
+                return Array.Empty<PlanRow>();
             }
         }
         private async Task SetCachedRows(string grade, List<NotificationRow> rows)
         {
             try
             {
-                string cache = string.Join('|', from notifRow in rows select string.Join(";", notifRow.Row.GetArray()));
+                //string cache = string.Join('|', from notifRow in rows select string.Join(";", notifRow.Row.GetArray()));
+                string json = JsonSerializer.Serialize(rows.FindAll(row => !row.IsDeleted).Select(row => row.Row));
 
-                await DataQueries.SetRoutineData(RoutineDataSubject.PLAN_CACHE, grade, cache);
+                await DataQueries.SetRoutineData(RoutineDataSubject.PLAN_CACHE, grade, json);
             }
             catch (Exception ex)
             {

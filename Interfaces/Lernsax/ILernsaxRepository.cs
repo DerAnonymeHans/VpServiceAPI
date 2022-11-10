@@ -23,6 +23,6 @@ namespace VpServiceAPI.Interfaces.Lernsax
             
 
         public Task<string> Login(User user, HttpClient? client);
-        public Task<string> Login(LernsaxCredentials credentials, HttpClient? client);
+        public Task<string> Login(LernsaxCredentials? credentials, HttpClient? client);
     }
 }

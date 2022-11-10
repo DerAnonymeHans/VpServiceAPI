@@ -84,7 +84,7 @@ namespace VpServiceAPI.Tools
         {
             if (DataAccess.CurrentDB == 2) return;
             DataAccess.SwitchToDB(2);
-            await Save("INSERT INTO users(name, address, grade, status, sub_day) VALUES (@name, @address, @grade, 'NORMAL', '01.01.2022')", new { name = user.Name, address = user.Address, grade = user.Grade });
+            await Save("INSERT INTO users(name, address, grade, status, sub_day, mode) VALUES (@name, @address, @grade, 'NORMAL', '01.01.2022', 'EMAIL')", new { name = user.Name, address = user.Address, grade = user.Grade });
             DataAccess.SwitchToDB(1);
         }
     }

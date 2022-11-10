@@ -19,20 +19,14 @@ namespace VpServiceAPI
         private IServiceCollection Services { get; init; }
         private UTestDependencyInjector? UTestInjector { get; init; }
 
-        private static Func<string, string?> GetEnvVar = Environment.GetEnvironmentVariable;
-        private static Func<bool> IsProduction = () => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
+        private static readonly Func<string, string?> GetEnvVar = Environment.GetEnvironmentVariable;
+        private static readonly Func<bool> IsProduction = () => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
 
-        private bool _allUsersWithTestNotificator = true; // or test users with prod notificator
-        private bool _forceTestUsers = false;
-        private bool _forceTestNotificator = true;
+        private const bool _allUsersWithTestNotificator = false; // or test users with prod notificator
+        private const bool _forceTestUsers = false;
+        private const bool _forceTestNotificator = false;
 
-        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
-        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
-        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
-        private bool _forceProdNotificator = false;
-        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
-        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
-        // ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG ACHTUNG
+        private const bool _forceProdNotificator = false;
 
         public DependencyInjector(ref IServiceCollection services)
         {
@@ -50,13 +44,26 @@ namespace VpServiceAPI
                 UTestInjector.Inject();
                 return;
             }
+
+            if(_forceProdNotificator)
+            {
+#pragma warning disable CS0162 // Unreachable code detected
+                Console.Write("Der Production Notificator wurde im Entwicklungsmodus aktiviert. Möchten sie fortfahren? [y] : ");
+#pragma warning restore CS0162 // Unreachable code detected
+                var key = Console.ReadKey();
+                if (key.KeyChar != 'y')
+                {
+                    Console.WriteLine("\nDer Prozess wird beendet.");
+                    Environment.Exit(0);
+                }
+            }
+
             InjectTools();
             InjectUpdateChecking();
             InjectNotification();
             InjectRepositories();
             InjectStatisticCreation();
             InjectStatisticProviding();
-            InjectAuthentication();
             InjectLernsax();
 
 
@@ -155,10 +162,6 @@ namespace VpServiceAPI
                 .AddSingleton<IByComparisonProvider, ByComparisonProvider>()
                 .AddSingleton<IByGeneralProvider, GeneralProvider>()
                 .AddSingleton<IByMetaProvider, ByMetaProvider>();
-        }
-        private void InjectAuthentication()
-        {
-
         }
         private void InjectLernsax()
         {

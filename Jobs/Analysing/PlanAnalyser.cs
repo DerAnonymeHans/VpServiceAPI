@@ -53,7 +53,7 @@ namespace VpServiceAPI.Jobs.Analysing
             try
             {
                 bool isMatch = false;
-                isMatch = Regex.IsMatch(row.Info, @"gesamte|bei|mit");
+                isMatch = Regex.IsMatch(row.Info, @"\sgesamte\s|\sbei\s|\smit\s");
                 if (isMatch) return GesamteCase(row);
 
                 isMatch = Regex.IsMatch(row.Lehrer, @"(?<=\().+(?=\))");

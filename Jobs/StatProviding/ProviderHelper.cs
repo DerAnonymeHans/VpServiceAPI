@@ -17,7 +17,8 @@ namespace VpServiceAPI.Jobs.StatProviding
                 //var year = form["year"];
                 //if (year.Count != 1) return CurrentSchoolYear;
                 //year = year[0];
-                var searchParams = Tools.AppContext.Current.Request.Query;
+                var searchParams = Tools.AppContext.Current?.Request.Query;
+                if (searchParams is null) return CurrentSchoolYear;
                 if (!searchParams.ContainsKey("year")) return CurrentSchoolYear;
                 var year = searchParams["year"];
                 if (Regex.Match(year, @"\d{2}").Value != year) throw new AppException("Das angegebene Schuljahr muss folgende Struktur besitzen ('21', '22', '23', ...).");
