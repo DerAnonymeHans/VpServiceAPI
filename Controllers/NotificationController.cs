@@ -56,7 +56,7 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpGet]
-        [Route("/api/Artwork/{artName}/{name}")]
+        [Route("Artwork/{artName}/{name}")]
         public async Task<IActionResult> GetArtwork(string artName, string name)
         {
             try
