@@ -13,6 +13,8 @@ using RestSharp;
 using VpServiceAPI.Exceptions;
 using System.Threading;
 using VpServiceAPI.Entities.Persons;
+using Lib.Net.Http.WebPush;
+using Lib.Net.Http.WebPush.Authentication;
 
 namespace VpServiceAPI.Jobs.Notification
 {
@@ -39,25 +41,41 @@ namespace VpServiceAPI.Jobs.Notification
     {
         private readonly IMyLogger Logger;
         private readonly string CLIENT_URL = Environment.GetEnvironmentVariable("CLIENT_URL") ?? "https://kepleraner.herokuapp.com";
+        private readonly PushServiceClient PushClient = new();
+        private readonly string PUSH_PUB_KEY = Environment.GetEnvironmentVariable("PUSH_PUB_KEY") ?? throw new AppException("PUSH_PUB_KEY is null");
+        private readonly string PUSH_PRIV_KEY = Environment.GetEnvironmentVariable("PUSH_PRIV_KEY") ?? throw new AppException("PUSH_PRIV_KEY is null");
+
         public ProdPushJob(IMyLogger logger)
         {
             Logger = logger;
         }
         public async Task Push(User user, PushOptions pushOptions, string reason = "NEWPLAN")
         {
-            var client = new RestClient(CLIENT_URL);
-            var request = new RestRequest("SendPush", Method.Post);
-            if (user.PushSubscribtion is null) throw new AppException("User push subscribtion is null");
-            string json = JsonSerializer.Serialize(new PushBody(user.PushSubscribtion, pushOptions));
-            request.AddStringBody(json, DataFormat.Json);
+            var msg = new PushMessage(JsonSerializer.Serialize(pushOptions));
+            if(user.PushSubscribtion is null) throw new AppException("User push subscribtion is null");
+            var sub = JsonSerializer.Deserialize<PushSubscription>(user.PushSubscribtion, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if(sub is null) throw new AppException("User push subscribtion is invalid");
 
-            var response = await client.ExecuteAsync(request);
-            if (!response.IsSuccessful)
-            {
-                throw new AppException($"Status: {response.StatusCode}; Message: {response.Content}");
-            }
+            var auth = new VapidAuthentication(PUSH_PUB_KEY, PUSH_PRIV_KEY);
+
+            await PushClient.RequestPushMessageDeliveryAsync(sub, msg, auth);
             Logger.Info(LogArea.Notification, $"{reason}: Send push Notification to: " + user.Address);
         }
+        //public async Task Push(User user, PushOptions pushOptions, string reason = "NEWPLAN")
+        //{
+        //    var client = new RestClient(CLIENT_URL);
+        //    var request = new RestRequest("SendPush", Method.Post);
+        //    if (user.PushSubscribtion is null) throw new AppException("User push subscribtion is null");
+        //    string json = JsonSerializer.Serialize(new PushBody(user.PushSubscribtion, pushOptions));
+        //    request.AddStringBody(json, DataFormat.Json);
+
+        //    var response = await client.ExecuteAsync(request);
+        //    if (!response.IsSuccessful)
+        //    {
+        //        throw new AppException($"Status: {response.StatusCode}; Message: {response.Content}");
+        //    }
+        //    Logger.Info(LogArea.Notification, $"{reason}: Send push Notification to: " + user.Address);
+        //}
     }
 
     sealed class PushBody

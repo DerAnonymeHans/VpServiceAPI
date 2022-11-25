@@ -1,0 +1,37 @@
+{
+   "name": "Kepleraner",
+   "short_name": "Kepleraner",
+   "start_url": "./Benachrichtigung",
+   "display": "standalone",
+   "background_color": "#000",
+   "theme_color": "#ff8ded",
+   "orientation": "portrait-primary",
+   "gcm_sender_id": "822061360123",
+   "icons": [
+      {
+         "src": "/img/icons/icon-76x76.png",
+         "type": "image/png",
+         "sizes": "76x76"
+      },
+      {
+         "src": "/img/icons/icon-120x120.png",
+         "type": "image/png",
+         "sizes": "120x120"
+      },
+      {
+         "src": "/img/icons/icon-152x152.png",
+         "type": "image/png",
+         "sizes": "152x152"
+      },
+      {
+         "src": "/img/icons/icon-192x192.png",
+         "type": "image/png",
+         "sizes": "192x192"
+      },
+      {
+         "src": "/img/icons/icon-512x512.png",
+         "type": "image/png",
+         "sizes": "512x512"
+      }
+   ]
+}

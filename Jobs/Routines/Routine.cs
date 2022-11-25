@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using VpServiceAPI.Entities.Plan;
@@ -33,6 +34,8 @@ namespace VpServiceAPI.Jobs.Routines
         public int Interval { get; private set; } = 600_000;
 
         private Timer Timer { get; set; } = new Timer();
+
+        private HttpClient Client = new();
 
         public Routine(
             IMyLogger logger,
@@ -101,6 +104,7 @@ namespace VpServiceAPI.Jobs.Routines
             bool IsJob(string name) => GetEnv("ASPNETCORE_ENVIRONMENT") == "Production" || GetEnv("ONLY_JOB") == "all" || GetEnv("ONLY_JOB") == name;
             try
             {
+                PingSelf();
                 await EventsJob();
                 if(IsJob("plan")) await VertretungsplanJob();
                 if(IsJob("lernsax")) await LernsaxServicesJob();
@@ -109,6 +113,10 @@ namespace VpServiceAPI.Jobs.Routines
             {
                 Logger.Error(LogArea.Routine, ex, "Failed on Routine.");
             }
+        }
+        private void PingSelf()
+        {
+            Client.GetAsync($"{Environment.GetEnvironmentVariable("URL")}/GetUserCount");
         }
         private async Task EventsJob()
         {

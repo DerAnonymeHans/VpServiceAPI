@@ -140,6 +140,7 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 var json = (await DataQueries.GetRoutineData(RoutineDataSubject.PLAN_CACHE, grade))[0];
                 if (json is null) return Array.Empty<PlanRow>();
+                if(json.Length == 0) return Array.Empty<PlanRow>();
                 return JsonSerializer.Deserialize<PlanRow[]>(json) ?? Array.Empty<PlanRow>();
             }
             catch (Exception ex)
