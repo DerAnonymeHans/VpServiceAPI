@@ -56,9 +56,10 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpGet]
-        [Route("/Artwork/{artName}/{name}")]
+        [Route("/api/Artwork/{artName}/{name}")]
         public async Task<IActionResult> Test(string artName, string name)
         {
+            Logger.Debug(artName, name);
             if (!await ArtworkRepository.IncludesArtwork(artName))
             {
                 artName = (await ArtworkRepository.Default()).Name;
