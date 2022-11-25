@@ -56,7 +56,7 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpGet]
-        [Route("Artwork/{artName}/{name}")]
+        [Route("/Artwork/{artName}/{name}")]
         public async Task<IActionResult> Test(string artName, string name)
         {
             if (!await ArtworkRepository.IncludesArtwork(artName))

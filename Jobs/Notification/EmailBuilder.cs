@@ -19,7 +19,7 @@ namespace VpServiceAPI.Jobs.Notification
         private NotificationBody NotificationBody { get; set; }
         private Dictionary<string, string> HTMLNotificationData { get; set; }
 
-        private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/api/Notification/Artwork";
+        private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/Artwork";
         private readonly string TemplatePath  = AppDomain.CurrentDomain.BaseDirectory + "Templates";
         private string TemplateName { get; set; } = "Default";
 
