@@ -72,8 +72,8 @@ namespace VpServiceAPI.Controllers
                 "js" => "application/javascript",
                 "json" => "application/json",
                 "ico" => "image/x-icon",
-                "png" => "mage/png",
-                "jpg" => "mage/jpg",
+                "png" => "image/png",
+                "jpg" => "image/jpg",
                 "css" => "text/css",
                 _ => "plain/text"
             };
