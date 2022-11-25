@@ -57,33 +57,41 @@ namespace VpServiceAPI.Controllers
 
         [HttpGet]
         [Route("/api/Artwork/{artName}/{name}")]
-        public async Task<IActionResult> Test(string artName, string name)
+        public async Task<IActionResult> GetArtwork(string artName, string name)
         {
-            Logger.Debug(artName, name);
-            if (!await ArtworkRepository.IncludesArtwork(artName))
+            try
             {
-                artName = (await ArtworkRepository.Default()).Name;
-            }
-            var artwork = await ArtworkRepository.GetArtwork(artName);
-            using (Bitmap bitMapImage = artwork.GetBitmap())
-            {
-                Graphics graphicImage = Graphics.FromImage(bitMapImage);
-                graphicImage.SmoothingMode = SmoothingMode.AntiAlias;
-                graphicImage.DrawString("Hallo", new Font("Arial", 30), new SolidBrush(artwork.FontColor), new Point(50, 80));
-                if (name.Length < 12)
+                Logger.Info(artName + name);
+                if (!await ArtworkRepository.IncludesArtwork(artName))
                 {
-                    graphicImage.DrawString(name, new Font("Arial", 48, FontStyle.Bold), new SolidBrush(artwork.FontColor), new Point(50, 120));
+                    artName = (await ArtworkRepository.Default()).Name;
                 }
-                else
+                var artwork = await ArtworkRepository.GetArtwork(artName);
+                using (Bitmap bitMapImage = artwork.GetBitmap())
                 {
-                    graphicImage.DrawString(name, new Font("Arial", 40, FontStyle.Bold), new SolidBrush(artwork.FontColor), new Point(50, 120));
+                    Graphics graphicImage = Graphics.FromImage(bitMapImage);
+                    graphicImage.SmoothingMode = SmoothingMode.AntiAlias;
+                    graphicImage.DrawString("Hallo", new Font("Arial", 30), new SolidBrush(artwork.FontColor), new Point(50, 80));
+                    if (name.Length < 12)
+                    {
+                        graphicImage.DrawString(name, new Font("Arial", 48, FontStyle.Bold), new SolidBrush(artwork.FontColor), new Point(50, 120));
+                    }
+                    else
+                    {
+                        graphicImage.DrawString(name, new Font("Arial", 40, FontStyle.Bold), new SolidBrush(artwork.FontColor), new Point(50, 120));
+                    }
+
+                    using (var stream = new MemoryStream())
+                    {
+                        bitMapImage.Save(stream, ImageFormat.Png);
+                        return File(stream.ToArray(), "image/png");
+                    }
                 }
 
-                using (var stream = new MemoryStream())
-                {
-                    bitMapImage.Save(stream, ImageFormat.Png);
-                    return File(stream.ToArray(), "image/png");
-                }
+            }catch(Exception ex)
+            {
+                Logger.Error(LogArea.NotificationAPI, ex, "Heeeeelp");
+                throw;
             }
         }
 

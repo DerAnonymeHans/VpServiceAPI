@@ -69,7 +69,7 @@ async function updateSubscription(subscription) {
    const form = new FormData();
    form.append("subscribtion", JSON.stringify(subscription));
 
-   await fetch(`${API_URL}/User/SetPushSubscribtion`, {
+   await fetch(`${API_URL}/api/User/SetPushSubscribtion`, {
       method: "POST",
       body: form,
       credentials: "include",
