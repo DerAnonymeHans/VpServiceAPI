@@ -56,7 +56,7 @@ namespace VpServiceAPI.Controllers
             if (!fileName.Contains(".")) return NotFound();
             try
             {
-                var buffer = System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @$"Frontend/img/icons{fileName}");
+                var buffer = System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @$"Frontend/img/icons/{fileName}");
                 return File(buffer, GetContentType(fileName.Split('.').Last()));
             }
             catch

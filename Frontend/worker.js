@@ -8,14 +8,14 @@ const API_URL = "";
 self.addEventListener("push", (e) => {
    const options = e.data.json();
    console.log("SW: received push", options);
-   fetch(API_URL + "/User/ConfirmPush", { method: "POST", body: options.data.UserName });
+   fetch(API_URL + "/api/User/ConfirmPush", { method: "POST", body: options.data.UserName });
    self.registration.showNotification(options.title, options);
 });
 
 self.addEventListener("notificationclick", (e) => {
    e.notification.close();
    console.log(e.notification);
-   e.waitUntil(clients.openWindow(`https://kepleraner.herokuapp.com${e.notification.data.Action}`));
+   e.waitUntil(clients.openWindow(`https://kepleraner.onrender.com${e.notification.data.Action}`));
 });
 
 self.addEventListener("install", (e) => {
