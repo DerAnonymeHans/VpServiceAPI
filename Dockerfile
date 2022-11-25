@@ -13,8 +13,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /VpServiceAPI
 COPY --from=build-env /VpServiceAPI/out .
 #CMD ASPNETCORE_URLS=http://localhost:5000 dotnet VpServiceAPI.dll
-#CMD ASPNETCORE_URLS=http://*:$PORT dotnet VpServiceAPI.dll
-ENTRYPOINT ["dotnet", "VpServiceAPI.dll"]
+CMD ASPNETCORE_URLS=http://*:$PORT dotnet VpServiceAPI.dll
+#ENTRYPOINT ["dotnet", "VpServiceAPI.dll"]
 
 
 
