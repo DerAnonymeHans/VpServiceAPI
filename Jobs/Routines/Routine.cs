@@ -116,7 +116,7 @@ namespace VpServiceAPI.Jobs.Routines
         }
         private void PingSelf()
         {
-            Client.GetAsync($"{Environment.GetEnvironmentVariable("URL")}/GetUserCount");
+            Client.GetAsync($"{Environment.GetEnvironmentVariable("URL")}/api/User/UserCount");
         }
         private async Task EventsJob()
         {

@@ -26,7 +26,7 @@ using VpServiceAPI.Entities.Notification;
 namespace VpServiceAPI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public sealed class UserController : ControllerBase
     {
         private readonly IMyLogger Logger;
@@ -52,13 +52,13 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpGet]
-        [Route("/GetUserCount")]
+        [Route("UserCount")]
         public async Task<WebResponse<int>> GetUserCount()
         {
             return await WebResponder.RunWith(async () => (await DataQueries.Load<int, dynamic>("SELECT COUNT(id) AS count FROM users WHERE 1", new { }))[0], Request.Path.Value, null, false);
         }
         [HttpPost]
-        [Route("/Subscribe")]
+        [Route("Subscribe")]
         public async Task<WebMessage> Subscribe()
         {
             var res = await WebResponder.RunWith(async () =>
@@ -71,7 +71,7 @@ namespace VpServiceAPI.Controllers
             return res;
         }
         [HttpPost]
-        [Route("/ProposeSmallExtra")]
+        [Route("ProposeSmallExtra")]
         public async Task<WebMessage> ProposeSmallExtra()
         {
             return await WebResponder.RunWith(async () =>
@@ -86,7 +86,7 @@ namespace VpServiceAPI.Controllers
         }
 
         [HttpPost]
-        [Route("/Proposal")]
+        [Route("Proposal")]
         public async Task<WebMessage> Propose()
         {
             return await WebResponder.RunWith(async () =>

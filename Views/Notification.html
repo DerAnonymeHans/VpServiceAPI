@@ -4,25 +4,25 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notification</title>
-    <link href="/styles" rel="stylesheet" />
-    <script src="/script"></script>
+    <link href="/Admin/styles" rel="stylesheet" />
+    <script src="/Admin/script"></script>
 </head>
 <body>
-    <a href="/View/Admin">Startseite</a>
+    <a href="/Admin/View/Admin">Startseite</a>
     <hr>
     <div class="container">
         <h3>Global Extra</h3>
         <div class="flex">
-            <textarea type="text" id="globalExtra" data-post="/Notification/GlobalExtra/{}"></textarea>
-            <div class="value-container" data-get="/Notification/GlobalExtra"></div>
+            <textarea type="text" id="globalExtra" data-post="/Admin/Notification/GlobalExtra/{}"></textarea>
+            <div class="value-container" data-get="/Admin/Notification/GlobalExtra"></div>
             <button id="stopInterval" onclick="post('globalExtra')">Setzen</button>
         </div>
     </div>
     <div class="container">
         <h3>Special Extra</h3>
         <div class="flex">
-            <textarea type="text" id="specialExtra" data-post="/Notification/SpecialExtra/{}"></textarea>
-            <div class="value-container" data-get="/Notification/SpecialExtra"></div>
+            <textarea type="text" id="specialExtra" data-post="/Admin/Notification/SpecialExtra/{}"></textarea>
+            <div class="value-container" data-get="/Admin/Notification/SpecialExtra"></div>
             <button id="stopInterval" onclick="post('specialExtra')">Setzen</button>
         </div>
     </div>
@@ -30,7 +30,7 @@
         <h3>Add Artwork</h3>
         <div class="flex">
             <iframe name="dummy" id="dummyFrame" style="display: none"></iframe>
-            <form action="/Notification/AddArtwork" method="POST" id="addArtwork" target="dummy" enctype="multipart/form-data">
+            <form action="/Admin/Notification/AddArtwork" method="POST" id="addArtwork" target="dummy" enctype="multipart/form-data">
                 <input type="file" name="artworkFile" id="artworkFileInput">
                 Name:
                 <input type="text" name="name">
@@ -51,7 +51,7 @@
         <div>
             <div class="flex">
                 Forced:
-                <div data-get="/Notification/CurrentForcedArtwork"></div>
+                <div data-get="/Admin/Notification/CurrentForcedArtwork"></div>
             </div>
             <ul id="artworkSelection-container">
             </ul>
@@ -63,14 +63,14 @@
 <script>
     async function getArtworks(){
         const container = document.getElementById("artworkSelection-container")
-        const names = await request("/Notification/AllArtworks")
+        const names = await request("/Admin/Notification/AllArtworks")
 
         for(const name of names){
             const rowEl = document.createElement("li")
             const buttonEl = document.createElement("button")
             buttonEl.textContent = name;
             buttonEl.onclick = async () => {
-                await request("/Notification/ForceArtwork/"+name, {method: "POST"})
+                await request("/Admin/Notification/ForceArtwork/"+name, {method: "POST"})
                 reload()
             }
 
@@ -81,7 +81,7 @@
         const buttonEl = document.createElement("button")
         buttonEl.textContent = "NICHTS"
         buttonEl.onclick = async () => {
-            await request("/Notification/ForceArtwork/NICHTS", {method: "POST"})
+            await request("/Admin/Notification/ForceArtwork/NICHTS", {method: "POST"})
             reload()
         }
         rowEl.append(buttonEl)

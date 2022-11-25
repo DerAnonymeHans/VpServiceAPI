@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logs</title>
-    <link href="/styles" rel="stylesheet" />
-    <script src="/script"></script>
+    <link href="/Admin/styles" rel="stylesheet" />
+    <script src="/Admin/script"></script>
     <style>
         html {
             height: 100%;
@@ -36,7 +36,7 @@
 
 </head>
 <body>
-    <a href="/View/Admin">Startseite</a>
+    <a href="/Admin/View/Admin">Startseite</a>
     Logs
     <main id="log-container">
         ...
@@ -52,7 +52,7 @@
 <script>
     const ROW_COUNT = 400;
     async function insertLogs(offset=0) {
-        let rows = await request(`/Logs/Rows/${ROW_COUNT}/${offset * ROW_COUNT}`);
+        let rows = await request(`/Admin/Logs/Rows/${ROW_COUNT}/${offset * ROW_COUNT}`);
         rows.reverse();
         const logContainerEl = document.getElementById("log-container");
         logContainerEl.innerHTML = rows.join("");
@@ -72,7 +72,7 @@
     }
 
     async function insertButtons(){
-        let count = await request("/Logs/Count");
+        let count = await request("/Admin/Logs/Count");
         const buttonContainerEl = document.getElementById("page-buttons");
         buttonContainerEl.innerHTML = "";
 
@@ -94,7 +94,7 @@
     insertButtons();
 
     async function deleteOldLogs() {
-        await request(`/DeleteOldLogs/Rows/${ROW_COUNT}`, {method: "POST"});
+        await request(`/Admin/DeleteOldLogs/Rows/${ROW_COUNT}`, {method: "POST"});
         insertButtons();
     }
 

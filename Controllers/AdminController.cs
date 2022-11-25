@@ -21,7 +21,7 @@ namespace VpServiceAPI.Controllers
 {
     [ApiController]
     [Authorize]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class AdminController : ControllerBase
     {
         private readonly IMyLogger Logger;
@@ -54,39 +54,39 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpPost]
-        [Route("/Routine/BeginOnce")]
+        [Route("Routine/BeginOnce")]
         public WebMessage RoutineBeginOnce()
         {
             return WebResponder.RunWithSync(Routine.BeginOnce, Request.Path.Value, "Started routine once", true);
         }
 
         [HttpPost]
-        [Route("/Routine/Begin")]
+        [Route("Routine/Begin")]
         public WebMessage RoutineBegin()
         {
             return WebResponder.RunWithSync(Routine.Begin, Request.Path.Value, "Started routine");
         }
         [HttpPost]
-        [Route("/Routine/ChangeInterval/{ms}")]
+        [Route("Routine/ChangeInterval/{ms}")]
         public WebMessage RoutineChangeInterval(int ms = 30000)
         {
             if (ms < 30000) ms = 600_000;
             return WebResponder.RunWithSync(() => Routine.ChangeInterval(ms), Request.Path.Value, $"Changed interval to {ms}");
         }
         [HttpPost]
-        [Route("/Routine/Stop")]
+        [Route("Routine/Stop")]
         public WebMessage RoutineStop()
         {
             return WebResponder.RunWithSync(Routine.End, Request.Path.Value, "Stopped routine");
         }
         [HttpGet]
-        [Route("/Routine/Interval")]
+        [Route("Routine/Interval")]
         public WebResponse<int> GetRoutineInterval()
         {
             return WebResponder.RunWithSync(() => Routine.Interval, Request.Path.Value);
         }
         [HttpGet]
-        [Route("/Routine/IsRunning")]
+        [Route("Routine/IsRunning")]
         public WebResponse<bool> GetRoutineIsRunning()
         {
             return WebResponder.RunWithSync(() => Routine.IsRunning, Request.Path.Value);
@@ -94,33 +94,33 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpGet]
-        [Route("/Notification/GlobalExtra")]
+        [Route("Notification/GlobalExtra")]
         public async Task<WebResponse<string>> GetGlobalExtra()
         {
             return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "global_extra"))[0], Request.Path.Value);
         }
         [HttpPost]
-        [Route("/Notification/GlobalExtra/{value}")]
+        [Route("Notification/GlobalExtra/{value}")]
         public async Task<WebMessage> SetGlobalExtra(string value)
         {
             return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData(RoutineDataSubject.EXTRA, "global_extra", value), Request.Path.Value, $"Set global extra to {value}");
         }
 
         [HttpGet]
-        [Route("/Notification/SpecialExtra")]
+        [Route("Notification/SpecialExtra")]
         public async Task<WebResponse<string>> GetSpecialExtra()
         {
             return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "special_extra"))[0], Request.Path.Value);
         }
         [HttpPost]
-        [Route("/Notification/SpecialExtra/{value}")]
+        [Route("Notification/SpecialExtra/{value}")]
         public async Task<WebMessage> SetSpecialExtra(string value)
         {
             return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData(RoutineDataSubject.EXTRA, "special_extra", value), Request.Path.Value, $"Set special extra to {value}");
         }
 
         [HttpPost]
-        [Route("/Notification/AddArtwork")]
+        [Route("Notification/AddArtwork")]
         public async Task<WebMessage> AddArtwork(IFormFile artworkFile)
         {
             return await WebResponder.RunWith(async () =>
@@ -130,26 +130,26 @@ namespace VpServiceAPI.Controllers
             }, Request.Path.Value, $"Added new Artwork {Request.Form["name"]}");
         }
         [HttpGet]
-        [Route("/Notification/CurrentForcedArtwork")]
+        [Route("Notification/CurrentForcedArtwork")]
         public async Task<WebResponse<string>> GetCurrentForcedArtwork()
         {
             return await WebResponder.RunWith(async () => (await DataQueries.GetRoutineData(RoutineDataSubject.EXTRA, "forced_artwork_name"))[0], Request.Path.Value);            
         }
         [HttpPost]
-        [Route("/Notification/ForceArtwork/{name}")]
+        [Route("Notification/ForceArtwork/{name}")]
         public async Task<WebMessage> SetForcedArtwork(string name)
         {
             return await WebResponder.RunWith(async () => await DataQueries.SetRoutineData(RoutineDataSubject.EXTRA, "forced_artwork_name", name), $"Set current forced artwork to {name}");
         }
         [HttpGet]
-        [Route("/Notification/AllArtworks")]
+        [Route("Notification/AllArtworks")]
         public async Task<WebResponse<List<string>>> GetAllArtworks()
         {
             return await WebResponder.RunWith(async () => await DataQueries.Load<string, dynamic>("SELECT name FROM artwork_data WHERE 1", new { }), Request.Path.Value);
         }
 
         [HttpGet]
-        [Route("/Logs/Rows/{count}/{offset}")]
+        [Route("Logs/Rows/{count}/{offset}")]
         public async Task<WebResponse<string[]>> GetLogRows(int count=1000, int offset=0)
         {
             return await WebResponder.RunWith(async () => 
@@ -162,7 +162,7 @@ namespace VpServiceAPI.Controllers
             , Request.Path.Value);
         }
         [HttpPost]
-        [Route("/DeleteOldLogs/Rows/{count}")]
+        [Route("DeleteOldLogs/Rows/{count}")]
         public async Task<WebMessage> DeleteLogRows(int count = 1000)
         {
             return await WebResponder.RunWith(async () =>
@@ -174,7 +174,7 @@ namespace VpServiceAPI.Controllers
             }, Request.Path.Value);
         }
         [HttpGet]
-        [Route("/Logs/Count")]
+        [Route("Logs/Count")]
         public async Task<WebResponse<int>> GetLogCount()
         {
             return await WebResponder.RunWith(async () => (await DataQueries.Load<int, dynamic>("SELECT COUNT(id) FROM logs", new { }))[0], Request.Path.Value);

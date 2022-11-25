@@ -1,6 +1,6 @@
 //const URL = "https://localhost:5001"
 //const URL = "http://vp-service-api.herokuapp.com"
-const URL = "";
+const URL = "/api";
 const request = (path, options={}) => new Promise(async(resolve, reject) => {
    const response = await fetch(URL + path, options)
       .then(res => res.json())

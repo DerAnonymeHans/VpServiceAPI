@@ -28,7 +28,7 @@ using VpServiceAPI.Entities.Notification;
 namespace VpServiceAPI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public sealed class NotificationController : ControllerBase
     {
         private readonly IMyLogger Logger;

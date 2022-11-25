@@ -187,7 +187,7 @@ namespace VpServiceAPI.Repositories
 
         public async Task SendHashResetMail(string mail)
         {
-            string linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("CLIENT_URL")}" : "http://localhost:3000";
+            string linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("URL")}" : "http://localhost:3000";
             
             EmailJob.Send(new Entities.Notification.Email
             {

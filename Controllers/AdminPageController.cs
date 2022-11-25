@@ -14,7 +14,7 @@ using VpServiceAPI.Interfaces;
 namespace VpServiceAPI.Controllers
 {
     [Authorize]
-    [Route("[controller]")]
+    [Route("Admin")]
     public sealed class AdminPageController : ControllerBase
     {
         private readonly IMyLogger Logger;
@@ -32,7 +32,7 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpGet]
-        [Route("/styles")]
+        [Route("styles")]
         public IActionResult Styles()
         {
             var buffer = System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Views/styles.css");
@@ -40,7 +40,7 @@ namespace VpServiceAPI.Controllers
         }
 
         [HttpGet]
-        [Route("/script")]
+        [Route("script")]
         public IActionResult Script()
         {
             var buffer = System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Views/script.js");
@@ -49,14 +49,14 @@ namespace VpServiceAPI.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("/Login")]
+        [Route("Login")]
         public IActionResult LoginView()
         {
             var buffer = System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Views/login.html");
             return File(buffer, "text/html");
         }
         [HttpGet]
-        [Route("/Admin")]
+        [Route("Admin")]
         public IActionResult AdminView()
         {
             var buffer = System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + $@"Views/Admin.html");
@@ -64,7 +64,7 @@ namespace VpServiceAPI.Controllers
         }
 
         [HttpGet]
-        [Route("/View/{viewName}")]
+        [Route("View/{viewName}")]
         public IActionResult View(string viewName)
         {
             try
@@ -82,7 +82,7 @@ namespace VpServiceAPI.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        [Route("/login")]
+        [Route("login")]
         public async Task<IActionResult> Login()
         {
             var name = Environment.GetEnvironmentVariable("SITE_ADMIN_NAME");
@@ -110,7 +110,7 @@ namespace VpServiceAPI.Controllers
         }
 
         [HttpPost]
-        [Route("/logout")]
+        [Route("logout")]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();

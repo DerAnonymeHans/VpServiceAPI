@@ -17,7 +17,7 @@ using VpServiceAPI.WebResponse;
 
 namespace VpServiceAPI.Controllers
 {
-    [Route("/Statistic")]
+    [Route("api/Statistic")]
     public sealed class StatisticController : ControllerBase
     {
         private readonly IMyLogger Logger;

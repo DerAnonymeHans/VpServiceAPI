@@ -15,7 +15,7 @@ using VpServiceAPI.WebResponse;
 namespace VpServiceAPI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class LernsaxController : ControllerBase
     {
         private readonly IMyLogger Logger;

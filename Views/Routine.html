@@ -6,40 +6,40 @@
     <title>Routine</title>
     <!-- <link href="/styles.css" rel="stylesheet" />
     <script src="script.js"></script> -->
-    <link href="/styles" rel="stylesheet" />
-    <script src="/script"></script>
+    <link href="/Admin/styles" rel="stylesheet" />
+    <script src="/Admin/script"></script>
 
 </head>
 <body>
-    <a href="/View/Admin">Startseite</a>
+    <a href="/Admin/View/Admin">Startseite</a>
     <hr>
     <h1>Routine</h1>
     <main>
         <div class="container">
             <h3>Start/Stop</h3>
             <div class="flex">
-                <button id="startInterval" onclick="post('startInterval')" data-post="/Routine/Begin">Start</button>
-                <button id="stopInterval" onclick="post('stopInterval')" data-post="/Routine/Stop">Stop</button>
+                <button id="startInterval" onclick="post('startInterval')" data-post="/Admin/Routine/Begin">Start</button>
+                <button id="stopInterval" onclick="post('stopInterval')" data-post="/Admin/Routine/Stop">Stop</button>
                 läuft:
-                <div class="value-container" data-get="/Routine/IsRunning"></div>
+                <div class="value-container" data-get="/Admin/Routine/IsRunning"></div>
             </div>
 
         </div>
         <div class="container">
             <h3>Starte einmal</h3>
             <div class="flex">
-                <button id="beginOnce" onclick="post('beginOnce')" data-post="/Routine/BeginOnce">Los</button>
+                <button id="beginOnce" onclick="post('beginOnce')" data-post="/Admin/Routine/BeginOnce">Los</button>
             </div>
 
         </div>
         <div class="container">
             <h3>Change Interval</h3>
             <div class="flex">
-                <input type="number" id="changeInterval" min="0" max="3600000" step="60000" data-post="/Routine/ChangeInterval/{}">
+                <input type="number" id="changeInterval" min="0" max="3600000" step="60000" data-post="/Admin/Routine/ChangeInterval/{}">
                 <span>(entspricht: </span>
                 <span id="intervalInMinutes"></span>
                 <span>Minuten)</span>
-                <div class="value-container" data-get="/Routine/Interval"></div>
+                <div class="value-container" data-get="/Admin/Routine/Interval"></div>
                 <button onclick="post('changeInterval')">Ändern</button>
             </div>
         </div>
