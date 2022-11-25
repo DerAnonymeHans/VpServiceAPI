@@ -44,7 +44,7 @@ namespace VpServiceAPI
             services.AddAuthentication("cookieAuth")
                 .AddCookie("cookieAuth", options =>
                 {
-                    options.LoginPath = "/Login";
+                    options.LoginPath = "/Admin/Login";
                     options.Cookie.Name = "loginHelper";
 
                 });

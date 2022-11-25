@@ -47,7 +47,7 @@ self.addEventListener("fetch", (e) => {
    if (e.request.url.includes("api")) return;
    // if (!e.request.url.includes("http://localhost:8080") && !e.request.url.includes("https://kepleraner")) return;
 
-   console.log("SW: Responsing fetch");
+   console.log("SW: Responsing fetch", e);
    e.respondWith(
       fetch(e.request)
          .then((res) => {
