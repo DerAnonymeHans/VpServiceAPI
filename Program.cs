@@ -18,8 +18,8 @@ namespace VpServiceAPI
         public static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-            if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" && Environment.GetEnvironmentVariable("AUTO_START_ROUTINE") == "true") StartRoutine();
             CreateHostBuilder(args).Build().Run();
+            if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" && Environment.GetEnvironmentVariable("AUTO_START_ROUTINE") == "true") StartRoutine();
 
         }
 
