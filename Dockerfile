@@ -8,12 +8,15 @@ RUN dotnet restore
 # Build and publish a release
 RUN dotnet publish -c Release -o out
 
+# install runtime dependencies
+RUN apt-get update && apt-get install -y apt-utils
+RUN apt-get install -y libgdiplus
+RUN apt-get install -y libc6-dev
+
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /VpServiceAPI
 COPY --from=build-env /VpServiceAPI/out .
 
-# install runtime dependencies
-RUN apt install libc6-dev libgdiplus
 
 CMD ASPNETCORE_URLS=http://*:$PORT dotnet VpServiceAPI.dll
