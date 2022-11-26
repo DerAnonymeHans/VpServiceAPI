@@ -43,7 +43,7 @@ namespace VpServiceAPI
             var content = new FormUrlEncodedContent(values);
             await client.PostAsync($"{Environment.GetEnvironmentVariable("URL")}/Admin/login", content);
 
-            await client.PostAsync(Environment.GetEnvironmentVariable("URL") + "/Admin/Routine/Begin", new FormUrlEncodedContent(new List<KeyValuePair<string?, string?>>()));
+            await client.PostAsync(Environment.GetEnvironmentVariable("URL") + "/api/Admin/Routine/Begin", new FormUrlEncodedContent(new List<KeyValuePair<string?, string?>>()));
 
         }
 
