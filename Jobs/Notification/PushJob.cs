@@ -40,7 +40,7 @@ namespace VpServiceAPI.Jobs.Notification
     public sealed class ProdPushJob : IPushJob
     {
         private readonly IMyLogger Logger;
-        private readonly string CLIENT_URL = Environment.GetEnvironmentVariable("CLIENT_URL") ?? "https://kepleraner.herokuapp.com";
+        private readonly string CLIENT_URL = Environment.GetEnvironmentVariable("CLIENT_URL") ?? "https://kepleraner.onrender.com";
         private readonly PushServiceClient PushClient = new();
         private readonly string PUSH_PUB_KEY = Environment.GetEnvironmentVariable("PUSH_PUB_KEY") ?? throw new AppException("PUSH_PUB_KEY is null");
         private readonly string PUSH_PRIV_KEY = Environment.GetEnvironmentVariable("PUSH_PRIV_KEY") ?? throw new AppException("PUSH_PRIV_KEY is null");

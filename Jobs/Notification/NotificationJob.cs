@@ -182,8 +182,8 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 var pushOptions = new PushOptions("Neuer Vertretungsplan", GlobalBody.Subject)
                 {
-                    Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Logo.png",
-                    Badge = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Badge_VP.png",
+                    Icon = $"{Environment.GetEnvironmentVariable("URL")}/api/Notification/Logo.png",
+                    Badge = $"{Environment.GetEnvironmentVariable("URL")}/api/Notification/Badge_VP.png",
                     Data = new PushData(user.Name, "/Benachrichtigung?page=plan")
                 };
 
