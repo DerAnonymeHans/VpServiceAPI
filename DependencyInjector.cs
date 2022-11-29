@@ -20,11 +20,11 @@ namespace VpServiceAPI
         private UTestDependencyInjector? UTestInjector { get; init; }
 
         private static readonly Func<string, string?> GetEnvVar = Environment.GetEnvironmentVariable;
-        private static readonly Func<bool> IsProduction = () => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
+        private static readonly Func<bool> IsProduction = () => false; //() => GetEnvVar("ASPNETCORE_ENVIRONMENT") == "Production";
 
         private const bool _allUsersWithTestNotificator = false; // or test users with prod notificator
-        private const bool _forceTestUsers = false;
-        private const bool _forceTestNotificator = false;
+        private const bool _forceTestUsers = true;
+        private const bool _forceTestNotificator = true;
 
         private const bool _forceProdNotificator = false;
 
