@@ -19,7 +19,7 @@ namespace VpServiceAPI.Jobs.Notification
         private NotificationBody NotificationBody { get; set; }
         private Dictionary<string, string> HTMLNotificationData { get; set; }
 
-        private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/Artwork";
+        private readonly string GeneratedPicRoute = $"{Environment.GetEnvironmentVariable("URL")}/api/Notification/Artwork";
         private readonly string TemplatePath  = AppDomain.CurrentDomain.BaseDirectory + "Templates";
         private string TemplateName { get; set; } = "Default";
 
@@ -67,7 +67,7 @@ namespace VpServiceAPI.Jobs.Notification
                 { "Color", NotificationBody.Artwork?.Color ?? "red" },
                 { "Grade", NotificationBody.Grade },
                 { "GlobalExtra", NotificationBody.GlobalExtra },
-                { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "api/Notification/Qrcode" },
+                { "QrCodeSrc", Environment.GetEnvironmentVariable("URL") + "/api/Notification/Qrcode" },
                 { "StatLoginParams", $"stat-user={Environment.GetEnvironmentVariable("SITE_STATS_NAME")}&stat-pw={Environment.GetEnvironmentVariable("SITE_STATS_PW")}" },
                 { "TempMax", NotificationBody.Weather?.TempMax.ToString() ?? ""},
                 { "TempMin", NotificationBody.Weather?.TempMin.ToString() ?? ""},

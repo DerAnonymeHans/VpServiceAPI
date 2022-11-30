@@ -25,6 +25,7 @@ namespace VpServiceAPI
 
         private static async void StartRoutine()
         {
+            await Task.Delay(10_000);
             using var client = new HttpClient();
             Console.WriteLine("Automatically starting Routine");
             await client.GetAsync($"{Environment.GetEnvironmentVariable("URL")}/Admin/Login");
