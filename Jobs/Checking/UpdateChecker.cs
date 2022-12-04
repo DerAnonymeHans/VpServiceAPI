@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Entities.Tools;
@@ -25,7 +27,7 @@ namespace VpServiceAPI.Jobs.Checking
 
         public async Task<StatusWrapper<UpdateCheckStatus, PlanModel>> Check(WhatPlan whatPlan, int dayShift=0)
         {
-            var htmlWrapper = await PlanHTMLProvider.GetPlanHTML(whatPlan.Number + dayShift);
+            var htmlWrapper = await PlanHTMLProvider.GetPlanHTML(GetDate(whatPlan.Number + dayShift));
             if (htmlWrapper.Status == PlanProvideStatus.PLAN_NOT_FOUND) return new(UpdateCheckStatus.NULL, null);
             if(htmlWrapper.Status == PlanProvideStatus.ERROR) return new(UpdateCheckStatus.UNCLEAR, null);
 
@@ -43,6 +45,25 @@ namespace VpServiceAPI.Jobs.Checking
             }
             return new(UpdateCheckStatus.IS_NEW, MyPlan);
 
+        }
+        // plan for next day after 7 o clock
+        // jumps over weekends
+        private DateTime GetDate(int dayShift = 0)
+        {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            bool isWeekend(DateTime day) => day.DayOfWeek == DayOfWeek.Saturday || day.DayOfWeek == DayOfWeek.Sunday;
+
+            var date = DateTime.Now;
+            date = date.AddDays(date.Hour < 7 ? 0 : 1);
+            date = date.AddDays(-1);
+            for (int i = -1; i < dayShift; i++)
+            {
+                date = date.AddDays(1);
+                if (!isWeekend(date)) continue;
+                date = date.AddDays(date.DayOfWeek == DayOfWeek.Saturday ? 2 : 1);
+
+            }
+            return date;
         }
         private async Task<ForceNotifStatus> GetForceNotifStatus()
         {

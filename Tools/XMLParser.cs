@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace VpServiceAPI.Tools
@@ -69,7 +70,18 @@ namespace VpServiceAPI.Tools
             if (node is null) return null;
             return node[(node.IndexOf('>') + 1)..^(nodeTag.Length + 3)];
         }
-
+        public static TOut[] ForEach<TOut>(string nodeTag, string xml, Func<string, TOut> callback)
+        {
+            var list = new List<TOut>();
+            while(true)
+            {
+                var node = GetNode(xml, nodeTag);
+                if (node is null) break;
+                list.Add(callback(node));
+                xml = xml[(xml.IndexOf(node) + node.Length)..];
+            }
+            return list.ToArray();
+        }
         public override string ToString()
         {
             return XML ?? "";

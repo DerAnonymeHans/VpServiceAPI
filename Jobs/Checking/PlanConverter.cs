@@ -7,6 +7,7 @@ using VpServiceAPI.Entities.Plan;
 using VpServiceAPI.Exceptions;
 using VpServiceAPI.Interfaces;
 using VpServiceAPI.Tools;
+using VpServiceAPI.TypeExtensions.String;
 
 #nullable enable
 namespace VpServiceAPI.Jobs.Checking
@@ -36,8 +37,8 @@ namespace VpServiceAPI.Jobs.Checking
                 return new PlanModel(metaData.title, metaData.originDate, metaData.affectedDate)
                 {
                     Rows = HTMLIntoRows(),
-                    Announcements = GetInformation(),
-                    MissingTeachers = GetMissingTeacher()
+                    Announcements = GetAnnouncements(),
+                    MissingTeachers = GetMissingTeachers()
                 };
             }
             catch (Exception ex)
@@ -116,7 +117,7 @@ namespace VpServiceAPI.Jobs.Checking
             }
             return table;
         }
-        private List<string> GetInformation()
+        private List<string> GetAnnouncements()
         {
             var fussHTML = XMLParser.GetNodeContent(PlanHTML, "fuss");
             if (fussHTML is null) return new List<string>();
@@ -124,7 +125,7 @@ namespace VpServiceAPI.Jobs.Checking
                 .Select(match => match.Value)
                 .ToList();
         }
-        private List<string> GetMissingTeacher()
+        private List<string> GetMissingTeachers()
         {
             var missingTeacher = XMLParser.GetNodeContent(PlanHTML, "abwesendl");
             if (missingTeacher is null) return new();
@@ -136,11 +137,13 @@ namespace VpServiceAPI.Jobs.Checking
     public sealed class PlanConverterKEPLER : IPlanConverter
     {
         private readonly IMyLogger Logger;
+        private readonly IPlanAnalyser PlanAnalyser;
         private string PlanHTML { get; set; } = "";
 
-        public PlanConverterKEPLER(IMyLogger logger)
+        public PlanConverterKEPLER(IMyLogger logger, IPlanAnalyser planAnalyser)
         {
             Logger = logger;
+            PlanAnalyser = planAnalyser;
         }
         public PlanModel? Convert(string planHTML)
         {
@@ -153,38 +156,44 @@ namespace VpServiceAPI.Jobs.Checking
             try
             {
                 var metaData = GetMetaData();
-
+                var rows = HTMLIntoRows();
                 return new PlanModel(metaData.title, metaData.originDate, metaData.affectedDate)
                 {
-                    Rows = HTMLIntoRows()
+                    Rows = rows,
+                    Announcements = GetAnnouncements(),
+                    MissingTeachers = GetMissingTeachers(rows)
                 };
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.Error(LogArea.PlanConverting, ex, "Tried to convert plan.");
             }
 
             return null;
+
         }
         private bool IsPlan()
         {
-            return PlanHTML.IndexOf("<span sealed class=\"ueberschrift\">Geänderte Unterrichtsstunden:</span>") != -1;
+            return PlanHTML.IndexOf("<span class=\"vpfuer\">Vertretungsplan für: </span>") != -1;
         }
         private (string title, OriginDate originDate, AffectedDate affectedDate) GetMetaData()
         {
-            string title = new Regex("(?<=<span sealed class=\"vpfuerdatum\">).*(?=</span>)")
-            .Match(PlanHTML).Value;
-            string originDateString = new Regex("(?<=<span sealed class=\"vpdatum\">).*(?=</span>)")
-                .Match(PlanHTML).Value;
+            string? title = PlanHTML.SubstringSurroundedBy("<span class=\"vpfuerdatum\">", "</span>");
+            string? originDateString = PlanHTML.SubstringSurroundedBy("<span class=\"vpdatum\">", "</span>");
+
+            if (title is null || originDateString is null) throw new AppException($"VP Title is: {title}. Origin String: {originDateString}");
 
             var affectedDate = GetAffectedDate(title);
             var originDate = GetOriginDate(originDateString);
 
             return (title, originDate, affectedDate);
+
         }
         private AffectedDate GetAffectedDate(string title)
         {
+            
             var dateTime = new DateTime(
-                    int.Parse(new Regex("[0-9]+", RegexOptions.RightToLeft).Match(title).Value),
+                    int.Parse(new Regex(@"[0-9]+(?= \()").Match(title).Value),
                     Converter.MonthToNumber(new Regex(@"(?<=\d\. )\w+").Match(title).Value),
                     int.Parse(new Regex(@"(?<=\w, )\d+").Match(title).Value)
                 );
@@ -206,38 +215,55 @@ namespace VpServiceAPI.Jobs.Checking
         }
         private List<PlanRow> HTMLIntoRows()
         {
-            string tableHTML = PlanHTML[PlanHTML.IndexOf("<table sealed class=\"tablekopf\"")..];
-            tableHTML = tableHTML[..tableHTML.IndexOf("</table>")];
+            var tableHTML = XMLParser.GetNodeContent(PlanHTML[PlanHTML.IndexOf("<span class=\"ueberschrift\">Geänderte Unterrichtsstunden:</span>")..], "table");
+            if (tableHTML is null) return new List<PlanRow>();
 
             var table = new List<PlanRow>();
-            for(int i=0; i<100; i++)
+            XMLParser.ForEach("tr", tableHTML, (string tr) =>
             {
-                // selects <tr> row
-                int trStartIdx = tableHTML.IndexOf("<tr");
-                int trEndIdx = tableHTML.IndexOf("</tr>");
-                if (trStartIdx == -1) break;
-                string rowStr = tableHTML.Substring(trStartIdx + 4, trEndIdx - trStartIdx);
-
-                // matches all >..</td> in the row, loops through them and selects the content
-                string[] rowArr = new Regex("(?<=>).*(?=</td>)").Matches(rowStr)
-                    .Cast<Match>()
-                    .Select(m => m.Value)
-                    .ToArray();
-
-                tableHTML = tableHTML[(trEndIdx + 5)..];
-                if (rowArr.Length == 0 || rowArr is null) continue;
-                table.Add(new PlanRow
+                if (tr.IndexOf("td") == -1) return "";
+                
+                int idx = 0;
+                var row = new PlanRow();
+                XMLParser.ForEach<string?>("td", tr, (string td) =>
                 {
-                    Klasse = rowArr[0],
-                    Stunde = rowArr[1],
-                    Fach = rowArr[2],
-                    Lehrer = rowArr[3],
-                    Raum = rowArr[4],
-                    Info = rowArr[5],
+                    var val = td.SubstringSurroundedBy(">", "<") ?? "";
+                    if (idx == 0) row.Klasse = val;
+                    else if (idx == 1) row.Stunde = val;
+                    else if (idx == 2) row.Fach = val;
+                    else if (idx == 3) row.Lehrer = val;
+                    else if (idx == 4) row.Raum = val;
+                    else if (idx == 5) row.Info = val;
+                    idx++;
+                    return null;
                 });
+                table.Add(row);
+                return null;
+            }).ToList();            
+            return table;
+        }
+        private List<string> GetAnnouncements()
+        {
+            var idx = PlanHTML.IndexOf("<span class=\"ueberschrift\">Zusätzliche Informationen:</span>");
+            if (idx == -1) return new List<string>();
+            var table = XMLParser.GetNodeContent(PlanHTML[idx..], "table");
+            if(table is null) return new List<string>();
+            return XMLParser.ForEach("td", table, (string td) =>
+            {
+                var content = td.SubstringSurroundedBy(">", "<");
+                return content ?? "";
+            }).ToList();
+        }
+        private List<string> GetMissingTeachers(List<PlanRow> rows)
+        {
+            var missingTeachers = new List<string>();
+            foreach (var row in rows)
+            {
+                var anaylsedRow = PlanAnalyser.AnalyseRow(row);
+                if(anaylsedRow is null) continue;
+                if (anaylsedRow.MissingTeacher.Length > 0) missingTeachers.Add(" " + anaylsedRow.MissingTeacher);
             }
-
-            return table;            
+            return missingTeachers.Distinct().ToList();
         }
     }
 

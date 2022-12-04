@@ -48,7 +48,7 @@ namespace VpServiceAPI.Jobs.Analysing
             }
             return analysedRows;
         }
-        private AnalysedRow? AnalyseRow(PlanRow row)
+        public AnalysedRow? AnalyseRow(PlanRow row)
         {
             try
             {
