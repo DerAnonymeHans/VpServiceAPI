@@ -164,8 +164,8 @@ namespace VpServiceAPI.Jobs.Lernsax
         {
             var pushOptions = new PushOptions("Neue Lernsax Email", $"{mail.Sender.CutToLength(16)}..: {mail.Subject.CutToLength(60)}")
             {
-                Icon = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Logo.png",
-                Badge = $"{Environment.GetEnvironmentVariable("URL")}/Notification/Badge_LS.png",
+                Icon = $"{Environment.GetEnvironmentVariable("URL")}/api/Notification/Logo.png",
+                Badge = $"{Environment.GetEnvironmentVariable("URL")}/api/Notification/Badge_LS.png",
                 Data = new PushData(user.Name, "/Benachrichtigung?page=lernsax&action=email")
             };
             await PushJob.Push(user, pushOptions, "LSMAIL");
