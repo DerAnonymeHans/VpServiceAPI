@@ -6,5 +6,6 @@ namespace VpServiceAPI.Interfaces
     public interface IPlanAnalyser
     {
         public List<AnalysedRow> Analyse(PlanModel planModel);
+        public AnalysedRow? AnalyseRow(PlanRow row);
     }
 }

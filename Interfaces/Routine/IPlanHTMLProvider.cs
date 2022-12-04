@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities;
 using VpServiceAPI.Entities.Tools;
@@ -9,6 +10,6 @@ namespace VpServiceAPI.Interfaces
 {
     public interface IPlanHTMLProvider
     {
-        public Task<StatusWrapper<PlanProvideStatus, string>> GetPlanHTML(int daysFromToday);
+        public Task<StatusWrapper<PlanProvideStatus, string>> GetPlanHTML(DateTime date);
     }
 }
