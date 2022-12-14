@@ -34,7 +34,7 @@ namespace VpServiceAPI.Middleware
             var path = httpContext.Request.Path.Value.Split('/');
             if (path.Length > 2)
             {
-                if((path[1] == "Statistic" && path[2] == "Login") || path[1] != "Statistic")
+                if((path[2] == "Statistic" && path[3] == "Login") || path[2] != "Statistic")
                 {
                     await _next.Invoke(httpContext);
                     return;
