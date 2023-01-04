@@ -35,16 +35,11 @@ namespace VpServiceAPI.Jobs.Notification
             TemplateName = name;
             Logger.Warn(LogArea.Notification, "Changed Notification Template to:", name);
         }
-        public Entities.Notification.Email Build(NotificationBody notificationBody, string receiver, string? template = null)
+        public Email Build(NotificationBody notificationBody, string receiver, string? template = null)
         {
             NotificationBody = notificationBody;
 
-            return new Entities.Notification.Email
-            {
-                Receiver = receiver,
-                Subject = NotificationBody.Subject,
-                Body = BuildBody(template)
-            };
+            return new Email(receiver, NotificationBody.Subject, BuildBody(template));
         }
         private string BuildBody(string? template = null)
         {

@@ -70,7 +70,6 @@ namespace VpServiceAPI.Repositories
 
         public async Task<Artwork> GetArtwork(string name)
         {
-            if (!await IncludesArtwork(name)) return await Default();
             try
             {
                 return (await DataQueries.Load<Artwork, dynamic>("SELECT name, image, color, font_color, start_date, end_date FROM artwork_data WHERE name=@name", new { name }))[0];
