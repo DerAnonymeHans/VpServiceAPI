@@ -16,6 +16,7 @@ using VpServiceAPI.Entities.Persons;
 using VpServiceAPI.Entities.Lernsax;
 using System.Text.Json;
 using VpServiceAPI.Interfaces.Lernsax;
+using VpServiceAPI.Entities.Notification;
 
 namespace VpServiceAPI.Repositories
 {
@@ -113,6 +114,8 @@ namespace VpServiceAPI.Repositories
         public async Task AddUserRequest(User user)
         {
             await DataQueries.Save("INSERT INTO users(name, address, grade, status, mode, sub_day) VALUES (@name, @address, @grade, @status, @mode, @date)", new { name = user.Name, address = user.Address, grade = user.Grade, date = DateTime.Now.ToString("dd.MM.yyyy"), status = UserStatus.REQUEST.ToString(), mode=user.NotifyMode.ToString() });
+
+            EmailJob.Send(new Email(Environment.GetEnvironmentVariable("SMTP_USER") ?? "vp.mailservice.kepler@gmail.com", "Neuer Nutzer", $"{user.Name} mit der Email Adresse {user.Address} der Klassenstufe {user.Grade} hat per {user.NotifyMode} abonniert."), "NEWUSER");
         }
         public async Task AcceptUser(string mail)
         {
@@ -189,12 +192,7 @@ namespace VpServiceAPI.Repositories
         {
             string linkTo = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? $"{Environment.GetEnvironmentVariable("URL")}" : "http://localhost:3000";
             
-            EmailJob.Send(new Entities.Notification.Email
-            {
-                Body = await GenerateBody(mail, linkTo),
-                Receiver = mail,
-                Subject = "Anmeldung bei Kepleraner"
-            }, "HASHRESET");
+            EmailJob.Send(new Email(await GenerateBody(mail, linkTo), mail, "Anmeldung bei Kepleraner"), "HASHRESET");
         }
 
         private async Task<string> GenerateBody(string mail, string linkTo)

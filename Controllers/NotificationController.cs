@@ -61,25 +61,33 @@ namespace VpServiceAPI.Controllers
         {
             try
             {
-                Logger.Info(artName + name);
-                if (!await ArtworkRepository.IncludesArtwork(artName))
-                {
-                    artName = (await ArtworkRepository.Default()).Name;
-                }
+                Logger.Info($"{artName}-{name}");
+                //if (!await ArtworkRepository.IncludesArtwork(artName))
+                //{
+                //    artName = (await ArtworkRepository.Default()).Name;
+                //}
                 var artwork = await ArtworkRepository.GetArtwork(artName);
                 using (Bitmap bitMapImage = artwork.GetBitmap())
                 {
                     Graphics graphicImage = Graphics.FromImage(bitMapImage);
                     graphicImage.SmoothingMode = SmoothingMode.AntiAlias;
                     graphicImage.DrawString("Hallo", new Font("Arial", 30), new SolidBrush(artwork.FontColor), new Point(50, 80));
-                    if (name.Length < 12)
+
+                    int fontSize = 48;
+                    if (name.Length > 9 && name.Length < 13)
                     {
-                        graphicImage.DrawString(name, new Font("Arial", 48, FontStyle.Bold), new SolidBrush(artwork.FontColor), new Point(50, 120));
+                        fontSize = 38;
+                    }
+                    else if(name.Length < 16)
+                    {
+                        fontSize = 35;
                     }
                     else
                     {
-                        graphicImage.DrawString(name, new Font("Arial", 40, FontStyle.Bold), new SolidBrush(artwork.FontColor), new Point(50, 120));
+                        fontSize = 30;
                     }
+
+                    graphicImage.DrawString(name, new Font("Arial", fontSize, FontStyle.Bold), new SolidBrush(artwork.FontColor), new Point(50, 120));
 
                     using (var stream = new MemoryStream())
                     {
