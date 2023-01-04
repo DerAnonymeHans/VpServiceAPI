@@ -12,6 +12,8 @@ using VpServiceAPI.Interfaces;
 using VpServiceAPI.Interfaces.Lernsax;
 using VpServiceAPI.Jobs.Checking;
 using VpServiceAPI.Jobs.Notification;
+using VpServiceAPI.Repositories;
+using VpServiceAPI.Tools;
 
 namespace VpServiceAPI.Jobs.Routines
 {
@@ -24,6 +26,7 @@ namespace VpServiceAPI.Jobs.Routines
         private readonly IAnalysedPlanSaver AnalysedPlanSaver;
         private readonly INotificationJob NotificationJob;
         private readonly IStatExtractor StatExtractor;
+        private readonly IDBAccess DBAccess;
 
         private readonly ITeacherRepository TeacherRepository;
         private readonly IUserRepository UserRepository;
@@ -46,7 +49,8 @@ namespace VpServiceAPI.Jobs.Routines
             IStatExtractor statExtractor,
             ITeacherRepository teacherRepository,
             ILernsaxMailService lernsaxMailService,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IDBAccess dbAccess)
         {
             Logger = logger;
             UpdateChecker = updateChecker;
@@ -57,6 +61,7 @@ namespace VpServiceAPI.Jobs.Routines
             TeacherRepository = teacherRepository;
             LernsaxMailService = lernsaxMailService;
             UserRepository = userRepository;
+            DBAccess = dbAccess;
         }
         public void Begin()
         {
@@ -104,7 +109,8 @@ namespace VpServiceAPI.Jobs.Routines
             bool IsJob(string name) => GetEnv("ASPNETCORE_ENVIRONMENT") == "Production" || GetEnv("ONLY_JOB") == "all" || GetEnv("ONLY_JOB") == name;
             try
             {
-                PingSelf();
+                PingSelf();                
+
                 await EventsJob();
                 if(IsJob("plan")) await VertretungsplanJob();
                 if(IsJob("lernsax")) await LernsaxServicesJob();
@@ -121,13 +127,19 @@ namespace VpServiceAPI.Jobs.Routines
         private async Task EventsJob()
         {
             var now = DateTime.Now;
-            if (TeacherRepository.ShouldUpdateTeacherList)
+            if (DateTime.Now - TeacherRepository.LastUpdate > TimeSpan.FromDays(2))
             {
+                TeacherRepository.LastUpdate = DateTime.Now;
                 await TeacherRepository.UpdateTeacherList();
             }
             if (now.Hour > 16)
             {
                 if (Environment.GetEnvironmentVariable("GEN_STATS") != "false") await StatExtractor.Begin(DateTime.Now);
+            }
+            if(now.Hour == 0 && now.Minute < 20)
+            {
+                // try standard db, if fails it automaticly switches back to backup
+                if (DBAccess.CurrentDB != 0) DBAccess.SwitchToDB(0);
             }
         }
         private async Task VertretungsplanJob()
