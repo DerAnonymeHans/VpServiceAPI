@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities.Persons;
 
@@ -8,6 +9,6 @@ namespace VpServiceAPI.Interfaces
     {
         public Task UpdateTeacherList();
         public Teacher? GetTeacher(string name);
-        public bool ShouldUpdateTeacherList { get; }
+        public DateTime LastUpdate { get; set; }
     }
 }
