@@ -48,6 +48,8 @@ namespace VpServiceAPI.Jobs.Notification
                 smtp.Port = SmtpPort;
                 smtp.Credentials = new NetworkCredential(notification.Sender, Environment.GetEnvironmentVariable("SMTP_PW"));
 
+                
+
                 smtp.SendAsync(mail, null);
                 Logger.Info(LogArea.Notification, $"{reason}: Send Email to: " + notification.Receiver);
 

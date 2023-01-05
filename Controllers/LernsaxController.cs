@@ -1,10 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AE.Net.Mail;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities.Lernsax;
+using VpServiceAPI.Entities.Notification;
 using VpServiceAPI.Entities.Persons;
 using VpServiceAPI.Enums;
 using VpServiceAPI.Exceptions;
@@ -141,14 +146,13 @@ namespace VpServiceAPI.Controllers
 
 
         [HttpGet("Service/Mail/Heads")]
-        public async Task<WebResponse<List<LernsaxMailHead>>> GetMailHeads()
+        public async Task<WebResponse<LernsaxMail[]>> GetMailHeads()
         {
             return await WebResponder.RunWith(async () =>
             {
                 var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
-                var mails = await EmailService.GetStoredEmails(user);
-                if (mails is null) return new List<LernsaxMailHead>();
-                return mails.Select(mail => new LernsaxMailHead { Sender=mail.Sender, DateTime=mail.DateTime, Subject=mail.Subject}).ToList();
+                user.LernsaxCredentials = await UserRepository.Lernsax.GetCredentials(user);
+                return EmailService.GetMails(user.LernsaxCredentials ?? throw new AppException("Bitte geben Sie Ihre Lernsax-Anmeldedaten an."), true).Reverse().ToArray();
             }, Request.Path.Value);
         }
         [HttpGet("Service/Mail/MailBody/{mailId}")]
@@ -157,11 +161,7 @@ namespace VpServiceAPI.Controllers
             return await WebResponder.RunWith(async () =>
             {
                 var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
-                var mails = await EmailService.GetStoredEmails(user);
-                if (mails is null) throw new AppException("Es wurden keine Emails gefunden.");
-                var selectedMail = mails.Find(mail => mail.Id.TrimEnd() == mailId);
-                if (selectedMail is null) throw new AppException("Die Email wurde nicht gefunden.");
-                return selectedMail.Body;
+                return EmailService.GetMailBody(await UserRepository.Lernsax.GetCredentials(user) ?? throw new AppException("Bitte geben Sie Ihre Lernsax-Anmeldedaten an."), mailId);
             }, Request.Path.Value);
         }
         
@@ -172,7 +172,8 @@ namespace VpServiceAPI.Controllers
             {
                 var searchString = Request.Form["search"][0];
                 var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
-                var mails = await EmailService.GetStoredEmails(user);
+                user.LernsaxCredentials = await UserRepository.Lernsax.GetCredentials(user);
+                var mails = EmailService.GetMails(user.LernsaxCredentials ?? throw new AppException("Bitte geben Sie Ihre Lernsax-Anmeldedaten an."), false);
                 if (mails is null) throw new AppException("Es wurden keine Emails gefunden.");
 
                 var ids = new List<string>();
@@ -181,8 +182,36 @@ namespace VpServiceAPI.Controllers
                     if (!mail.Body.ToLower().Contains(searchString)) continue;
                     ids.Add(mail.Id);
                 }
+                ids.Reverse();
                 return ids;
             }, Request.Path.Value);
         }
+
+        [HttpPost("Service/Mail/Send")]
+        public async Task<WebResponse<bool>> SendMail()
+        {
+            return await WebResponder.RunWith(async () =>
+            {
+                var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
+                user.LernsaxCredentials = await UserRepository.Lernsax.GetCredentials(user);
+                var mail = JsonSerializer.Deserialize<LernsaxMailToSend>(await new StreamReader(Request.Body).ReadToEndAsync(), new()
+                {
+                    PropertyNameCaseInsensitive = true,
+                });
+                if (mail is null) throw new Exception();
+                if (mail.Subject.Length == 0) throw new AppException("Der Betreff darf nicht leer sein.");
+                if (mail.Body.Length == 0) throw new AppException("Der Text der Email darf nicht leer sein.");
+
+                if (user.LernsaxCredentials is null) throw new AppException("Bitte geben Sie Ihre Lernsax-Anmeldedaten an.");
+
+                var _mail = new Email(mail.Receiver, mail.Subject, mail.Body)
+                {
+                    Sender = user.LernsaxCredentials.Address
+                };
+                EmailService.SendMail(user.LernsaxCredentials, _mail);
+                return true;
+            }, Request.Path.Value);
+        }
+                
     }
 }

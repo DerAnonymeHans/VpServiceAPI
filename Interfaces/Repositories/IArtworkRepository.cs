@@ -13,7 +13,7 @@ namespace VpServiceAPI.Interfaces
         public Task<ArtworkMeta?> GetSpecialArtworkForDate(DateTime dateTime);
         public Task<bool> IncludesArtwork(string name);
         public Task<Artwork> Default();
-        public Task<ArtworkMeta> DefaultMeta();
+        public Task<ArtworkMeta> DefaultMeta(string name = "rainbow_car");
         public Artwork FormFileToArtwork(IFormFile file, IFormCollection form);
     }
 }

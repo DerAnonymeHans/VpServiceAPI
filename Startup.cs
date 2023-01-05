@@ -22,6 +22,7 @@ using VpServiceAPI.Jobs.StatExtraction;
 using VpServiceAPI.Jobs.StatProviding;
 using VpServiceAPI.Middleware;
 using Microsoft.AspNetCore.Http;
+using System.Text;
 
 namespace VpServiceAPI
 {
@@ -66,6 +67,9 @@ namespace VpServiceAPI
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "VpServiceAPI", Version = "v1" });
             });
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
