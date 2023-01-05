@@ -184,14 +184,9 @@ namespace VpServiceAPI.Jobs.Notification
             {
                 return specialArtwork;
             }
+            
+            return await ArtworkRepository.GetArtworkMeta(weather);
 
-            ArtworkMeta? weatherArtwork = await ArtworkRepository.GetArtworkMeta(weather);
-            if (weatherArtwork is not null)
-            {
-                return weatherArtwork;
-            }
-
-            return await ArtworkRepository.DefaultMeta();
         }
 
 

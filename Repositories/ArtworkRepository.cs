@@ -43,7 +43,7 @@ namespace VpServiceAPI.Repositories
             }
         }
 
-        public async Task<ArtworkMeta> DefaultMeta()
+        public async Task<ArtworkMeta> DefaultMeta(string name = "rainbow_car")
         {
             try
             {
@@ -51,7 +51,7 @@ namespace VpServiceAPI.Repositories
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.ArtworkRepo, ex, "Tried to get default meta");
-                return new ArtworkMeta("rainbow_car", "0.0.", "0.0.", "red", "white");
+                return new ArtworkMeta(name, "0.0.", "0.0.", "red", "white");
             }
         }
 
@@ -90,7 +90,7 @@ namespace VpServiceAPI.Repositories
 
         public async Task<ArtworkMeta> GetArtworkMeta(string name)
         {
-            if (!await IncludesArtwork(name)) return await DefaultMeta();
+            if (!await IncludesArtwork(name)) return await DefaultMeta(name);
             try
             {
                 return (await DataQueries.Load<ArtworkMeta, dynamic>("SELECT name, start_date, end_date, color, font_color FROM artwork_data WHERE name=@name", new { name }))[0];

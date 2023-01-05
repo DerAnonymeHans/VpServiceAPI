@@ -1,15 +1,19 @@
-﻿using RestSharp;
+﻿using AE.Net.Mail;
+using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Mail;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VpServiceAPI.Entities.Lernsax;
+using VpServiceAPI.Entities.Notification;
 using VpServiceAPI.Entities.Persons;
 using VpServiceAPI.Entities.Tools;
 using VpServiceAPI.Enums;
@@ -28,6 +32,10 @@ namespace VpServiceAPI.Jobs.Lernsax
         private readonly IDataQueries DataQueries;
         private readonly IUserRepository UserRepository;
         private readonly IPushJob PushJob;
+        private const int MAIL_COUNT = 30;
+        private const string SMTP_ADDRESS = "mail.lernsax.de";
+        private const string IMAP_ADDRESS = "mail.lernsax.de";
+
 
         public LernsaxMailService(IMyLogger logger, IDataQueries dataQueries, IUserRepository userRepository, IPushJob pushJob)
         {
@@ -36,10 +44,8 @@ namespace VpServiceAPI.Jobs.Lernsax
             UserRepository = userRepository;
             PushJob = pushJob;
         }
-        public async Task<List<LernsaxMail>?> GetStoredEmails(User user)
-        {
-            return await UserRepository.Lernsax.GetMails(user);
-        }
+        public static string GetMailId(AE.Net.Mail.MailMessage mail) => mail.Date.ToString("s") + mail.Sender.Address.CutToLength(4) + mail.Subject.CutToLength(8);
+
         public async Task RunOnUser(User user)
         {
             await RunOnUser(new UserWithLernsax(user, await UserRepository.Lernsax.GetLernsaxForEmailChecking(user)));
@@ -49,11 +55,7 @@ namespace VpServiceAPI.Jobs.Lernsax
             try
             {
                 user.Lernsax.LastMailDateTime.Set(await UserRepository.Lernsax.GetLastMailDatetime(user.User));
-                var res = await GetMailsIfUpdate(user.Lernsax);
-                if (res is null) return;
-                user.Lernsax.Mails = res;
-                user.Lernsax.LastMailDateTime.Set(user.Lernsax.Mails[0].DateTime);
-                await StoreEmails(user.User, user.Lernsax);
+                if(!IsNewMail(user.Lernsax)) return;
                 await NotifyUser(user.User, user.Lernsax.Mails[0]);
             }catch(Exception ex)
             {
@@ -61,108 +63,59 @@ namespace VpServiceAPI.Jobs.Lernsax
             }
         }
 
-        public async Task<List<LernsaxMail>?> GetMailsIfUpdate(Entities.Lernsax.Lernsax lernsax)
+        private ImapClient GenerateImapClient(LernsaxCredentials creds)
         {
-            using var client = new HttpClient()
-            {
-                BaseAddress = new Uri("https://www.lernsax.de")
-            };
-
-            string mailOverviewHtml = await GetMailOverviewHtml(lernsax.Credentials, client);
-            var wrapper = await ExtractMailsAndCheckForUpdate(lernsax.LastMailDateTime, mailOverviewHtml, client);
-            if (wrapper.Status == UpdateCheckStatus.NOT_NEW) return null;
-            if (wrapper.Body is null) throw new AppException("Wrapper body is null even though status is null");
-
-            return wrapper.Body;
-           
+            return new ImapClient(IMAP_ADDRESS, creds.Address, creds.Password, AuthMethods.Login, 993, true);
         }
-        
-        
-        private async Task<string> GetMailOverviewHtml(LernsaxCredentials? credentials, HttpClient client)
-        {
-            string html = await UserRepository.Lernsax.Login(credentials, client);
-            string sid = html.SubstringSurroundedBy(@"<a href=""105592.php?sid=", @""">") ?? throw new Exception("sid for mail page not found");
 
-            html = await new StreamReader((await client.GetAsync($"wws/105592.php?sid={sid}")).Content.ReadAsStream(), Encoding.Latin1).ReadToEndAsync();
-            html = html[html.IndexOf(@"<form action=""/wws/105592.php?")..];
-            html = html[html.IndexOf(@"<div class=""content_outer"" id=""content"">")..];
-            html = html[html.IndexOf(@"<div class=""jail_table"">")..];
-            html = html[html.IndexOf(@"<tbody>")..html.IndexOf("</tbody>")];
-            return html;
-        }             
-       
-        
-        // returns Status.FAIL if no update and SUCCESS for new mail
-        private async Task<StatusWrapper<UpdateCheckStatus, List<LernsaxMail>?>> ExtractMailsAndCheckForUpdate(StrictDateTime lastMailDateTime, string html, HttpClient client)
+        private bool IsNewMail(Entities.Lernsax.Lernsax lernsax)
         {
-            var mails = new List<LernsaxMail>();
-            for(int i=0; i<20; i++)
+            if (lernsax.Credentials is null) throw new AppException("Die Emails können nur bei angegebenen Anmeldedaten geladen werden.");
+            using (ImapClient ic = GenerateImapClient(lernsax.Credentials))
             {
-                var row = XMLParser.GetNode(html, "tr");
-                if (row is null) break;
-
-                (LernsaxMail mail, string bodyPath) = ExtractMailHead(row);
-
-                // no new mail
-                if(i == 0 && lastMailDateTime >= mail.DateTime && Environment.GetEnvironmentVariable("MODE") != "Testing")
+                ic.SelectMailbox("INBOX");
+                var messageCount = ic.GetMessageCount();
+                var newestMail = ic.GetMessage(messageCount - 1, true);
+                return newestMail.Date > lernsax.LastMailDateTime.DateTime;
+            }
+        }
+        public LernsaxMail[] GetMails(LernsaxCredentials creds, bool headersOnly = true, int maxCount = MAIL_COUNT)
+        {
+            using (ImapClient ic = GenerateImapClient(creds))
+            {
+                ic.SelectMailbox("INBOX");
+                var messageCount = ic.GetMessageCount();
+                var rawMsgs = ic.GetMessages(Math.Max(0, messageCount - maxCount), Math.Max(0, messageCount - 1), headersOnly);
+                return rawMsgs.Select(mail =>
                 {
-                    return new(UpdateCheckStatus.NOT_NEW, null);
-                }
-
-                var body = await GetMailBody(bodyPath, client);
-                mail.Body = body;
-                mails.Add(mail);
-
-                html = html[row.Length..];
+                    return new LernsaxMail
+                    {
+                        DateTime = mail.Date,
+                        Sender = mail.From.Address,
+                        SenderDisplayName = mail.From.DisplayName,
+                        Subject = mail.Subject,
+                        Body = mail.Body,
+                    };
+                }).ToArray();
             }
-
-            return new(UpdateCheckStatus.IS_NEW, mails);
-        }  
-        private (LernsaxMail mailHead, string bodyPath) ExtractMailHead(string rowHtml)
+        }
+        public string GetMailBody(LernsaxCredentials creds, string mailId)
         {
-            var cell = rowHtml.SubstringSurroundedBy(@"c_subj"">", "</td>") ?? "";
-            var subject = XMLParser.GetNodeContent(cell, "a");
-            var path = cell.SubstringSurroundedBy(@"data-popup=""", @"""");
-
-            cell = rowHtml.SubstringSurroundedBy(@"c_from"">", "</td>") ?? "";
-            var sender = XMLParser.GetNodeContent(cell, "span");
-
-            cell = rowHtml.SubstringSurroundedBy(@"c_date""", "/td>") ?? "";
-            var date = cell.SubstringSurroundedBy(">", "<");
-
-            if (subject is null || path is null || sender is null || date is null)
+            var headers = GetMails(creds, false, MAIL_COUNT + 1);
+            var selectedMailIdx = Array.FindIndex(headers, mail => mail.Id == mailId);
+            if (selectedMailIdx == -1) throw new AppException("Die Email wurde nicht gefunden.");
+            using (ImapClient ic = GenerateImapClient(creds))
             {
-                throw new AppException($"Cannnot extract mail. Subject: {subject}, Path: {path}, Sender: {sender}, Date: {date}");
+                ic.SelectMailbox("INBOX");
+                var messageCount = ic.GetMessageCount();
+                Logger.Debug(messageCount - selectedMailIdx);
+                return ic.GetMessage(messageCount - (headers.Length - selectedMailIdx)).Body;
             }
-
-            DateTime dateTime = DateTime.ParseExact(date, "dd.MM.yyyy HH:mm", null);
-
-            return (new LernsaxMail
-            {
-                Subject = subject,
-                Sender = sender,
-                DateTime = dateTime
-            }, path);
-        }
-
-
-        private async Task<string> GetMailBody(string path, HttpClient httpClient)
-        {
-            path = path.Replace("amp;", "");
-            var html = await new StreamReader((await httpClient.GetAsync($"/wws/{path}")).Content.ReadAsStream(), Encoding.Latin1).ReadToEndAsync();
-            string startTag = @"<p class=""panel"">";
-            int startIdx = html.IndexOf(startTag) + startTag.Length;
-            html = html[startIdx..html.IndexOf("</p>", startIdx)];
-            return html;
-        }
-        
-        private async Task StoreEmails(User user, Entities.Lernsax.Lernsax lernsax)
-        {
-            await UserRepository.Lernsax.SetLernsax(user, lernsax, new LernsaxData[] { LernsaxData.MAILS, LernsaxData.LAST_MAIL_DATETIME });
+            
         }
         private async Task NotifyUser(User user, LernsaxMail mail)
         {
-            var pushOptions = new PushOptions("Neue Lernsax Email", $"{mail.Sender.CutToLength(16)}..: {mail.Subject.CutToLength(60)}")
+            var pushOptions = new PushOptions("Neue Lernsax Email", $"{mail.SenderDisplayName.CutToLength(16)}: {mail.Subject.CutToLength(60)}")
             {
                 Icon = $"{Environment.GetEnvironmentVariable("URL")}/api/Notification/Logo.png",
                 Badge = $"{Environment.GetEnvironmentVariable("URL")}/api/Notification/Badge_LS.png",
@@ -171,6 +124,24 @@ namespace VpServiceAPI.Jobs.Lernsax
             await PushJob.Push(user, pushOptions, "LSMAIL");
         }
 
-        
+        public void SendMail(LernsaxCredentials creds, Email email)
+        {
+            var mail = new System.Net.Mail.MailMessage();
+            var smtp = new SmtpClient();
+
+            mail.From = new MailAddress(email.Sender);
+            mail.To.Add(new MailAddress(email.Receiver));
+            mail.Subject = email.Subject;
+            mail.Body = email.Body;
+            mail.IsBodyHtml = true;
+
+            smtp.Host = SMTP_ADDRESS;
+            smtp.EnableSsl = true;
+            smtp.Port = 587;
+            smtp.Credentials = new NetworkCredential(creds.Address, creds.Password);
+            Logger.Debug(creds);
+            Logger.Debug(email);
+            smtp.Send(mail);
+        }
     }
 }
