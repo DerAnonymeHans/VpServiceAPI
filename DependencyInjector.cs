@@ -24,7 +24,7 @@ namespace VpServiceAPI
 
         private const bool _allUsersWithTestNotificator = false; // or test users with prod notificator
         private const bool _forceTestUsers = false;
-        private const bool _forceTestNotificator = false;
+        private const bool _forceTestNotificator = true;
 
         private const bool _forceProdNotificator = false;
 
