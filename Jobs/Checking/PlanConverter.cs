@@ -181,6 +181,8 @@ namespace VpServiceAPI.Jobs.Checking
             string? title = PlanHTML.SubstringSurroundedBy("<span class=\"vpfuerdatum\">", "</span>");
             string? originDateString = PlanHTML.SubstringSurroundedBy("<span class=\"vpdatum\">", "</span>");
 
+            Logger.Debug(title, originDateString);
+
             if (title is null || originDateString is null) throw new AppException($"VP Title is: {title}. Origin String: {originDateString}");
 
             var affectedDate = GetAffectedDate(title);
@@ -191,11 +193,25 @@ namespace VpServiceAPI.Jobs.Checking
         }
         private AffectedDate GetAffectedDate(string title)
         {
-            
+            int year, month, day;
+            try
+            {
+                year = int.Parse(new Regex(@"[0-9]+(?= \()").Match(title).Value);
+                month = Converter.MonthToNumber(new Regex(@"(?<=\d\. )\w+").Match(title).Value);
+                day = int.Parse(new Regex(@"(?<=\w, )\d+").Match(title).Value);
+            }
+            catch(Exception ex)
+            {
+                year = DateTime.Now.Year;
+                month = 1;
+                day = 1;
+                Logger.Error(LogArea.PlanConverting, ex, "Tried to get affected date.");
+            }
+
             var dateTime = new DateTime(
-                    int.Parse(new Regex(@"[0-9]+(?= \()").Match(title).Value),
-                    Converter.MonthToNumber(new Regex(@"(?<=\d\. )\w+").Match(title).Value),
-                    int.Parse(new Regex(@"(?<=\w, )\d+").Match(title).Value)
+                    year,
+                    month,
+                    day
                 );
 
             return new AffectedDate(dateTime);
