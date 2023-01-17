@@ -55,8 +55,8 @@ namespace VpServiceAPI.Jobs.Lernsax
             try
             {
                 user.Lernsax.LastMailDateTime.Set(await UserRepository.Lernsax.GetLastMailDatetime(user.User));
-                if(!IsNewMail(user.Lernsax)) return;
-                await NotifyUser(user.User, user.Lernsax.Mails[0]);
+                if(!IsNewMail(user.Lernsax, out LernsaxMail? newestMail)) return;
+                await NotifyUser(user.User, newestMail!);
             }catch(Exception ex)
             {
                 Logger.Error(LogArea.LernsaxMail, ex, "Tried to run mail service on user: " + user.User.Address);
@@ -68,15 +68,29 @@ namespace VpServiceAPI.Jobs.Lernsax
             return new ImapClient(IMAP_ADDRESS, creds.Address, creds.Password, AuthMethods.Login, 993, true);
         }
 
-        private bool IsNewMail(Entities.Lernsax.Lernsax lernsax)
+        private bool IsNewMail(Entities.Lernsax.Lernsax lernsax, out LernsaxMail? newestMail)
         {
+            newestMail = null;
             if (lernsax.Credentials is null) throw new AppException("Die Emails können nur bei angegebenen Anmeldedaten geladen werden.");
             using (ImapClient ic = GenerateImapClient(lernsax.Credentials))
             {
                 ic.SelectMailbox("INBOX");
                 var messageCount = ic.GetMessageCount();
-                var newestMail = ic.GetMessage(messageCount - 1, true);
-                return newestMail.Date > lernsax.LastMailDateTime.DateTime;
+                var _newestMail = ic.GetMessage(messageCount - 1, false);
+                if(_newestMail.Date > lernsax.LastMailDateTime.DateTime)
+                {
+                    newestMail = new LernsaxMail();
+                    newestMail.Body = _newestMail.Body;
+                    newestMail.DateTime = _newestMail.Date;
+                    newestMail.Subject = _newestMail.Subject;
+                    if(_newestMail.Sender is not null)
+                    {
+                        newestMail.SenderDisplayName = _newestMail.Sender.DisplayName;
+                        newestMail.Sender = _newestMail.Sender.Address;
+                    }
+                    return true;
+                }
+                return false;
             }
         }
         public LernsaxMail[] GetMails(LernsaxCredentials creds, bool headersOnly = true, int maxCount = MAIL_COUNT)
