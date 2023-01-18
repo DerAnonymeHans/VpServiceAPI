@@ -44,7 +44,6 @@ namespace VpServiceAPI.Jobs.Lernsax
             UserRepository = userRepository;
             PushJob = pushJob;
         }
-        public static string GetMailId(AE.Net.Mail.MailMessage mail) => mail.Date.ToString("s") + mail.Sender.Address.CutToLength(4) + mail.Subject.CutToLength(8);
 
         public async Task RunOnUser(User user)
         {
@@ -56,6 +55,8 @@ namespace VpServiceAPI.Jobs.Lernsax
             {
                 user.Lernsax.LastMailDateTime.Set(await UserRepository.Lernsax.GetLastMailDatetime(user.User));
                 if(!IsNewMail(user.Lernsax, out LernsaxMail? newestMail)) return;
+                user.Lernsax.LastMailDateTime.Set(newestMail!.DateTime);
+                await UserRepository.Lernsax.SetLernsax(user, new[] { LernsaxData.LAST_MAIL_DATETIME });
                 await NotifyUser(user.User, newestMail!);
             }catch(Exception ex)
             {
@@ -76,18 +77,16 @@ namespace VpServiceAPI.Jobs.Lernsax
             {
                 ic.SelectMailbox("INBOX");
                 var messageCount = ic.GetMessageCount();
-                var _newestMail = ic.GetMessage(messageCount - 1, false);
+                var _newestMail = ic.GetMessage(messageCount - 1);
                 if(_newestMail.Date > lernsax.LastMailDateTime.DateTime)
                 {
                     newestMail = new LernsaxMail();
                     newestMail.Body = _newestMail.Body;
                     newestMail.DateTime = _newestMail.Date;
                     newestMail.Subject = _newestMail.Subject;
-                    if(_newestMail.Sender is not null)
-                    {
-                        newestMail.SenderDisplayName = _newestMail.Sender.DisplayName;
-                        newestMail.Sender = _newestMail.Sender.Address;
-                    }
+                    newestMail.SenderDisplayName = _newestMail.From.DisplayName;
+                    newestMail.Sender = _newestMail.From.Address;
+                    
                     return true;
                 }
                 return false;
