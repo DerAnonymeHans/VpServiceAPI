@@ -15,6 +15,7 @@ namespace VpServiceAPI.Controllers
         [Route("/Benachrichtigung")]
         [Route("/Statistiken")]
         [Route("/Mitmachen")]
+        [Route("/Abirechner")]
         public IActionResult Index()
         {
             var buffer = System.IO.File.ReadAllBytes(AppDomain.CurrentDomain.BaseDirectory + @"Frontend/index.html");
