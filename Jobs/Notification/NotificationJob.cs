@@ -179,7 +179,7 @@ namespace VpServiceAPI.Jobs.Notification
                 notifBody.GlobalExtra = gradeBody.GradeExtra ?? notifBody.GlobalExtra;
                 var notification = EmailBuilder.Build(notifBody, user.Address, gradeMailHtml);
                 EmailJob.Send(notification);
-                await Task.Delay(250);
+                await Task.Delay(500);
             }
         }
         private async Task<bool> TrySendPush(User user)
