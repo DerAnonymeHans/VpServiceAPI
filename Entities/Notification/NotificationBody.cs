@@ -28,6 +28,7 @@ namespace VpServiceAPI.Entities.Notification
         public List<List<NotificationRow>> ListOfTables { get; set; } = new();
         public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
+        public bool ForceStop { get; set; }
 
     }
 
@@ -54,6 +55,7 @@ namespace VpServiceAPI.Entities.Notification
         public List<List<NotificationRow>> ListOfTables { get; set; } = new();
         public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
+        public bool ForceStop { get; set; }
 
 
         public string UserName { get; set; } = "";

@@ -37,24 +37,27 @@ namespace VpServiceAPI.Jobs.Notification
             bool isAffected = listOfTables.First().Any(row => row.HasChange);
             if (isAffected && Environment.GetEnvironmentVariable("VP_SOURCE") != "STATIC") await SetCachedRows(grade, listOfTables.First());
 
+            (bool notify, bool forceStop) = await IsSendMail(grade, isAffected);
             return new GradeNotificationBody
             {
                 Grade = grade,
-                IsNotify = await IsSendMail(grade, isAffected),
+                IsNotify = notify,
                 GradeExtra = await GetGradeExtra(grade),
-                ListOfTables = listOfTables
+                ListOfTables = listOfTables,
+                ForceStop = forceStop
             };
         }
-        private async Task<bool> IsSendMail(string grade, bool isAffected)
+        private async Task<(bool, bool)> IsSendMail(string grade, bool isAffected)
         {
             bool isSendMail = isAffected;
             if (Environment.GetEnvironmentVariable("MODE") == "Testing") isSendMail = true;
-            return await GetGradeMode(grade) switch
+            var gradeMode = await GetGradeMode(grade);
+            return gradeMode switch
             {
-                GradeMode.FORCE => true,
-                GradeMode.SPECIAL_EXTRA_FORCE => true,
-                GradeMode.STOP => false,
-                _ => isSendMail
+                GradeMode.FORCE => (true, false),
+                GradeMode.SPECIAL_EXTRA_FORCE => (true, false),
+                GradeMode.STOP => (false, true),
+                _ => (isSendMail, false)
             };
         }
         private async Task<string?> GetGradeExtra(string grade)

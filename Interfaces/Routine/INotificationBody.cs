@@ -21,6 +21,7 @@ namespace VpServiceAPI.Interfaces
         public bool IsNotify { get; set; }
         public string? GradeExtra { get; set; }
         public List<List<NotificationRow>> ListOfTables { get; set; }
+        public bool ForceStop { get; set; }
     }
 
     public interface IUserNotificationBody

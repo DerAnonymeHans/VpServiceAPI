@@ -72,6 +72,7 @@ namespace VpServiceAPI.Jobs.Notification
             await DataQueries.SetRoutineData(RoutineDataSubject.DATETIME, "plan_found_datetime", DateTime.Now.Ticks.ToString());
 
             Users = await UserProvider.GetUsers();
+            Console.WriteLine(JsonSerializer.Serialize(Users));
             GlobalBody = await GlobalTask.Begin(planCollection);
             await CacheGlobalModel(GlobalBody);
             CycleUsers();
@@ -148,11 +149,16 @@ namespace VpServiceAPI.Jobs.Notification
                     await CacheGradeModel(gradeBody);
                     prevUser = user;                                        
                 }
+                if (gradeBody.ForceStop)
+                {
+                    continue;
+                }
 
                 if (!PlanCollection.ForceNotifStatus.IsForce)
                 {
                     if (!gradeBody.IsNotify) continue;
                 }
+                
 
 
                 var userBody = await UserTask.Begin(user);
