@@ -49,6 +49,8 @@ namespace VpServiceAPI.Interfaces
 
         ArtworkRepo,
         SmallExtraRepo,
-        UserRepo
+        UserRepo,
+
+        Brief
     }
 }
