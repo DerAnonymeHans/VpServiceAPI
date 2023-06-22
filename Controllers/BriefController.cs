@@ -60,7 +60,7 @@ namespace VpServiceAPI.Controllers
 
                 return "Deine Nachricht wurde versendet";
                 
-            }, Request.Path.Value, null, false);
+            }, Request.Path.Value, null);
         }
 
         [HttpGet]
@@ -74,7 +74,7 @@ namespace VpServiceAPI.Controllers
 
                 return res;
 
-            }, Request.Path.Value, null, false);
+            }, Request.Path.Value, null);
         }
 
     }
