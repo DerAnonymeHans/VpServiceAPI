@@ -1,12 +1,10 @@
 using System;
-using System.Data;
-using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using VpServiceAPI.Interfaces;
-using MySql.Data.MySqlClient;
 using Dapper;
 using System.Threading.Tasks;
+using Npgsql;
 using VpServiceAPI.Exceptions;
 
 namespace VpServiceAPI.Tools
@@ -24,12 +22,14 @@ namespace VpServiceAPI.Tools
         {
             try
             {
-                var con = new MySqlConnection(DBConString);
+                var dataSourceBuilder = new NpgsqlDataSourceBuilder(DBConString);
+                var datasource = dataSourceBuilder.Build();
+                var con = await datasource.OpenConnectionAsync();
                 var rows = await con.QueryAsync<T>(sql, parameters);
                 con.Close();
                 return rows.ToList();
             }
-            catch (MySqlException ex)
+            catch (NpgsqlException ex)
             {
                 if (ex.Message != "Unable to connect to any of the specified MySQL hosts.") throw ex;
                 if (tryNumber == 2) throw ex;
@@ -42,12 +42,14 @@ namespace VpServiceAPI.Tools
         {
             try
             {
-                var con = new MySqlConnection(DBConString);
+                var dataSourceBuilder = new NpgsqlDataSourceBuilder(DBConString);
+                var datasource = dataSourceBuilder.Build();
+                var con = await datasource.OpenConnectionAsync();
                 int affectedRows = await con.ExecuteAsync(sql, parameters);
                 con.Close();
                 return affectedRows;
             }
-            catch (MySqlException ex)
+            catch (NpgsqlException ex)
             {
                 if (ex.Message != "Unable to connect to any of the specified MySQL hosts.") throw ex;
                 if (tryNumber == 2) throw ex;
@@ -73,7 +75,9 @@ namespace VpServiceAPI.Tools
 
         public async Task<int> SaveAndGetId<T>(string sql, T parameters)
         {
-            var con = new MySqlConnection(DBConString);
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(DBConString);
+            var datasource = dataSourceBuilder.Build();
+            var con = await datasource.OpenConnectionAsync();
             await con.ExecuteAsync(sql, parameters);
             int id = (await con.QueryAsync<int>(sql, parameters)).ToList()[0];
 
