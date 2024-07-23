@@ -194,8 +194,7 @@ namespace VpServiceAPI.Controllers
             {
                 var user = await UserRepository.GetAuthenticatedUserFromRequest(Request.Cookies);
                 user.LernsaxCredentials = await UserRepository.Lernsax.GetCredentials(user);
-                var text = await new StreamReader(Request.Body).ReadToEndAsync();
-                var mail = JsonSerializer.Deserialize<LernsaxMailToSend>(text, new JsonSerializerOptions
+                var mail = JsonSerializer.Deserialize<LernsaxMailToSend>(await new StreamReader(Request.Body).ReadToEndAsync(), new()
                 {
                     PropertyNameCaseInsensitive = true,
                 });
